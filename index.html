@@ -2,49 +2,65 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1120" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Commute-to-Desk · Daily Productivity OS</title>
+  <link id="dynamic-manifest" rel="manifest" />
   <style>
     :root {
-      --bg-header: #0f172a;
-      --bg-header-sub: #1e293b;
-      --bg-body: #f8fafc;
-      --bg-card: #ffffff;
+      --bg-header: #0b1120;
+      --bg-header-grad: linear-gradient(135deg, #0b1120 0%, #172554 100%);
+      --bg-body: #f4f6fb;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f8fafc;
       --border: #e2e8f0;
+      --border-strong: #cbd5e1;
       --text-main: #0f172a;
-      --text-muted: #64748b;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --accent: #f59e0b;
-      --success: #10b981;
+      --primary-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+      --ai-grad: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      --amber: #f59e0b;
+      --amber-bg: #fffbeb;
+      --emerald: #10b981;
+      --emerald-bg: #ecfdf5;
       --danger: #ef4444;
-      --work-badge: #dbeafe;
-      --work-text: #1e40af;
-      --pers-badge: #fef3c7;
-      --pers-text: #92400e;
-      --radius: 12px;
-      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+      --danger-bg: #fef2f2;
+      --radius-xl: 20px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Inter, sans-serif;
       background: var(--bg-body);
       color: var(--text-main);
-      line-height: 1.5;
-      padding-bottom: 90px;
+      line-height: 1.45;
+      overflow-x: hidden;
+      overscroll-behavior-y: none;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(80px + var(--safe-bottom));
     }
 
-    /* Dark Header */
-    header {
-      background: var(--bg-header);
+    /* Native-Style App Bar + Top Text Navigation */
+    .app-header {
+      background: var(--bg-header-grad);
       color: #f8fafc;
-      padding: 14px 16px 0;
+      padding: calc(12px + var(--safe-top)) 16px 0;
       position: sticky;
       top: 0;
       z-index: 40;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      box-shadow: 0 6px 20px rgba(11, 17, 32, 0.22);
     }
     .header-top {
       max-width: 1120px;
@@ -52,81 +68,142 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      padding-bottom: 12px;
+      gap: 10px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-icon {
-      width: 36px; height: 36px; border-radius: 10px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      display: grid; place-items: center; font-weight: 800; font-size: 18px; color: #fff;
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .app-logo {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
-    .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
-    .brand p { font-size: 11px; color: #94a3b8; }
-    .header-actions { display: flex; align-items: center; gap: 8px; }
-    .btn-header {
-      background: var(--bg-header-sub);
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 8px 12px;
+    .brand-text h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-text p { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+    .header-pills { display: flex; align-items: center; gap: 8px; }
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      height: 36px;
+      padding: 0 12px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      min-height: 36px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      transition: transform 0.1s, background 0.15s;
     }
-    .btn-header:hover { background: #334155; }
-    .nav-tabs {
+    .pill-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.18); }
+    .pill-install {
+      background: #2563eb;
+      border-color: #60a5fa;
+      display: none;
+    }
+
+    /* Live Summary Chips inside Header */
+    .hero-metrics {
       max-width: 1120px;
-      margin: 0 auto;
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
+      margin: 12px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
     }
+    .metric-chip {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 7px 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .metric-chip .m-val { font-size: 15px; font-weight: 800; color: #ffffff; }
+    .metric-chip .m-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; font-weight: 600; }
+
+    /* Top Text Tab Bar (Mobile & Desktop) */
+    .top-nav {
+      max-width: 1120px;
+      margin: 10px auto 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
     .nav-tab {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 14px;
-      cursor: pointer;
       border-bottom: 3px solid transparent;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px 14px 11px;
+      cursor: pointer;
       white-space: nowrap;
+      flex: 1;
+      text-align: center;
+      min-height: 44px;
+      transition: color 0.15s, border-color 0.15s;
     }
     .nav-tab.active {
       color: #ffffff;
       border-bottom-color: #3b82f6;
     }
 
-    /* Main Container */
+    /* Main Workspace */
     main {
       max-width: 1120px;
-      margin: 16px auto;
+      margin: 14px auto;
       padding: 0 14px;
     }
-    .view { display: none; }
+    .view { display: none; animation: fadeIn 0.18s ease-out; }
     .view.active { display: block; }
-
-    /* Cards & Grid */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
+
     @media (min-width: 860px) {
-      .grid-2 { grid-template-columns: 1.15fr 0.85fr; }
+      body { padding-bottom: 40px; }
+      .nav-tab { flex: 0 0 auto; padding: 10px 18px 11px; }
+      .nav-tab[data-tab="focus"] { display: none; }
+      .grid-desktop {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+        align-items: start;
+      }
+      #tab-focus.desktop-always { display: block !important; }
+    }
+
+    /* App Cards & Section Headers */
+    .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 16px 2px 8px;
+    }
+    .section-label h2 {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: var(--bg-surface);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      border-radius: var(--radius-xl);
       padding: 16px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 14px;
     }
     .card-header {
       display: flex;
@@ -134,77 +211,104 @@
       justify-content: space-between;
       gap: 8px;
       margin-bottom: 12px;
-      flex-wrap: wrap;
     }
     .card-title {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    /* Buttons & Inputs */
+    /* Native Buttons & Inputs */
     .btn {
       border: 1px solid var(--border);
-      background: #fff;
+      background: var(--bg-subtle);
       color: var(--text-main);
-      border-radius: 9px;
-      padding: 9px 14px;
-      font-size: 13px;
-      font-weight: 600;
+      border-radius: 14px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
-      min-height: 40px;
+      min-height: 46px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: background 0.15s, transform 0.08s;
+      gap: 7px;
+      transition: transform 0.08s, box-shadow 0.15s;
     }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-ai { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; }
-    .btn-danger { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
-    .btn-success { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-    .btn-sm { min-height: 34px; padding: 6px 10px; font-size: 12px; }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary {
+      background: var(--primary-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-ai {
+      background: var(--ai-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+    }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: #fecaca; }
+    .btn-success { background: var(--emerald-bg); color: #065f46; border-color: #a7f3d0; }
+    .btn-chip {
+      min-height: 32px;
+      padding: 0 11px;
+      font-size: 12px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+    }
 
     textarea, input[type="text"], input[type="password"], select {
       width: 100%;
-      border: 1px solid #cbd5e1;
-      border-radius: 9px;
-      padding: 10px 12px;
-      font-size: 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 16px;
       font-family: inherit;
       color: var(--text-main);
-      background: #fff;
+      background: #f8fafc;
+      min-height: 46px;
+      transition: border-color 0.15s, background 0.15s;
     }
     textarea:focus, input:focus, select:focus {
       outline: none;
+      background: #ffffff;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
     }
 
-    /* Voice & Brain Dump */
-    .mic-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .mic-btn {
-      background: #ef4444;
+    /* Voice Capture Pill */
+    .voice-trigger {
+      width: 100%;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: #fff;
       border: none;
-      flex: 1 1 160px;
+      border-radius: 15px;
+      min-height: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.26);
+      margin-bottom: 10px;
     }
-    .mic-btn.recording {
-      animation: pulse 1.2s infinite;
-      background: #b91c1c;
+    .voice-trigger.recording {
+      animation: pulseRing 1.2s infinite;
+      background: #991b1b;
     }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-      50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    @keyframes pulseRing {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+      50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
+    .dual-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 9px;
+      margin-top: 10px;
     }
     .inline-key-box {
       display: none;
@@ -212,157 +316,220 @@
       padding: 12px;
       background: #eff6ff;
       border: 1px solid #bfdbfe;
-      border-radius: 10px;
+      border-radius: 14px;
     }
     .inline-key-box.visible { display: block; }
-    .inline-key-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    .status-msg { font-size: 12px; margin-top: 8px; color: var(--text-muted); }
+    .status-msg { font-size: 12px; margin-top: 8px; color: var(--text-secondary); font-weight: 500; }
 
-    /* Task Items */
-    .task-list { display: flex; flex-direction: column; gap: 8px; }
-    .task-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
+    /* Quick Add Bar */
+    .quick-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    /* Native App Task Cards */
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
+    .task-card {
+      background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #fff;
+      border-radius: 16px;
+      padding: 13px 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.1s;
     }
-    .task-item.top3 {
-      border-left: 4px solid var(--accent);
-      background: #fffbeb;
+    .task-card.top3 {
+      border: 1.5px solid #fcd34d;
+      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
     }
-    .task-item.done { opacity: 0.6; background: #f8fafc; }
-    .task-item.done .task-title { text-decoration: line-through; }
-    .task-left {
+    .task-card.done {
+      opacity: 0.58;
+      background: #f8fafc;
+    }
+    .task-card.done .task-title { text-decoration: line-through; }
+
+    .task-main {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
+      gap: 12px;
     }
-    .task-check {
-      width: 22px; height: 22px; margin-top: 2px;
-      accent-color: var(--primary);
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .task-info { flex: 1; min-width: 0; }
-    .task-title { font-size: 14px; font-weight: 600; word-break: break-word; }
-    .task-meta {
-      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
-      font-size: 11px; color: var(--text-muted);
-    }
-    .badge {
-      padding: 2px 7px; border-radius: 999px; font-weight: 600; font-size: 11px;
-    }
-    .badge-work { background: var(--work-badge); color: var(--work-text); }
-    .badge-pers { background: var(--pers-badge); color: var(--pers-text); }
-    .badge-roll { background: #f3e8ff; color: #6b21a8; }
-    .badge-2min { background: #dcfce7; color: #166534; }
-
-    /* Thumb-friendly 36x36 action buttons */
-    .task-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .icon-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #f8fafc;
-      color: var(--text-main);
-      font-size: 15px;
+    .check-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: #fff;
       display: grid;
       place-items: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+      font-size: 14px;
+      color: transparent;
+      transition: all 0.15s;
+    }
+    .task-card.done .check-circle {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      color: #fff;
+    }
+    .task-body { flex: 1; min-width: 0; }
+    .task-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .task-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tag {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .tag-work { background: #dbeafe; color: #1e40af; }
+    .tag-pers { background: #fef3c7; color: #92400e; }
+    .tag-time { background: #f1f5f9; color: #475569; }
+    .tag-roll { background: #f3e8ff; color: #6b21a8; }
+    .tag-2m { background: #dcfce7; color: #166534; }
+
+    /* Segmented Action Strip */
+    .task-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding-top: 9px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .t-btn {
+      height: 38px;
+      border-radius: 10px;
+      border: none;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
       cursor: pointer;
     }
-    .icon-btn:hover { background: #e2e8f0; }
-    .icon-btn.starred {
-      background: #fef3c7;
-      border-color: #f59e0b;
-      color: #d97706;
-    }
-    .icon-btn.del:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+    .t-btn:active { transform: scale(0.95); background: #e2e8f0; }
+    .t-btn.star-on { background: #fef3c7; color: #b45309; }
+    .t-btn.del-btn { background: #fef2f2; color: #dc2626; }
 
-    /* Pomodoro Timer */
-    .timer-box {
+    /* Circular App Focus Timer */
+    .focus-card {
+      background: var(--bg-header-grad);
+      color: #fff;
+      border-radius: 22px;
+      padding: 22px 16px;
       text-align: center;
-      padding: 14px;
-      background: #0f172a;
-      color: #f8fafc;
-      border-radius: 12px;
-      margin-bottom: 12px;
+      box-shadow: 0 12px 28px rgba(11, 17, 32, 0.25);
+      margin-bottom: 14px;
     }
-    .timer-task { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
-    .timer-display {
-      font-size: 42px;
+    .focus-pin {
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .timer-ring {
+      width: 196px;
+      height: 196px;
+      border-radius: 50%;
+      margin: 16px auto;
+      border: 6px solid rgba(59, 130, 246, 0.35);
+      box-shadow: inset 0 0 24px rgba(37, 99, 235, 0.25);
+      display: grid;
+      place-items: center;
+    }
+    .timer-digits {
+      font-size: 46px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       letter-spacing: 1px;
-      margin: 6px 0;
     }
-    .timer-presets, .timer-controls {
-      display: flex;
-      justify-content: center;
+    .preset-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+      margin-bottom: 12px;
     }
-    .preset-btn {
-      background: #1e293b;
+    .p-chip {
+      background: rgba(255,255,255,0.08);
       color: #cbd5e1;
-      border: 1px solid #334155;
-      padding: 6px 10px;
-      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.12);
+      height: 38px;
+      border-radius: 11px;
       font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
     }
-    .preset-btn.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
-
-    /* Schedule Blocks */
-    .block-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      margin-bottom: 8px;
-      background: #f8fafc;
+    .p-chip.active { background: #2563eb; color: #fff; border-color: #60a5fa; }
+    .focus-ctrls {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 8px;
     }
-    .block-item.fixed { background: #f1f5f9; border-left: 4px solid #64748b; }
-    .block-item.work { background: #eff6ff; border-left: 4px solid #2563eb; }
-    .block-item.pers { background: #fffbeb; border-left: 4px solid #f59e0b; }
-    .block-item.deferred { background: #fef2f2; border-left: 4px solid #ef4444; }
-    .block-time { font-size: 12px; font-weight: 700; color: var(--primary); min-width: 112px; }
+
+    /* Timeline Schedule Cards */
+    .timeline-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .timeline-card.fixed { background: #f8fafc; border-left: 4px solid #64748b; }
+    .timeline-card.work { border-left: 4px solid #2563eb; }
+    .timeline-card.pers { border-left: 4px solid #f59e0b; }
+    .timeline-card.deferred { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .t-slot { font-size: 12px; font-weight: 800; color: var(--primary); }
 
     /* Analytics */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin-bottom: 16px;
     }
-    .kpi-card {
-      background: #fff;
+    .kpi-tile {
+      background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 15px;
       padding: 14px;
     }
-    .kpi-val { font-size: 24px; font-weight: 800; color: var(--primary); }
-    .kpi-lbl { font-size: 12px; color: var(--text-muted); }
+    .kpi-num { font-size: 26px; font-weight: 800; color: var(--primary); }
+    .kpi-name { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
     .bar-chart {
       display: flex;
       align-items: flex-end;
-      gap: 10px;
+      gap: 8px;
       height: 150px;
-      padding: 16px 8px 4px;
+      padding: 16px 4px 4px;
       border-bottom: 1px solid var(--border);
     }
     .bar-col {
@@ -376,64 +543,74 @@
     }
     .bar-fill {
       width: 100%;
-      max-width: 38px;
-      background: linear-gradient(180deg, #3b82f6, #1d4ed8);
-      border-radius: 6px 6px 0 0;
+      max-width: 32px;
+      background: var(--primary-grad);
+      border-radius: 8px 8px 0 0;
       min-height: 6px;
-      transition: height 0.3s;
     }
-    .bar-lbl { font-size: 11px; color: var(--text-muted); }
+    .bar-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
 
-    /* Modals & Bot Drawer */
-    .modal-backdrop {
+    /* Bottom Sheets */
+    .sheet-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(11, 17, 32, 0.58);
+      backdrop-filter: blur(3px);
       display: none;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      padding: 14px;
       z-index: 60;
     }
-    .modal-backdrop.open { display: flex; }
-    .modal-card {
+    .sheet-backdrop.open { display: flex; }
+    .sheet-card {
       background: #fff;
-      border-radius: 14px;
+      border-radius: 24px 24px 0 0;
       width: 100%;
-      max-width: 460px;
+      max-width: 520px;
       max-height: 90dvh;
       overflow-y: auto;
-      padding: 18px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      padding: 14px 18px calc(22px + var(--safe-bottom));
+      box-shadow: 0 -12px 32px rgba(11, 17, 32, 0.25);
     }
-    .form-group { margin-bottom: 12px; }
+    @media (min-width: 640px) {
+      .sheet-backdrop { align-items: center; padding: 16px; }
+      .sheet-card { border-radius: 20px; padding: 22px; }
+    }
+    .sheet-grabber {
+      width: 42px; height: 5px; border-radius: 999px;
+      background: #cbd5e1; margin: 0 auto 14px;
+    }
+    .form-group { margin-bottom: 13px; }
     .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155; }
 
+    /* Floating Coach Pill */
     .bot-fab {
       position: fixed;
       right: 16px;
-      bottom: 16px;
-      background: #0f172a;
+      bottom: calc(18px + var(--safe-bottom));
+      background: var(--bg-header);
       color: #fff;
-      border: 2px solid #3b82f6;
+      border: 1.5px solid #3b82f6;
       border-radius: 999px;
-      padding: 12px 18px;
+      height: 46px;
+      padding: 0 18px;
       font-size: 13px;
       font-weight: 700;
-      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25);
+      box-shadow: 0 8px 22px rgba(11, 17, 32, 0.3);
       cursor: pointer;
-      z-index: 50;
+      z-index: 44;
     }
     .bot-panel {
       position: fixed;
-      right: 16px;
-      bottom: 72px;
-      width: calc(100% - 32px);
-      max-width: 390px;
+      left: 12px;
+      right: 12px;
+      bottom: calc(74px + var(--safe-bottom));
+      max-width: 400px;
+      margin-left: auto;
       background: #fff;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.22);
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(11, 17, 32, 0.26);
       display: none;
       flex-direction: column;
       overflow: hidden;
@@ -441,9 +618,9 @@
     }
     .bot-panel.open { display: flex; }
     .bot-head {
-      background: #0f172a;
+      background: var(--bg-header);
       color: #fff;
-      padding: 12px 14px;
+      padding: 13px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -452,17 +629,17 @@
     }
     .bot-msgs {
       padding: 12px;
-      max-height: 260px;
+      max-height: 240px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      font-size: 13px;
+      font-size: 14px;
       background: #f8fafc;
     }
     .bot-msg {
-      padding: 9px 11px;
-      border-radius: 10px;
+      padding: 10px 13px;
+      border-radius: 14px;
       max-width: 88%;
       line-height: 1.4;
     }
@@ -473,276 +650,341 @@
 </head>
 <body>
 
-<header>
+<header class="app-header">
   <div class="header-top">
     <div class="brand">
-      <div class="brand-icon">C2D</div>
-      <div>
+      <div class="app-logo">C2D</div>
+      <div class="brand-text">
         <h1>Commute-to-Desk</h1>
         <p id="dateSubtitle">Daily Productivity OS</p>
       </div>
     </div>
-    <div class="header-actions">
-      <button class="btn-header" onclick="openSettings()">⚙ Settings <span id="headerKeyDot"></span></button>
+    <div class="header-pills">
+      <button id="installAppBtn" class="pill-btn pill-install" onclick="triggerInstall()">📲 Install</button>
+      <button class="pill-btn" onclick="openSettings()">⚙ <span id="headerKeyDot">Key</span></button>
     </div>
   </div>
-  <nav class="nav-tabs">
-    <button class="nav-tab active" data-tab="today" onclick="switchTab('today', this)">Today & Rule of 3</button>
-    <button class="nav-tab" data-tab="schedule" onclick="switchTab('schedule', this)">Timeblocks & Calendar</button>
-    <button class="nav-tab" data-tab="analytics" onclick="switchTab('analytics', this)">Analytics (W/M/Y)</button>
+
+  <!-- Live Summary Strip -->
+  <div class="hero-metrics">
+    <div class="metric-chip">
+      <span class="m-val" id="heroTop3">0 / 3</span>
+      <span class="m-lbl">Rule of 3</span>
+    </div>
+    <div class="metric-chip">
+      <span class="m-val" id="heroDone">0</span>
+      <span class="m-lbl">Done Today</span>
+    </div>
+    <div class="metric-chip">
+      <span class="m-val" id="heroFocus">0m</span>
+      <span class="m-lbl">Deep Focus</span>
+    </div>
+  </div>
+
+  <!-- Top Text Navigation Bar -->
+  <nav class="top-nav">
+    <button class="nav-tab active" data-tab="today" onclick="switchTab('today')">Today</button>
+    <button class="nav-tab" data-tab="focus" onclick="switchTab('focus')">Focus</button>
+    <button class="nav-tab" data-tab="schedule" onclick="switchTab('schedule')">Plan</button>
+    <button class="nav-tab" data-tab="analytics" onclick="switchTab('analytics')">Stats</button>
   </nav>
 </header>
 
 <main>
-  <!-- TAB 1: TODAY & RULE OF 3 -->
-  <section id="tab-today" class="view active">
-    <div class="grid-2">
-      <div>
-        <!-- Brain Dump Card -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🎙 60-Second Brain Dump</div>
-            <button class="btn btn-sm" onclick="loadSampleDump()">Load Sample</button>
-          </div>
-          <div class="mic-bar">
-            <button id="micBtn" class="btn mic-btn" onclick="toggleVoice()">🎤 Tap to Speak</button>
-            <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
-            <button class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
-          </div>
-          <textarea id="dumpInput" rows="3" placeholder="Ramble freely: e.g., Check RDP VM logs before standup, review Jira PR #42, buy groceries on my 8 PM walk, water the balcony bamboo..."></textarea>
-
-          <!-- Inline Key Prompt if missing -->
-          <div id="inlineKeyBox" class="inline-key-box">
-            <div style="font-size:12px;font-weight:700;color:#1e3a8a;">Enter your Google AI Studio Gemini API Key (AIza...)</div>
-            <div class="inline-key-row">
-              <input type="password" id="inlineKeyInput" placeholder="Paste AIzaSy... key here" oninput="liveSaveKey(this.value)" />
-              <button class="btn btn-primary btn-sm" onclick="saveAndRunAi()">Save & Run AI Polish</button>
-            </div>
-          </div>
-          <div id="dumpStatus" class="status-msg"></div>
+  <div class="grid-desktop">
+    <!-- TAB 1: TODAY -->
+    <section id="tab-today" class="view active">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎙 60-Sec Brain Dump</div>
+          <button class="btn btn-chip" onclick="loadSampleDump()">Sample</button>
+        </div>
+        <button id="micBtn" class="btn voice-trigger" onclick="toggleVoice()">🎤 Tap to Speak</button>
+        <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs, review Jira ticket, buy groceries on evening walk..."></textarea>
+        <div class="dual-actions">
+          <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
+          <button class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
         </div>
 
-        <!-- Quick Manual Add -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">➕ Quick Add Task</div>
-            <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;">
-              <input type="checkbox" id="filter2Min" onchange="renderTasks()" /> 2-Min Quick Wins Only
-            </label>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <input type="text" id="quickTitle" placeholder="Task title..." style="flex:2 1 180px;" onkeydown="if(event.key==='Enter')addManualTask()" />
-            <select id="quickBucket" style="flex:1 1 110px;">
-              <option value="work">Work</option>
-              <option value="personal">Personal</option>
-            </select>
-            <select id="quickMins" style="flex:1 1 90px;">
-              <option value="2">2 min</option>
-              <option value="15">15 min</option>
-              <option value="25" selected>25 min</option>
-              <option value="45">45 min</option>
-              <option value="60">60 min</option>
-              <option value="90">90 min</option>
-            </select>
-            <button class="btn btn-primary" onclick="addManualTask()">Add</button>
+        <div id="inlineKeyBox" class="inline-key-box">
+          <div style="font-size:12px;font-weight:700;color:#1e3a8a;">Enter Gemini API Key (AIza...)</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <input type="password" id="inlineKeyInput" placeholder="AIzaSy..." oninput="liveSaveKey(this.value)" />
+            <button class="btn btn-primary" onclick="saveAndRunAi()">Save & Run AI Polish</button>
           </div>
         </div>
+        <div id="dumpStatus" class="status-msg"></div>
+      </div>
 
-        <!-- Top 3 Priorities -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">★ Rule of 3 · Must-Win Priorities (<span id="top3Count">0</span>/3)</div>
-            <button class="btn btn-sm" onclick="copyWorkMarkdown()">📋 Copy Markdown</button>
-          </div>
-          <div id="top3List" class="task-list"></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">➕ Quick Add</div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:#475569;">
+            <input type="checkbox" id="filter2Min" style="width:18px;height:18px;" onchange="renderTasks()" /> ≤2m Wins
+          </label>
         </div>
-
-        <!-- Work Queue -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">💼 Work Queue</div>
-            <button class="btn btn-sm" onclick="clearCompleted()">Clear Done</button>
-          </div>
-          <div id="workList" class="task-list"></div>
-        </div>
-
-        <!-- Personal & Chores -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🏡 Personal & Evening Walk Chores</div>
-          </div>
-          <div id="personalList" class="task-list"></div>
+        <input type="text" id="quickTitle" placeholder="Add a single action item..." onkeydown="if(event.key==='Enter')addManualTask()" />
+        <div class="quick-row">
+          <select id="quickBucket">
+            <option value="work">💼 Work</option>
+            <option value="personal">🏡 Personal</option>
+          </select>
+          <select id="quickMins">
+            <option value="2">2 min</option>
+            <option value="15">15 min</option>
+            <option value="25" selected>25 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
+          </select>
+          <button class="btn btn-primary" onclick="addManualTask()">Add</button>
         </div>
       </div>
 
-      <!-- Right Column: Focus Timer & Daily Rituals -->
-      <div>
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">⏱ Deep-Work Focus Timer</div>
-          </div>
-          <div class="timer-box">
-            <div id="timerActiveTask" class="timer-task">No task pinned · Tap ▶ on any task</div>
-            <div id="timerDisplay" class="timer-display">25:00</div>
-            <div class="timer-presets">
-              <button class="preset-btn active" onclick="setTimerPreset(25, this)">25m Pomodoro</button>
-              <button class="preset-btn" onclick="setTimerPreset(5, this)">5m Break</button>
-              <button class="preset-btn" onclick="setTimerPreset(90, this)">90m Ultradian</button>
-            </div>
-            <div class="timer-controls">
-              <button id="timerStartBtn" class="btn btn-primary btn-sm" onclick="toggleTimer()">▶ Start</button>
-              <button class="btn btn-sm" onclick="resetTimer()">↺ Reset</button>
-              <button class="btn btn-success btn-sm" onclick="completeTimerSession()">✓ Complete</button>
-            </div>
-          </div>
-          <div style="font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between;">
-            <span>Focus logged today: <strong id="todayFocusMins">0</strong> mins</span>
-            <span>Auto-rollover at midnight: <strong>ON</strong></span>
-          </div>
-        </div>
+      <!-- Top 3 Section -->
+      <div class="section-label">
+        <h2>★ Rule of 3 · Must-Win (<span id="top3Count">0</span>/3)</h2>
+        <button class="btn btn-chip" onclick="copyWorkMarkdown()">📋 Copy MD</button>
+      </div>
+      <div id="top3List" class="task-list"></div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🧭 Proven Frameworks & Rituals</div>
-          </div>
-          <ul style="font-size:13px;color:#334155;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
-            <li><strong>Ivy Lee Rule of 3:</strong> Tap ★ on up to 3 needle-moving tasks. Unfinished items auto-roll to tomorrow.</li>
-            <li><strong>2-Minute Rule:</strong> Knock out ≤2m tasks immediately between meetings.</li>
-            <li><strong>90-Min Ultradian Sprints:</strong> Use the 90m preset for deep engineering/VM debugging blocks.</li>
-          </ul>
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-sm" onclick="simulateNextDayRollover()">↻ Test Next-Day Rollover</button>
-            <button class="btn btn-sm btn-success" onclick="shutdownRitual()">🌙 Evening Shutdown</button>
-          </div>
+      <!-- Work Queue Section -->
+      <div class="section-label">
+        <h2>💼 Work Queue</h2>
+        <button class="btn btn-chip" onclick="clearCompleted()">Clear Done</button>
+      </div>
+      <div id="workList" class="task-list"></div>
+
+      <!-- Personal Section -->
+      <div class="section-label">
+        <h2>🏡 Personal & Evening Walk</h2>
+      </div>
+      <div id="personalList" class="task-list"></div>
+    </section>
+
+    <!-- TAB 2: FOCUS -->
+    <section id="tab-focus" class="view desktop-always">
+      <div class="focus-card">
+        <div id="timerActiveTask" class="focus-pin">Tap "▶ Focus" on any task to pin it</div>
+        <div class="timer-ring">
+          <div id="timerDisplay" class="timer-digits">25:00</div>
+        </div>
+        <div class="preset-row">
+          <button class="p-chip active" onclick="setTimerPreset(25, this)">25m Focus</button>
+          <button class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
+          <button class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
+        </div>
+        <div class="focus-ctrls">
+          <button id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
+          <button class="btn" onclick="resetTimer()">↺ Reset</button>
+          <button class="btn btn-success" onclick="completeTimerSession()">✓ Done</button>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- TAB 2: TIMEBLOCKS & CALENDAR -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🧭 Daily Rituals & Rules</div>
+        </div>
+        <ul style="font-size:13px;color:#334155;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
+          <li><strong>Rule of 3:</strong> Pin up to 3 must-win tasks. Unfinished items auto-roll tomorrow.</li>
+          <li><strong>2-Minute Rule:</strong> Knock out ≤2m tasks between meetings.</li>
+          <li><strong>90-Min Ultradian Sprint:</strong> Deep engineering & VM blocks.</li>
+        </ul>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
+          <button class="btn" onclick="simulateNextDayRollover()">↻ Rollover</button>
+          <button class="btn btn-success" onclick="shutdownRitual()">🌙 Shutdown</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 3: SCHEDULE -->
   <section id="tab-schedule" class="view">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">🗓 Auto-Timeblocker & Phone Calendar Sync</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Generate Schedule</button>
-          <button class="btn btn-success" onclick="exportICS()">📲 Export .ICS to Calendar</button>
-        </div>
+        <div class="card-title">🗓 Auto-Timeblocker</div>
       </div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
-        Automatically slots your Top 3 and queued tasks around your daily anchors (<strong>07:30–09:00</strong> Gym, <strong>11:30–19:00</strong> Core Work, <strong>20:00–21:30</strong> Evening Walk & Chores) from the current time forward.
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+        Slots pending tasks from right now forward around your anchors (<strong>07:30</strong> Gym, <strong>11:30–19:00</strong> Work, <strong>20:00</strong> Walk).
       </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <button class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Plan</button>
+        <button class="btn btn-success" onclick="exportICS()">📲 Export .ICS</button>
+      </div>
       <div id="scheduleList"></div>
     </div>
   </section>
 
-  <!-- TAB 3: ANALYTICS -->
+  <!-- TAB 4: STATS -->
   <section id="tab-analytics" class="view">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">📊 Progress & Consistency Dashboard</div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-sm btn-primary" id="range-week" onclick="setAnalyticsRange('week')">Week</button>
-          <button class="btn btn-sm" id="range-month" onclick="setAnalyticsRange('month')">Month</button>
-          <button class="btn btn-sm" id="range-year" onclick="setAnalyticsRange('year')">Year</button>
+        <div class="card-title">📊 Progress Dashboard</div>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-chip" id="range-week" onclick="setAnalyticsRange('week')">Week</button>
+          <button class="btn btn-chip" id="range-month" onclick="setAnalyticsRange('month')">Month</button>
+          <button class="btn btn-chip" id="range-year" onclick="setAnalyticsRange('year')">Year</button>
         </div>
       </div>
       <div class="kpi-grid" id="kpiGrid"></div>
-      <div class="card-title" style="margin-top:8px;">Tasks Completed Trend</div>
+      <div class="card-title" style="margin-top:8px;font-size:14px;">Completed Tasks Trend</div>
       <div class="bar-chart" id="barChart"></div>
     </div>
   </section>
 </main>
 
-<!-- EDIT TASK MODAL -->
-<div id="editModal" class="modal-backdrop" onclick="if(event.target===this)closeEditModal()">
-  <div class="modal-card">
+<!-- Edit Bottom Sheet -->
+<div id="editModal" class="sheet-backdrop" onclick="if(event.target===this)closeEditModal()">
+  <div class="sheet-card">
+    <div class="sheet-grabber"></div>
     <div class="card-header">
       <div class="card-title">✎ Edit Task</div>
-      <button class="btn btn-sm" onclick="closeEditModal()">✕</button>
+      <button class="btn btn-chip" onclick="closeEditModal()">✕</button>
     </div>
     <input type="hidden" id="editTaskId" />
     <div class="form-group">
       <label>Task Title</label>
       <input type="text" id="editTaskTitle" />
     </div>
-    <div class="form-group">
-      <label>Bucket</label>
-      <select id="editTaskBucket">
-        <option value="work">Work</option>
-        <option value="personal">Personal / Chores</option>
-      </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label>Bucket</label>
+        <select id="editTaskBucket">
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Duration</label>
+        <select id="editTaskMins">
+          <option value="2">2 mins</option>
+          <option value="15">15 mins</option>
+          <option value="25">25 mins</option>
+          <option value="45">45 mins</option>
+          <option value="60">60 mins</option>
+          <option value="90">90 mins</option>
+        </select>
+      </div>
     </div>
     <div class="form-group">
-      <label>Estimated Duration</label>
-      <select id="editTaskMins">
-        <option value="2">2 mins (2-Minute Rule)</option>
-        <option value="15">15 mins</option>
-        <option value="25">25 mins (1 Pomodoro)</option>
-        <option value="45">45 mins</option>
-        <option value="60">60 mins</option>
-        <option value="90">90 mins (Ultradian Sprint)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
-        <input type="checkbox" id="editTaskTop3" style="width:18px;height:18px;" />
-        ★ Pin to Rule of 3 (Must-Win Priority)
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;min-height:40px;">
+        <input type="checkbox" id="editTaskTop3" style="width:22px;height:22px;" />
+        ★ Pin to Rule of 3 Priority
       </label>
     </div>
-    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;">
-      <button class="btn btn-danger" onclick="deleteFromEditModal()">🗑 Delete Task</button>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" onclick="closeEditModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:14px;">
+      <button class="btn btn-danger" onclick="deleteFromEditModal()">🗑 Delete</button>
+      <button class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
     </div>
   </div>
 </div>
 
-<!-- SETTINGS MODAL -->
-<div id="settingsModal" class="modal-backdrop" onclick="if(event.target===this)closeSettings()">
-  <div class="modal-card">
+<!-- Settings Bottom Sheet -->
+<div id="settingsModal" class="sheet-backdrop" onclick="if(event.target===this)closeSettings()">
+  <div class="sheet-card">
+    <div class="sheet-grabber"></div>
     <div class="card-header">
-      <div class="card-title">⚙ Settings & Gemini AI Key</div>
-      <button class="btn btn-sm" onclick="closeSettings()">✕</button>
+      <div class="card-title">⚙ Settings & Gemini Key</div>
+      <button class="btn btn-chip" onclick="closeSettings()">✕</button>
     </div>
     <div class="form-group">
-      <label>Google AI Studio API Key (Stored locally in your browser)</label>
+      <label>Google AI Studio API Key (Saved on device)</label>
       <input type="password" id="settingsKeyInput" placeholder="Paste AIzaSy... key here" oninput="liveSaveKey(this.value)" />
-      <div id="keySavedBadge" style="font-size:12px;margin-top:6px;font-weight:600;"></div>
+      <div id="keySavedBadge" style="font-size:12px;margin-top:6px;font-weight:700;"></div>
     </div>
     <div class="form-group">
-      <label>Preferred Gemini Model</label>
+      <label>Gemini Model</label>
       <select id="settingsModelSelect" onchange="saveModelPref(this.value)">
-        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Recommended · Fast)</option>
+        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Fast)</option>
         <option value="gemini-3.8-flash">gemini-3.8-flash</option>
         <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
       </select>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
-      <button class="btn btn-primary" onclick="saveSettingsAndClose()">Save & Close</button>
-    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="saveSettingsAndClose()">Save & Close</button>
   </div>
 </div>
 
-<!-- DATA COACH BOT -->
-<button class="bot-fab" onclick="toggleBot()">💬 Ask Data Bot</button>
+<!-- Coach Bot -->
+<button class="bot-fab" onclick="toggleBot()">💬 Coach</button>
 <div id="botPanel" class="bot-panel">
   <div class="bot-head">
-    <span>🤖 Data Coach · Live Workspace Q&A</span>
-    <button style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;" onclick="toggleBot()">✕</button>
+    <span>🤖 Data Coach · Workspace Q&A</span>
+    <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 6px;" onclick="toggleBot()">✕</button>
   </div>
   <div id="botMsgs" class="bot-msgs">
     <div class="bot-msg ai">Ask me about your Top 3 priorities, pending work/personal tasks, focus minutes, or rollover items!</div>
   </div>
   <div class="bot-input-row">
-    <input type="text" id="botInput" placeholder="e.g., What are my Top 3 priorities?" onkeydown="if(event.key==='Enter')sendBotQuery()" />
-    <button class="btn btn-primary btn-sm" onclick="sendBotQuery()">Ask</button>
+    <input type="text" id="botInput" placeholder="Ask about your tasks..." onkeydown="if(event.key==='Enter')sendBotQuery()" />
+    <button class="btn btn-primary" onclick="sendBotQuery()">Ask</button>
   </div>
 </div>
 
 <script>
+  // Dynamic PWA Manifest + Inline Service Worker Setup
+  (function initPWA() {
+    if (!location.protocol.startsWith('http')) return;
+    function makeIcon(size) {
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      const g = ctx.createLinearGradient(0, 0, size, size);
+      g.addColorStop(0, '#2563eb');
+      g.addColorStop(1, '#7c3aed');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.round(size * 0.34)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('C2D', size / 2, size / 2);
+      return c.toDataURL('image/png');
+    }
+    const manifest = {
+      name: 'Commute-to-Desk · Productivity OS',
+      short_name: 'Commute2Desk',
+      start_url: location.href,
+      scope: location.pathname.replace(/[^/]*$/, ''),
+      display: 'standalone',
+      background_color: '#0b1120',
+      theme_color: '#0b1120',
+      icons: [
+        { src: makeIcon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: makeIcon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ]
+    };
+    const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    document.getElementById('dynamic-manifest').href = URL.createObjectURL(mBlob);
+
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+        self.addEventListener('fetch', e => {
+          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+    }
+  })();
+
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('installAppBtn');
+    if (btn) btn.style.display = 'inline-flex';
+  });
+
+  async function triggerInstall() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    document.getElementById('installAppBtn').style.display = 'none';
+  }
+
   const STORAGE_KEY = 'c2d_productivity_os_v3';
   const API_KEY_STORAGE = 'c2d_gemini_api_key';
   window.__geminiKey = '';
@@ -789,7 +1031,7 @@
       if (inlineBox) inlineBox.classList.remove('visible');
     } else {
       if (badge) { badge.style.color = '#64748b'; badge.textContent = 'No key saved yet (offline splitter still works).'; }
-      if (dot) dot.textContent = '';
+      if (dot) dot.textContent = 'Key';
     }
   }
 
@@ -852,7 +1094,7 @@
     state.lastActiveDate = '2000-01-01';
     checkDayRollover();
     renderAll();
-    setStatus('Simulated midnight rollover: unfinished tasks carried over with ↻ badge.');
+    setStatus('Simulated rollover: unfinished tasks carried forward with ↻ badge.');
   }
 
   function setStatus(msg, isErr = false) {
@@ -861,7 +1103,6 @@
     el.textContent = msg;
   }
 
-  // Voice Input (Android duplicate-safe)
   let recognition = null;
   let isRecording = false;
   let finalTranscript = '';
@@ -869,7 +1110,7 @@
   function toggleVoice() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
-      setStatus('Speech recognition not supported in this browser. Type or paste your brain dump below.', true);
+      setStatus('Speech input unavailable in this view. Type or paste below.', true);
       return;
     }
     const btn = document.getElementById('micBtn');
@@ -902,21 +1143,19 @@
       }
       input.value = (finalTranscript + interim).trim();
     };
-    recognition.onerror = (e) => {
-      setStatus('Mic error: ' + e.error, true);
-    };
+    recognition.onerror = (e) => setStatus('Mic error: ' + e.error, true);
     recognition.onend = () => {
       isRecording = false;
       btn.classList.remove('recording');
       btn.textContent = '🎤 Tap to Speak';
-      setStatus('Voice capture finished. Tap Smart Split or AI Polish.');
+      setStatus('Voice captured. Tap Smart Split or AI Polish.');
     };
     recognition.start();
   }
 
   function loadSampleDump() {
     document.getElementById('dumpInput').value =
-      'Check the RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), pick up groceries during my 8 PM walk, water the balcony lucky bamboo, and practice guitar barre chords.';
+      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), buy groceries during my 8 PM walk, water the balcony lucky bamboo, and practice guitar barre chords.';
     setStatus('Sample brain dump loaded.');
   }
 
@@ -969,12 +1208,11 @@
 
     addTasksFromItems(items);
     document.getElementById('dumpInput').value = '';
-    setStatus(`Split ${items.length} tasks into Work & Personal buckets.`);
+    setStatus(`Split ${items.length} tasks into Work & Personal.`);
   }
 
   function saveAndRunAi() {
-    const val = document.getElementById('inlineKeyInput').value;
-    liveSaveKey(val);
+    liveSaveKey(document.getElementById('inlineKeyInput').value);
     runAiPolish();
   }
 
@@ -986,7 +1224,7 @@
     if (!apiKey) {
       document.getElementById('inlineKeyBox').classList.add('visible');
       document.getElementById('inlineKeyInput').focus();
-      setStatus('Paste your Gemini API key above to run AI Polish, or use ⚡ Smart Split offline.', true);
+      setStatus('Paste your Gemini API key above, or use ⚡ Smart Split.', true);
       return;
     }
 
@@ -1031,7 +1269,7 @@
         lastErr = err.message;
       }
     }
-    setStatus(`AI Polish error: ${lastErr}. Falling back or check your API key in Settings.`, true);
+    setStatus(`AI Polish error: ${lastErr}. Check API key in Settings.`, true);
   }
 
   function addManualTask() {
@@ -1065,7 +1303,7 @@
     } else {
       const count = state.tasks.filter(x => x.top3 && !x.done).length;
       if (count >= 3) {
-        alert('Rule of 3 allows up to 3 active priorities. Unstar one first (★) to swap.');
+        alert('Rule of 3 allows up to 3 active priorities. Tap ★ on one to unpin first.');
         return;
       }
       t.top3 = true;
@@ -1078,7 +1316,7 @@
     state.tasks = state.tasks.filter(x => x.id !== id);
     if (timerState.taskId === id) {
       timerState.taskId = null;
-      document.getElementById('timerActiveTask').textContent = 'No task pinned · Tap ▶ on any task';
+      document.getElementById('timerActiveTask').textContent = 'Tap "▶ Focus" on any task to pin it';
     }
     saveState();
     renderAll();
@@ -1090,7 +1328,6 @@
     renderAll();
   }
 
-  // Edit Modal
   function openEditModal(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
@@ -1139,31 +1376,31 @@
   }
 
   function renderTaskRow(t) {
-    const twoMinBadge = t.mins <= 2 ? `<span class="badge badge-2min">⚡ 2-Min</span>` : '';
-    const rollBadge = t.rolledOver ? `<span class="badge badge-roll">↻ Rolled Over</span>` : '';
-    const bucketBadge = t.bucket === 'work'
-      ? `<span class="badge badge-work">Work</span>`
-      : `<span class="badge badge-pers">Personal</span>`;
+    const twoMinTag = t.mins <= 2 ? `<span class="tag tag-2m">⚡ 2m</span>` : '';
+    const rollTag = t.rolledOver ? `<span class="tag tag-roll">↻ Rolled</span>` : '';
+    const bucketTag = t.bucket === 'work'
+      ? `<span class="tag tag-work">Work</span>`
+      : `<span class="tag tag-pers">Personal</span>`;
 
     return `
-      <div class="task-item ${t.top3 ? 'top3' : ''} ${t.done ? 'done' : ''}">
-        <div class="task-left">
-          <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="toggleTaskDone('${t.id}')" />
-          <div class="task-info">
+      <div class="task-card ${t.top3 ? 'top3' : ''} ${t.done ? 'done' : ''}">
+        <div class="task-main">
+          <button type="button" class="check-circle" aria-label="Complete" onclick="toggleTaskDone('${t.id}')">✓</button>
+          <div class="task-body">
             <div class="task-title">${escapeHtml(t.title)}</div>
-            <div class="task-meta">
-              ${bucketBadge}
-              <span>⏱ ${t.mins}m</span>
-              ${twoMinBadge}
-              ${rollBadge}
+            <div class="task-tags">
+              ${bucketTag}
+              <span class="tag tag-time">⏱ ${t.mins}m</span>
+              ${twoMinTag}
+              ${rollTag}
             </div>
           </div>
         </div>
-        <div class="task-actions">
-          <button class="icon-btn" title="Focus Timer" onclick="pinTaskToTimer('${t.id}')">▶</button>
-          <button class="icon-btn ${t.top3 ? 'starred' : ''}" title="Toggle Top 3 Priority" onclick="toggleTop3('${t.id}')">★</button>
-          <button class="icon-btn" title="Edit Task" onclick="openEditModal('${t.id}')">✎</button>
-          <button class="icon-btn del" title="Delete Task" onclick="deleteTask('${t.id}')">🗑</button>
+        <div class="task-bar">
+          <button class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
+          <button class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>
+          <button class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
+          <button class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
         </div>
       </div>`;
   }
@@ -1175,16 +1412,23 @@
     const work = filtered.filter(t => !t.top3 && t.bucket === 'work');
     const pers = filtered.filter(t => !t.top3 && t.bucket === 'personal');
 
-    document.getElementById('top3Count').textContent = state.tasks.filter(t => t.top3 && !t.done).length;
+    const activeTop3Count = state.tasks.filter(t => t.top3 && !t.done).length;
+    const doneTodayCount = state.tasks.filter(t => t.done).length;
+
+    document.getElementById('top3Count').textContent = activeTop3Count;
+    document.getElementById('heroTop3').textContent = `${activeTop3Count} / 3`;
+    document.getElementById('heroDone').textContent = doneTodayCount;
+    document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
+
     document.getElementById('top3List').innerHTML = top3.length
       ? top3.map(renderTaskRow).join('')
-      : '<div style="font-size:13px;color:var(--text-muted);">Tap ★ on up to 3 high-impact tasks to lock in your daily wins.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Tap <strong>☆ Top 3</strong> on up to 3 needle-moving tasks.</div>';
     document.getElementById('workList').innerHTML = work.length
       ? work.map(renderTaskRow).join('')
-      : '<div style="font-size:13px;color:var(--text-muted);">No queued work tasks.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks.</div>';
     document.getElementById('personalList').innerHTML = pers.length
       ? pers.map(renderTaskRow).join('')
-      : '<div style="font-size:13px;color:var(--text-muted);">No personal or evening errands yet.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands yet.</div>';
   }
 
   function copyWorkMarkdown() {
@@ -1193,16 +1437,15 @@
       .map(t => `- [${t.done ? 'x' : ' '}] ${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`);
     if (!lines.length) { alert('No work tasks to copy.'); return; }
     navigator.clipboard?.writeText(lines.join('\n'));
-    setStatus('Copied Markdown checklist to clipboard!');
+    setStatus('Copied Markdown checklist!');
   }
 
   function shutdownRitual() {
     const done = state.tasks.filter(t => t.done).length;
     const rem = state.tasks.filter(t => !t.done).length;
-    alert(`Shutdown Complete!\n\n✓ Completed today: ${done} tasks (${state.todayFocusMins} focus mins)\n↻ Unfinished tasks (${rem}) will automatically roll over to tomorrow.`);
+    alert(`Shutdown Complete!\n\n✓ Completed today: ${done} tasks (${state.todayFocusMins} focus mins)\n↻ Unfinished tasks (${rem}) will auto-roll to tomorrow.`);
   }
 
-  // Wall-clock Pomodoro Timer
   let timerState = {
     presetMins: 25,
     remainingSec: 25 * 60,
@@ -1213,7 +1456,7 @@
     isCompleting: false
   };
 
-  function pinTaskToTimer(id) {
+  function pinTaskToTimer(id, openFocusTab = false) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
     timerState.taskId = id;
@@ -1224,13 +1467,16 @@
       timerState.remainingSec = mins * 60;
       updateTimerDisplay();
     }
+    if (openFocusTab && window.innerWidth < 860) {
+      switchTab('focus');
+    }
   }
 
   function setTimerPreset(mins, btn) {
     if (timerState.running) toggleTimer();
     timerState.presetMins = mins;
     timerState.remainingSec = mins * 60;
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.p-chip').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     updateTimerDisplay();
   }
@@ -1239,7 +1485,7 @@
     const m = String(Math.floor(timerState.remainingSec / 60)).padStart(2, '0');
     const s = String(timerState.remainingSec % 60).padStart(2, '0');
     document.getElementById('timerDisplay').textContent = `${m}:${s}`;
-    document.getElementById('todayFocusMins').textContent = state.todayFocusMins || 0;
+    document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
   }
 
   function playChime() {
@@ -1300,7 +1546,6 @@
     timerState.isCompleting = false;
   }
 
-  // Auto-Timeblocker & .ICS Export
   function fmtMins(totalMins) {
     const h = Math.floor(totalMins / 60);
     const m = totalMins % 60;
@@ -1315,7 +1560,7 @@
     const blocks = [
       { start: 450, end: 540, title: '🏋️ Morning Gym & Mobility', type: 'fixed' },
       { start: 690, end: 1140, title: '💼 Core Work Window', type: 'fixed' },
-      { start: 1200, end: 1290, title: '🚶 Evening Walk & Personal Chores', type: 'fixed' }
+      { start: 1200, end: 1290, title: '🚶 Evening Walk & Chores', type: 'fixed' }
     ];
 
     const pending = [
@@ -1335,14 +1580,14 @@
           generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
           workCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, title: `↻ Deferred to Tomorrow 11:30: ${t.title}`, type: 'deferred' });
+          generated.push({ start: null, end: null, title: `↻ Tomorrow 11:30: ${t.title}`, type: 'deferred' });
         }
       } else {
         if (persCursor + dur <= 1320) {
           generated.push({ start: persCursor, end: persCursor + dur, title: t.title, type: 'pers' });
           persCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, title: `↻ Deferred to Tomorrow 20:00: ${t.title}`, type: 'deferred' });
+          generated.push({ start: null, end: null, title: `↻ Tomorrow 20:00: ${t.title}`, type: 'deferred' });
         }
       }
     });
@@ -1355,13 +1600,13 @@
   function renderSchedule() {
     const el = document.getElementById('scheduleList');
     if (!state.schedule.length) {
-      el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);">Tap <strong>Auto-Generate Schedule</strong> to build today\'s timeblocks.</div>';
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">Tap <strong>⚡ Auto-Plan</strong> to slot your tasks around your daily routine.</div>';
       return;
     }
     el.innerHTML = state.schedule.map(b => `
-      <div class="block-item ${b.type}">
-        <div class="block-time">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : 'Tomorrow'}</div>
-        <div style="flex:1;font-size:13px;font-weight:600;">${escapeHtml(b.title)}</div>
+      <div class="timeline-card ${b.type}">
+        <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : 'Tomorrow'}</div>
+        <div style="font-size:14px;font-weight:700;">${escapeHtml(b.title)}</div>
       </div>`).join('');
   }
 
@@ -1401,12 +1646,13 @@
     URL.revokeObjectURL(url);
   }
 
-  // Analytics
   let analyticsRange = 'week';
   function setAnalyticsRange(range) {
     analyticsRange = range;
     ['week', 'month', 'year'].forEach(r => {
-      document.getElementById('range-' + r).classList.toggle('btn-primary', r === range);
+      const el = document.getElementById('range-' + r);
+      el.style.background = r === range ? '#2563eb' : '#f1f5f9';
+      el.style.color = r === range ? '#fff' : '#334155';
     });
     renderAnalytics();
   }
@@ -1425,16 +1671,16 @@
     const completionPct = totalToday ? Math.round((doneToday / totalToday) * 100) : 0;
 
     document.getElementById('kpiGrid').innerHTML = `
-      <div class="kpi-card"><div class="kpi-val">${totalDone}</div><div class="kpi-lbl">Tasks Completed (${analyticsRange})</div></div>
-      <div class="kpi-card"><div class="kpi-val">${top3Done}/3</div><div class="kpi-lbl">Today's Rule of 3</div></div>
-      <div class="kpi-card"><div class="kpi-val">${totalFocus}m</div><div class="kpi-lbl">Deep Focus Logged</div></div>
-      <div class="kpi-card"><div class="kpi-val">${completionPct}%</div><div class="kpi-lbl">Today's Completion Rate</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${totalDone}</div><div class="kpi-name">Done (${analyticsRange})</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${top3Done}/3</div><div class="kpi-name">Rule of 3 Today</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${totalFocus}m</div><div class="kpi-name">Focus Logged</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${completionPct}%</div><div class="kpi-name">Completion Rate</div></div>
     `;
 
     const labels = analyticsRange === 'week'
-      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today']
+      ? ['M', 'T', 'W', 'T', 'F', 'S', 'Now']
       : analyticsRange === 'month'
-        ? ['Wk 1', 'Wk 2', 'Wk 3', 'Current']
+        ? ['Wk1', 'Wk2', 'Wk3', 'Now']
         : ['Q1', 'Q2', 'Q3', 'Q4'];
     const vals = labels.map((_, i) => i === labels.length - 1 ? Math.max(doneToday, 1) : Math.max(1, (i + 2) * mult));
     const maxVal = Math.max(...vals, 5);
@@ -1446,7 +1692,6 @@
       </div>`).join('');
   }
 
-  // Settings Modal
   function openSettings() {
     document.getElementById('settingsKeyInput').value = getStoredApiKey();
     document.getElementById('settingsModelSelect').value = state.model || 'gemini-3.5-flash-lite';
@@ -1466,17 +1711,18 @@
     setStatus('Settings saved.');
   }
 
-  // Navigation
-  function switchTab(tab, btn) {
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+  function switchTab(tab) {
+    document.querySelectorAll('.nav-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
+    const target = document.getElementById('tab-' + tab);
+    if (target) target.classList.add('active');
     if (tab === 'schedule') renderSchedule();
     if (tab === 'analytics') renderAnalytics();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Data Coach Bot
   function toggleBot() {
     document.getElementById('botPanel').classList.toggle('open');
   }
@@ -1506,22 +1752,22 @@
     let reply = '';
     if (/top\s*3|priorit/i.test(q)) {
       reply = top3.length
-        ? `Your active Rule of 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
-        : 'You have 0 active Top 3 priorities pinned right now. Tap ★ on your top tasks!';
+        ? `Active Top 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
+        : '0 active Top 3 priorities pinned right now. Tap "☆ Top 3" on your top tasks!';
     } else if (/focus|pomodoro|time/i.test(q)) {
-      reply = `You have logged ${state.todayFocusMins || 0} deep-focus minutes today across ${done} completed tasks.`;
+      reply = `Logged ${state.todayFocusMins || 0} deep-focus mins today across ${done} completed tasks.`;
     } else if (/roll|miss|yesterday/i.test(q)) {
-      reply = `You currently have ${rolled} rolled-over task(s) carried forward from previous days.`;
+      reply = `${rolled} rolled-over task(s) carried forward from previous days.`;
     } else {
-      reply = `Today's snapshot: ${done} completed, ${workPending} pending work tasks, ${persPending} pending personal/evening tasks, and ${state.todayFocusMins || 0} focus mins logged.`;
+      reply = `Today: ${done} done, ${workPending} work pending, ${persPending} personal pending, ${state.todayFocusMins || 0}m focus logged.`;
     }
-    setTimeout(() => appendBotMsg(reply, 'ai'), 180);
+    setTimeout(() => appendBotMsg(reply, 'ai'), 160);
   }
 
   function renderAll() {
     const now = new Date();
     document.getElementById('dateSubtitle').textContent = now.toLocaleDateString('en-IN', {
-      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+      weekday: 'short', day: 'numeric', month: 'short'
     });
     updateKeyIndicators();
     renderTasks();
@@ -1531,6 +1777,7 @@
   }
 
   loadState();
+  setAnalyticsRange('week');
   renderAll();
 </script>
 </body>
