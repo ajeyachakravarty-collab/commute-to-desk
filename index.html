@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Commute-to-Desk · Daily Productivity OS</title>
+  <style>
+    :root {
+      --bg-header: #0f172a;
+      --bg-header-sub: #1e293b;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --work-badge: #dbeafe;
+      --work-text: #1e40af;
+      --pers-badge: #fef3c7;
+      --pers-text: #92400e;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 90px;
+    }
+
+    /* Dark Header */
+    header {
+      background: var(--bg-header);
+      color: #f8fafc;
+      padding: 14px 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+    .header-top {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: grid; place-items: center; font-weight: 800; font-size: 18px; color: #fff;
+    }
+    .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+    .brand p { font-size: 11px; color: #94a3b8; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-header {
+      background: var(--bg-header-sub);
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-header:hover { background: #334155; }
+    .nav-tabs {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+    }
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+    }
+    .nav-tab.active {
+      color: #ffffff;
+      border-bottom-color: #3b82f6;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1120px;
+      margin: 16px auto;
+      padding: 0 14px;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Cards & Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 860px) {
+      .grid-2 { grid-template-columns: 1.15fr 0.85fr; }
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Buttons & Inputs */
+    .btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-main);
+      border-radius: 9px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.08s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-ai { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; }
+    .btn-danger { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
+    .btn-success { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+    .btn-sm { min-height: 34px; padding: 6px 10px; font-size: 12px; }
+
+    textarea, input[type="text"], input[type="password"], select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-main);
+      background: #fff;
+    }
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Voice & Brain Dump */
+    .mic-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .mic-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      flex: 1 1 160px;
+    }
+    .mic-btn.recording {
+      animation: pulse 1.2s infinite;
+      background: #b91c1c;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    }
+    .inline-key-box {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+    }
+    .inline-key-box.visible { display: block; }
+    .inline-key-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .status-msg { font-size: 12px; margin-top: 8px; color: var(--text-muted); }
+
+    /* Task Items */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+    .task-item.top3 {
+      border-left: 4px solid var(--accent);
+      background: #fffbeb;
+    }
+    .task-item.done { opacity: 0.6; background: #f8fafc; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .task-check {
+      width: 22px; height: 22px; margin-top: 2px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .task-info { flex: 1; min-width: 0; }
+    .task-title { font-size: 14px; font-weight: 600; word-break: break-word; }
+    .task-meta {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .badge {
+      padding: 2px 7px; border-radius: 999px; font-weight: 600; font-size: 11px;
+    }
+    .badge-work { background: var(--work-badge); color: var(--work-text); }
+    .badge-pers { background: var(--pers-badge); color: var(--pers-text); }
+    .badge-roll { background: #f3e8ff; color: #6b21a8; }
+    .badge-2min { background: #dcfce7; color: #166534; }
+
+    /* Thumb-friendly 36x36 action buttons */
+    .task-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text-main);
+      font-size: 15px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .icon-btn:hover { background: #e2e8f0; }
+    .icon-btn.starred {
+      background: #fef3c7;
+      border-color: #f59e0b;
+      color: #d97706;
+    }
+    .icon-btn.del:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+
+    /* Pomodoro Timer */
+    .timer-box {
+      text-align: center;
+      padding: 14px;
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .timer-task { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    .timer-display {
+      font-size: 42px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+      margin: 6px 0;
+    }
+    .timer-presets, .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .preset-btn {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .preset-btn.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
+
+    /* Schedule Blocks */
+    .block-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      background: #f8fafc;
+    }
+    .block-item.fixed { background: #f1f5f9; border-left: 4px solid #64748b; }
+    .block-item.work { background: #eff6ff; border-left: 4px solid #2563eb; }
+    .block-item.pers { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .block-item.deferred { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .block-time { font-size: 12px; font-weight: 700; color: var(--primary); min-width: 112px; }
+
+    /* Analytics */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .kpi-val { font-size: 24px; font-weight: 800; color: var(--primary); }
+    .kpi-lbl { font-size: 12px; color: var(--text-muted); }
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      height: 150px;
+      padding: 16px 8px 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar-fill {
+      width: 100%;
+      max-width: 38px;
+      background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+      border-radius: 6px 6px 0 0;
+      min-height: 6px;
+      transition: height 0.3s;
+    }
+    .bar-lbl { font-size: 11px; color: var(--text-muted); }
+
+    /* Modals & Bot Drawer */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 60;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 90dvh;
+      overflow-y: auto;
+      padding: 18px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155; }
+
+    .bot-fab {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #0f172a;
+      color: #fff;
+      border: 2px solid #3b82f6;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25);
+      cursor: pointer;
+      z-index: 50;
+    }
+    .bot-panel {
+      position: fixed;
+      right: 16px;
+      bottom: 72px;
+      width: calc(100% - 32px);
+      max-width: 390px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.22);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 55;
+    }
+    .bot-panel.open { display: flex; }
+    .bot-head {
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .bot-msgs {
+      padding: 12px;
+      max-height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      background: #f8fafc;
+    }
+    .bot-msg {
+      padding: 9px 11px;
+      border-radius: 10px;
+      max-width: 88%;
+      line-height: 1.4;
+    }
+    .bot-msg.ai { background: #fff; border: 1px solid var(--border); align-self: flex-start; }
+    .bot-msg.user { background: var(--primary); color: #fff; align-self: flex-end; }
+    .bot-input-row { display: flex; gap: 6px; padding: 10px; border-top: 1px solid var(--border); background: #fff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-icon">C2D</div>
+      <div>
+        <h1>Commute-to-Desk</h1>
+        <p id="dateSubtitle">Daily Productivity OS</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-header" onclick="openSettings()">⚙ Settings <span id="headerKeyDot"></span></button>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-tab="today" onclick="switchTab('today', this)">Today & Rule of 3</button>
+    <button class="nav-tab" data-tab="schedule" onclick="switchTab('schedule', this)">Timeblocks & Calendar</button>
+    <button class="nav-tab" data-tab="analytics" onclick="switchTab('analytics', this)">Analytics (W/M/Y)</button>
+  </nav>
+</header>
+
+<main>
+  <!-- TAB 1: TODAY & RULE OF 3 -->
+  <section id="tab-today" class="view active">
+    <div class="grid-2">
+      <div>
+        <!-- Brain Dump Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎙 60-Second Brain Dump</div>
+            <button class="btn btn-sm" onclick="loadSampleDump()">Load Sample</button>
+          </div>
+          <div class="mic-bar">
+            <button id="micBtn" class="btn mic-btn" onclick="toggleVoice()">🎤 Tap to Speak</button>
+            <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
+            <button class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
+          </div>
+          <textarea id="dumpInput" rows="3" placeholder="Ramble freely: e.g., Check RDP VM logs before standup, review Jira PR #42, buy groceries on my 8 PM walk, water the balcony bamboo..."></textarea>
+
+          <!-- Inline Key Prompt if missing -->
+          <div id="inlineKeyBox" class="inline-key-box">
+            <div style="font-size:12px;font-weight:700;color:#1e3a8a;">Enter your Google AI Studio Gemini API Key (AIza...)</div>
+            <div class="inline-key-row">
+              <input type="password" id="inlineKeyInput" placeholder="Paste AIzaSy... key here" oninput="liveSaveKey(this.value)" />
+              <button class="btn btn-primary btn-sm" onclick="saveAndRunAi()">Save & Run AI Polish</button>
+            </div>
+          </div>
+          <div id="dumpStatus" class="status-msg"></div>
+        </div>
+
+        <!-- Quick Manual Add -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">➕ Quick Add Task</div>
+            <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;">
+              <input type="checkbox" id="filter2Min" onchange="renderTasks()" /> 2-Min Quick Wins Only
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="text" id="quickTitle" placeholder="Task title..." style="flex:2 1 180px;" onkeydown="if(event.key==='Enter')addManualTask()" />
+            <select id="quickBucket" style="flex:1 1 110px;">
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+            </select>
+            <select id="quickMins" style="flex:1 1 90px;">
+              <option value="2">2 min</option>
+              <option value="15">15 min</option>
+              <option value="25" selected>25 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+            </select>
+            <button class="btn btn-primary" onclick="addManualTask()">Add</button>
+          </div>
+        </div>
+
+        <!-- Top 3 Priorities -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">★ Rule of 3 · Must-Win Priorities (<span id="top3Count">0</span>/3)</div>
+            <button class="btn btn-sm" onclick="copyWorkMarkdown()">📋 Copy Markdown</button>
+          </div>
+          <div id="top3List" class="task-list"></div>
+        </div>
+
+        <!-- Work Queue -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💼 Work Queue</div>
+            <button class="btn btn-sm" onclick="clearCompleted()">Clear Done</button>
+          </div>
+          <div id="workList" class="task-list"></div>
+        </div>
+
+        <!-- Personal & Chores -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🏡 Personal & Evening Walk Chores</div>
+          </div>
+          <div id="personalList" class="task-list"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Focus Timer & Daily Rituals -->
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⏱ Deep-Work Focus Timer</div>
+          </div>
+          <div class="timer-box">
+            <div id="timerActiveTask" class="timer-task">No task pinned · Tap ▶ on any task</div>
+            <div id="timerDisplay" class="timer-display">25:00</div>
+            <div class="timer-presets">
+              <button class="preset-btn active" onclick="setTimerPreset(25, this)">25m Pomodoro</button>
+              <button class="preset-btn" onclick="setTimerPreset(5, this)">5m Break</button>
+              <button class="preset-btn" onclick="setTimerPreset(90, this)">90m Ultradian</button>
+            </div>
+            <div class="timer-controls">
+              <button id="timerStartBtn" class="btn btn-primary btn-sm" onclick="toggleTimer()">▶ Start</button>
+              <button class="btn btn-sm" onclick="resetTimer()">↺ Reset</button>
+              <button class="btn btn-success btn-sm" onclick="completeTimerSession()">✓ Complete</button>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between;">
+            <span>Focus logged today: <strong id="todayFocusMins">0</strong> mins</span>
+            <span>Auto-rollover at midnight: <strong>ON</strong></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🧭 Proven Frameworks & Rituals</div>
+          </div>
+          <ul style="font-size:13px;color:#334155;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
+            <li><strong>Ivy Lee Rule of 3:</strong> Tap ★ on up to 3 needle-moving tasks. Unfinished items auto-roll to tomorrow.</li>
+            <li><strong>2-Minute Rule:</strong> Knock out ≤2m tasks immediately between meetings.</li>
+            <li><strong>90-Min Ultradian Sprints:</strong> Use the 90m preset for deep engineering/VM debugging blocks.</li>
+          </ul>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="simulateNextDayRollover()">↻ Test Next-Day Rollover</button>
+            <button class="btn btn-sm btn-success" onclick="shutdownRitual()">🌙 Evening Shutdown</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: TIMEBLOCKS & CALENDAR -->
+  <section id="tab-schedule" class="view">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🗓 Auto-Timeblocker & Phone Calendar Sync</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Generate Schedule</button>
+          <button class="btn btn-success" onclick="exportICS()">📲 Export .ICS to Calendar</button>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+        Automatically slots your Top 3 and queued tasks around your daily anchors (<strong>07:30–09:00</strong> Gym, <strong>11:30–19:00</strong> Core Work, <strong>20:00–21:30</strong> Evening Walk & Chores) from the current time forward.
+      </p>
+      <div id="scheduleList"></div>
+    </div>
+  </section>
+
+  <!-- TAB 3: ANALYTICS -->
+  <section id="tab-analytics" class="view">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📊 Progress & Consistency Dashboard</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-primary" id="range-week" onclick="setAnalyticsRange('week')">Week</button>
+          <button class="btn btn-sm" id="range-month" onclick="setAnalyticsRange('month')">Month</button>
+          <button class="btn btn-sm" id="range-year" onclick="setAnalyticsRange('year')">Year</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="card-title" style="margin-top:8px;">Tasks Completed Trend</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+  </section>
+</main>
+
+<!-- EDIT TASK MODAL -->
+<div id="editModal" class="modal-backdrop" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-card">
+    <div class="card-header">
+      <div class="card-title">✎ Edit Task</div>
+      <button class="btn btn-sm" onclick="closeEditModal()">✕</button>
+    </div>
+    <input type="hidden" id="editTaskId" />
+    <div class="form-group">
+      <label>Task Title</label>
+      <input type="text" id="editTaskTitle" />
+    </div>
+    <div class="form-group">
+      <label>Bucket</label>
+      <select id="editTaskBucket">
+        <option value="work">Work</option>
+        <option value="personal">Personal / Chores</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Estimated Duration</label>
+      <select id="editTaskMins">
+        <option value="2">2 mins (2-Minute Rule)</option>
+        <option value="15">15 mins</option>
+        <option value="25">25 mins (1 Pomodoro)</option>
+        <option value="45">45 mins</option>
+        <option value="60">60 mins</option>
+        <option value="90">90 mins (Ultradian Sprint)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+        <input type="checkbox" id="editTaskTop3" style="width:18px;height:18px;" />
+        ★ Pin to Rule of 3 (Must-Win Priority)
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;">
+      <button class="btn btn-danger" onclick="deleteFromEditModal()">🗑 Delete Task</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal-backdrop" onclick="if(event.target===this)closeSettings
