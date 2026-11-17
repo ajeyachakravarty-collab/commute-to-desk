@@ -49,7 +49,7 @@
       overflow-x: hidden;
       overscroll-behavior-y: none;
       -webkit-font-smoothing: antialiased;
-      padding-bottom: calc(80px + var(--safe-bottom));
+      padding-bottom: calc(84px + var(--safe-bottom));
     }
 
     /* Native-Style App Bar + Top Text Navigation */
@@ -262,6 +262,7 @@
       border: 1px solid #e2e8f0;
       color: #334155;
       font-weight: 700;
+      cursor: pointer;
     }
 
     textarea, input[type="text"], input[type="password"], select {
@@ -358,17 +359,18 @@
       gap: 12px;
     }
     .check-circle {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 2px solid #cbd5e1;
       background: #fff;
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      margin-top: 1px;
+      margin-top: 0;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 800;
       color: transparent;
       transition: all 0.15s;
     }
@@ -413,7 +415,7 @@
       border-top: 1px solid #f1f5f9;
     }
     .t-btn {
-      height: 38px;
+      height: 40px;
       border-radius: 10px;
       border: none;
       background: #f1f5f9;
@@ -479,7 +481,7 @@
       background: rgba(255,255,255,0.08);
       color: #cbd5e1;
       border: 1px solid rgba(255,255,255,0.12);
-      height: 38px;
+      height: 40px;
       border-radius: 11px;
       font-size: 12px;
       font-weight: 700;
@@ -770,9 +772,9 @@
           <div id="timerDisplay" class="timer-digits">25:00</div>
         </div>
         <div class="preset-row">
-          <button class="p-chip active" onclick="setTimerPreset(25, this)">25m Focus</button>
-          <button class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
-          <button class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
+          <button class="p-chip active" data-mins="25" onclick="setTimerPreset(25, this)">25m Focus</button>
+          <button class="p-chip" data-mins="5" onclick="setTimerPreset(5, this)">5m Break</button>
+          <button class="p-chip" data-mins="90" onclick="setTimerPreset(90, this)">90m Sprint</button>
         </div>
         <div class="focus-ctrls">
           <button id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
@@ -1456,15 +1458,22 @@
     isCompleting: false
   };
 
+  function syncPresetChips(mins) {
+    document.querySelectorAll('.p-chip').forEach(b => {
+      b.classList.toggle('active', Number(b.dataset.mins) === mins);
+    });
+  }
+
   function pinTaskToTimer(id, openFocusTab = false) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
     timerState.taskId = id;
     document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     if (!timerState.running) {
-      const mins = [25, 5, 90].includes(t.mins) ? t.mins : (t.mins || 25);
+      const mins = t.mins || 25;
       timerState.presetMins = mins;
       timerState.remainingSec = mins * 60;
+      syncPresetChips(mins);
       updateTimerDisplay();
     }
     if (openFocusTab && window.innerWidth < 860) {
@@ -1473,11 +1482,14 @@
   }
 
   function setTimerPreset(mins, btn) {
-    if (timerState.running) toggleTimer();
+    if (timerState.running) {
+      clearInterval(timerState.intervalId);
+      timerState.running = false;
+      document.getElementById('timerStartBtn').textContent = '▶ Start';
+    }
     timerState.presetMins = mins;
     timerState.remainingSec = mins * 60;
-    document.querySelectorAll('.p-chip').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    syncPresetChips(mins);
     updateTimerDisplay();
   }
 
@@ -1487,6 +1499,16 @@
     document.getElementById('timerDisplay').textContent = `${m}:${s}`;
     document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
   }
+
+  // Sync timer immediately if user switches apps or locks screen on mobile
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && timerState.running && timerState.endTime) {
+      const left = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
+      timerState.remainingSec = left;
+      updateTimerDisplay();
+      if (left <= 0) completeTimerSession();
+    }
+  });
 
   function playChime() {
     try {
