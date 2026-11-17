@@ -701,4 +701,837 @@
 </div>
 
 <!-- SETTINGS MODAL -->
-<div id="settingsModal" class="modal-backdrop" onclick="if(event.target===this)closeSettings
+<div id="settingsModal" class="modal-backdrop" onclick="if(event.target===this)closeSettings()">
+  <div class="modal-card">
+    <div class="card-header">
+      <div class="card-title">⚙ Settings & Gemini AI Key</div>
+      <button class="btn btn-sm" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Google AI Studio API Key (Stored locally in your browser)</label>
+      <input type="password" id="settingsKeyInput" placeholder="Paste AIzaSy... key here" oninput="liveSaveKey(this.value)" />
+      <div id="keySavedBadge" style="font-size:12px;margin-top:6px;font-weight:600;"></div>
+    </div>
+    <div class="form-group">
+      <label>Preferred Gemini Model</label>
+      <select id="settingsModelSelect" onchange="saveModelPref(this.value)">
+        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Recommended · Fast)</option>
+        <option value="gemini-3.8-flash">gemini-3.8-flash</option>
+        <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+      </select>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+      <button class="btn btn-primary" onclick="saveSettingsAndClose()">Save & Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- DATA COACH BOT -->
+<button class="bot-fab" onclick="toggleBot()">💬 Ask Data Bot</button>
+<div id="botPanel" class="bot-panel">
+  <div class="bot-head">
+    <span>🤖 Data Coach · Live Workspace Q&A</span>
+    <button style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;" onclick="toggleBot()">✕</button>
+  </div>
+  <div id="botMsgs" class="bot-msgs">
+    <div class="bot-msg ai">Ask me about your Top 3 priorities, pending work/personal tasks, focus minutes, or rollover items!</div>
+  </div>
+  <div class="bot-input-row">
+    <input type="text" id="botInput" placeholder="e.g., What are my Top 3 priorities?" onkeydown="if(event.key==='Enter')sendBotQuery()" />
+    <button class="btn btn-primary btn-sm" onclick="sendBotQuery()">Ask</button>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'c2d_productivity_os_v3';
+  const API_KEY_STORAGE = 'c2d_gemini_api_key';
+  window.__geminiKey = '';
+
+  function getLocalDateKey(d = new Date()) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function getStoredApiKey() {
+    if (window.__geminiKey && window.__geminiKey.trim()) return window.__geminiKey.trim();
+    try {
+      const s = sessionStorage.getItem(API_KEY_STORAGE);
+      if (s && s.trim()) { window.__geminiKey = s.trim(); return window.__geminiKey; }
+    } catch (e) {}
+    try {
+      const l = localStorage.getItem(API_KEY_STORAGE);
+      if (l && l.trim()) { window.__geminiKey = l.trim(); return window.__geminiKey; }
+    } catch (e) {}
+    return (state && state.apiKey ? state.apiKey.trim() : '');
+  }
+
+  function liveSaveKey(val) {
+    const clean = (val || '').trim();
+    window.__geminiKey = clean;
+    if (state) state.apiKey = clean;
+    try { sessionStorage.setItem(API_KEY_STORAGE, clean); } catch (e) {}
+    try { localStorage.setItem(API_KEY_STORAGE, clean); } catch (e) {}
+    saveState();
+    updateKeyIndicators();
+  }
+
+  function updateKeyIndicators() {
+    const key = getStoredApiKey();
+    const badge = document.getElementById('keySavedBadge');
+    const dot = document.getElementById('headerKeyDot');
+    const inlineBox = document.getElementById('inlineKeyBox');
+    if (key) {
+      const masked = key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : 'Saved';
+      if (badge) { badge.style.color = '#059669'; badge.textContent = `✓ Key active (${masked})`; }
+      if (dot) dot.textContent = '🟢';
+      if (inlineBox) inlineBox.classList.remove('visible');
+    } else {
+      if (badge) { badge.style.color = '#64748b'; badge.textContent = 'No key saved yet (offline splitter still works).'; }
+      if (dot) dot.textContent = '';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  let state = {
+    lastActiveDate: getLocalDateKey(),
+    apiKey: '',
+    model: 'gemini-3.5-flash-lite',
+    tasks: [],
+    schedule: [],
+    history: {},
+    todayFocusMins: 0
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = { ...state, ...parsed };
+      }
+    } catch (e) {}
+    const k = getStoredApiKey();
+    if (k) state.apiKey = k;
+    checkDayRollover();
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function checkDayRollover() {
+    const today = getLocalDateKey();
+    if (state.lastActiveDate && state.lastActiveDate !== today) {
+      const prevDate = state.lastActiveDate;
+      const doneCount = state.tasks.filter(t => t.done).length;
+      const top3Done = state.tasks.filter(t => t.done && t.top3).length;
+      state.history[prevDate] = {
+        completed: doneCount,
+        top3Hit: top3Done,
+        focusMins: state.todayFocusMins || 0
+      };
+      state.tasks = state.tasks
+        .filter(t => !t.done)
+        .map(t => ({ ...t, rolledOver: true }));
+      state.todayFocusMins = 0;
+      state.schedule = [];
+      state.lastActiveDate = today;
+      saveState();
+    }
+  }
+
+  function simulateNextDayRollover() {
+    state.lastActiveDate = '2000-01-01';
+    checkDayRollover();
+    renderAll();
+    setStatus('Simulated midnight rollover: unfinished tasks carried over with ↻ badge.');
+  }
+
+  function setStatus(msg, isErr = false) {
+    const el = document.getElementById('dumpStatus');
+    el.style.color = isErr ? '#dc2626' : '#475569';
+    el.textContent = msg;
+  }
+
+  // Voice Input (Android duplicate-safe)
+  let recognition = null;
+  let isRecording = false;
+  let finalTranscript = '';
+
+  function toggleVoice() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setStatus('Speech recognition not supported in this browser. Type or paste your brain dump below.', true);
+      return;
+    }
+    const btn = document.getElementById('micBtn');
+    const input = document.getElementById('dumpInput');
+    if (isRecording && recognition) {
+      recognition.stop();
+      return;
+    }
+    recognition = new SpeechRec();
+    recognition.lang = 'en-IN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    finalTranscript = input.value ? input.value.trim() + ' ' : '';
+
+    recognition.onstart = () => {
+      isRecording = true;
+      btn.classList.add('recording');
+      btn.textContent = '⏹ Stop Listening';
+      setStatus('Listening... speak naturally.');
+    };
+    recognition.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const txt = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          finalTranscript += txt.trim() + '. ';
+        } else {
+          interim += txt;
+        }
+      }
+      input.value = (finalTranscript + interim).trim();
+    };
+    recognition.onerror = (e) => {
+      setStatus('Mic error: ' + e.error, true);
+    };
+    recognition.onend = () => {
+      isRecording = false;
+      btn.classList.remove('recording');
+      btn.textContent = '🎤 Tap to Speak';
+      setStatus('Voice capture finished. Tap Smart Split or AI Polish.');
+    };
+    recognition.start();
+  }
+
+  function loadSampleDump() {
+    document.getElementById('dumpInput').value =
+      'Check the RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), pick up groceries during my 8 PM walk, water the balcony lucky bamboo, and practice guitar barre chords.';
+    setStatus('Sample brain dump loaded.');
+  }
+
+  function addTasksFromItems(items) {
+    let top3Current = state.tasks.filter(t => t.top3 && !t.done).length;
+    items.forEach(item => {
+      const title = (item.title || '').trim();
+      if (!title) return;
+      const bucket = item.bucket === 'personal' ? 'personal' : 'work';
+      const mins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
+      let isTop3 = Boolean(item.top3);
+      if (isTop3 && top3Current >= 3) isTop3 = false;
+      if (isTop3) top3Current++;
+      state.tasks.push({
+        id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        title,
+        bucket,
+        mins,
+        top3: isTop3,
+        done: false,
+        rolledOver: false
+      });
+    });
+    saveState();
+    renderAll();
+  }
+
+  function splitOffline() {
+    const raw = document.getElementById('dumpInput').value.trim();
+    if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
+    const parts = raw
+      .split(/[\n.;]+|,\s*(?:and\s+|also\s+)?|\b(?:and also|also|then)\b/i)
+      .map(s => s.replace(/^[-*•\d.)\s]+/, '').trim())
+      .filter(s => s.length > 2);
+
+    const personalRx = /\b(grocer|walk|bamboo|plant|guitar|home|buy|bill|sbi|gym|dinner|laundry|clean|chore|milk|veg|fruit|water the)\b/i;
+    let workAdded = 0;
+    const currentTop3 = state.tasks.filter(t => t.top3 && !t.done).length;
+
+    const items = parts.map(p => {
+      const isPers = personalRx.test(p);
+      const mins = /\b2\s*min/i.test(p) ? 2 : (isPers ? 20 : 30);
+      let top3 = false;
+      if (!isPers && (currentTop3 + workAdded) < 3) {
+        top3 = true;
+        workAdded++;
+      }
+      return { title: p.charAt(0).toUpperCase() + p.slice(1), bucket: isPers ? 'personal' : 'work', mins, top3 };
+    });
+
+    addTasksFromItems(items);
+    document.getElementById('dumpInput').value = '';
+    setStatus(`Split ${items.length} tasks into Work & Personal buckets.`);
+  }
+
+  function saveAndRunAi() {
+    const val = document.getElementById('inlineKeyInput').value;
+    liveSaveKey(val);
+    runAiPolish();
+  }
+
+  async function runAiPolish() {
+    const raw = document.getElementById('dumpInput').value.trim();
+    if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
+
+    const apiKey = getStoredApiKey();
+    if (!apiKey) {
+      document.getElementById('inlineKeyBox').classList.add('visible');
+      document.getElementById('inlineKeyInput').focus();
+      setStatus('Paste your Gemini API key above to run AI Polish, or use ⚡ Smart Split offline.', true);
+      return;
+    }
+
+    setStatus('✨ Polishing with Gemini AI...');
+    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-2.5-flash-lite'];
+    const prompt = [
+      'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
+      '{"tasks":[{"title":"Clean concise action item","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
+      'Rules: Mark at most 3 high-impact work tasks as top3:true. Keep titles crisp.',
+      'Brain dump: ' + JSON.stringify(raw)
+    ].join('\n');
+
+    let lastErr = '';
+    for (const model of [...new Set(modelsToTry)]) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          lastErr = data?.error?.message || `HTTP ${res.status}`;
+          continue;
+        }
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const cleaned = text.replace(/```json|```/gi, '').trim();
+        const parsed = JSON.parse(cleaned);
+        if (Array.isArray(parsed.tasks) && parsed.tasks.length) {
+          addTasksFromItems(parsed.tasks);
+          document.getElementById('dumpInput').value = '';
+          setStatus(`✨ AI Polish (${model}) organized ${parsed.tasks.length} tasks!`);
+          return;
+        }
+      } catch (err) {
+        lastErr = err.message;
+      }
+    }
+    setStatus(`AI Polish error: ${lastErr}. Falling back or check your API key in Settings.`, true);
+  }
+
+  function addManualTask() {
+    const input = document.getElementById('quickTitle');
+    const title = input.value.trim();
+    if (!title) return;
+    const bucket = document.getElementById('quickBucket').value;
+    const mins = Number(document.getElementById('quickMins').value) || 25;
+    const top3Count = state.tasks.filter(t => t.top3 && !t.done).length;
+    addTasksFromItems([{ title, bucket, mins, top3: bucket === 'work' && top3Count < 3 }]);
+    input.value = '';
+  }
+
+  function toggleTaskDone(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    t.done = !t.done;
+    const today = getLocalDateKey();
+    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: state.todayFocusMins };
+    state.history[today].completed = state.tasks.filter(x => x.done).length;
+    state.history[today].top3Hit = state.tasks.filter(x => x.done && x.top3).length;
+    saveState();
+    renderAll();
+  }
+
+  function toggleTop3(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    if (t.top3) {
+      t.top3 = false;
+    } else {
+      const count = state.tasks.filter(x => x.top3 && !x.done).length;
+      if (count >= 3) {
+        alert('Rule of 3 allows up to 3 active priorities. Unstar one first (★) to swap.');
+        return;
+      }
+      t.top3 = true;
+    }
+    saveState();
+    renderAll();
+  }
+
+  function deleteTask(id) {
+    state.tasks = state.tasks.filter(x => x.id !== id);
+    if (timerState.taskId === id) {
+      timerState.taskId = null;
+      document.getElementById('timerActiveTask').textContent = 'No task pinned · Tap ▶ on any task';
+    }
+    saveState();
+    renderAll();
+  }
+
+  function clearCompleted() {
+    state.tasks = state.tasks.filter(x => !x.done);
+    saveState();
+    renderAll();
+  }
+
+  // Edit Modal
+  function openEditModal(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('editTaskId').value = t.id;
+    document.getElementById('editTaskTitle').value = t.title;
+    document.getElementById('editTaskBucket').value = t.bucket;
+    document.getElementById('editTaskMins').value = String(t.mins || 25);
+    document.getElementById('editTaskTop3').checked = Boolean(t.top3);
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+  }
+
+  function saveTaskEdit() {
+    const id = document.getElementById('editTaskId').value;
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    const newTitle = document.getElementById('editTaskTitle').value.trim();
+    if (!newTitle) return;
+    const wantTop3 = document.getElementById('editTaskTop3').checked;
+    if (wantTop3 && !t.top3) {
+      const count = state.tasks.filter(x => x.top3 && !x.done && x.id !== id).length;
+      if (count >= 3) {
+        alert('You already have 3 Top Priorities. Unstar one first.');
+        return;
+      }
+    }
+    t.title = newTitle;
+    t.bucket = document.getElementById('editTaskBucket').value;
+    t.mins = Number(document.getElementById('editTaskMins').value) || 25;
+    t.top3 = wantTop3;
+    if (timerState.taskId === id && !timerState.running) {
+      document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
+    }
+    saveState();
+    closeEditModal();
+    renderAll();
+  }
+
+  function deleteFromEditModal() {
+    const id = document.getElementById('editTaskId').value;
+    closeEditModal();
+    deleteTask(id);
+  }
+
+  function renderTaskRow(t) {
+    const twoMinBadge = t.mins <= 2 ? `<span class="badge badge-2min">⚡ 2-Min</span>` : '';
+    const rollBadge = t.rolledOver ? `<span class="badge badge-roll">↻ Rolled Over</span>` : '';
+    const bucketBadge = t.bucket === 'work'
+      ? `<span class="badge badge-work">Work</span>`
+      : `<span class="badge badge-pers">Personal</span>`;
+
+    return `
+      <div class="task-item ${t.top3 ? 'top3' : ''} ${t.done ? 'done' : ''}">
+        <div class="task-left">
+          <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="toggleTaskDone('${t.id}')" />
+          <div class="task-info">
+            <div class="task-title">${escapeHtml(t.title)}</div>
+            <div class="task-meta">
+              ${bucketBadge}
+              <span>⏱ ${t.mins}m</span>
+              ${twoMinBadge}
+              ${rollBadge}
+            </div>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn" title="Focus Timer" onclick="pinTaskToTimer('${t.id}')">▶</button>
+          <button class="icon-btn ${t.top3 ? 'starred' : ''}" title="Toggle Top 3 Priority" onclick="toggleTop3('${t.id}')">★</button>
+          <button class="icon-btn" title="Edit Task" onclick="openEditModal('${t.id}')">✎</button>
+          <button class="icon-btn del" title="Delete Task" onclick="deleteTask('${t.id}')">🗑</button>
+        </div>
+      </div>`;
+  }
+
+  function renderTasks() {
+    const only2Min = document.getElementById('filter2Min').checked;
+    const filtered = state.tasks.filter(t => !only2Min || t.mins <= 2);
+    const top3 = filtered.filter(t => t.top3);
+    const work = filtered.filter(t => !t.top3 && t.bucket === 'work');
+    const pers = filtered.filter(t => !t.top3 && t.bucket === 'personal');
+
+    document.getElementById('top3Count').textContent = state.tasks.filter(t => t.top3 && !t.done).length;
+    document.getElementById('top3List').innerHTML = top3.length
+      ? top3.map(renderTaskRow).join('')
+      : '<div style="font-size:13px;color:var(--text-muted);">Tap ★ on up to 3 high-impact tasks to lock in your daily wins.</div>';
+    document.getElementById('workList').innerHTML = work.length
+      ? work.map(renderTaskRow).join('')
+      : '<div style="font-size:13px;color:var(--text-muted);">No queued work tasks.</div>';
+    document.getElementById('personalList').innerHTML = pers.length
+      ? pers.map(renderTaskRow).join('')
+      : '<div style="font-size:13px;color:var(--text-muted);">No personal or evening errands yet.</div>';
+  }
+
+  function copyWorkMarkdown() {
+    const lines = state.tasks
+      .filter(t => t.bucket === 'work' || t.top3)
+      .map(t => `- [${t.done ? 'x' : ' '}] ${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`);
+    if (!lines.length) { alert('No work tasks to copy.'); return; }
+    navigator.clipboard?.writeText(lines.join('\n'));
+    setStatus('Copied Markdown checklist to clipboard!');
+  }
+
+  function shutdownRitual() {
+    const done = state.tasks.filter(t => t.done).length;
+    const rem = state.tasks.filter(t => !t.done).length;
+    alert(`Shutdown Complete!\n\n✓ Completed today: ${done} tasks (${state.todayFocusMins} focus mins)\n↻ Unfinished tasks (${rem}) will automatically roll over to tomorrow.`);
+  }
+
+  // Wall-clock Pomodoro Timer
+  let timerState = {
+    presetMins: 25,
+    remainingSec: 25 * 60,
+    endTime: null,
+    running: false,
+    intervalId: null,
+    taskId: null,
+    isCompleting: false
+  };
+
+  function pinTaskToTimer(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    timerState.taskId = id;
+    document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
+    if (!timerState.running) {
+      const mins = [25, 5, 90].includes(t.mins) ? t.mins : (t.mins || 25);
+      timerState.presetMins = mins;
+      timerState.remainingSec = mins * 60;
+      updateTimerDisplay();
+    }
+  }
+
+  function setTimerPreset(mins, btn) {
+    if (timerState.running) toggleTimer();
+    timerState.presetMins = mins;
+    timerState.remainingSec = mins * 60;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    updateTimerDisplay();
+  }
+
+  function updateTimerDisplay() {
+    const m = String(Math.floor(timerState.remainingSec / 60)).padStart(2, '0');
+    const s = String(timerState.remainingSec % 60).padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+    document.getElementById('todayFocusMins').textContent = state.todayFocusMins || 0;
+  }
+
+  function playChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    } catch (e) {}
+  }
+
+  function toggleTimer() {
+    const btn = document.getElementById('timerStartBtn');
+    if (timerState.running) {
+      clearInterval(timerState.intervalId);
+      timerState.running = false;
+      btn.textContent = '▶ Resume';
+    } else {
+      timerState.endTime = Date.now() + timerState.remainingSec * 1000;
+      timerState.running = true;
+      btn.textContent = '⏸ Pause';
+      timerState.intervalId = setInterval(() => {
+        const left = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
+        timerState.remainingSec = left;
+        updateTimerDisplay();
+        if (left <= 0) completeTimerSession();
+      }, 500);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerState.intervalId);
+    timerState.running = false;
+    timerState.remainingSec = timerState.presetMins * 60;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    updateTimerDisplay();
+  }
+
+  function completeTimerSession() {
+    if (timerState.isCompleting) return;
+    timerState.isCompleting = true;
+    clearInterval(timerState.intervalId);
+    timerState.running = false;
+    playChime();
+    state.todayFocusMins = (state.todayFocusMins || 0) + timerState.presetMins;
+    const today = getLocalDateKey();
+    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0 };
+    state.history[today].focusMins = state.todayFocusMins;
+    saveState();
+    resetTimer();
+    timerState.isCompleting = false;
+  }
+
+  // Auto-Timeblocker & .ICS Export
+  function fmtMins(totalMins) {
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function generateSchedule() {
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    const roundedNow = Math.ceil(currentMins / 5) * 5;
+
+    const blocks = [
+      { start: 450, end: 540, title: '🏋️ Morning Gym & Mobility', type: 'fixed' },
+      { start: 690, end: 1140, title: '💼 Core Work Window', type: 'fixed' },
+      { start: 1200, end: 1290, title: '🚶 Evening Walk & Personal Chores', type: 'fixed' }
+    ];
+
+    const pending = [
+      ...state.tasks.filter(t => !t.done && t.top3),
+      ...state.tasks.filter(t => !t.done && !t.top3 && t.bucket === 'work'),
+      ...state.tasks.filter(t => !t.done && !t.top3 && t.bucket === 'personal')
+    ];
+
+    let workCursor = Math.max(690, roundedNow);
+    let persCursor = Math.max(1200, roundedNow);
+    const generated = [];
+
+    pending.forEach(t => {
+      const dur = t.mins || 25;
+      if (t.bucket === 'work' || t.top3) {
+        if (workCursor + dur <= 1140) {
+          generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
+          workCursor += dur + 5;
+        } else {
+          generated.push({ start: null, end: null, title: `↻ Deferred to Tomorrow 11:30: ${t.title}`, type: 'deferred' });
+        }
+      } else {
+        if (persCursor + dur <= 1320) {
+          generated.push({ start: persCursor, end: persCursor + dur, title: t.title, type: 'pers' });
+          persCursor += dur + 5;
+        } else {
+          generated.push({ start: null, end: null, title: `↻ Deferred to Tomorrow 20:00: ${t.title}`, type: 'deferred' });
+        }
+      }
+    });
+
+    state.schedule = [...blocks, ...generated].sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
+    saveState();
+    renderSchedule();
+  }
+
+  function renderSchedule() {
+    const el = document.getElementById('scheduleList');
+    if (!state.schedule.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);">Tap <strong>Auto-Generate Schedule</strong> to build today\'s timeblocks.</div>';
+      return;
+    }
+    el.innerHTML = state.schedule.map(b => `
+      <div class="block-item ${b.type}">
+        <div class="block-time">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : 'Tomorrow'}</div>
+        <div style="flex:1;font-size:13px;font-weight:600;">${escapeHtml(b.title)}</div>
+      </div>`).join('');
+  }
+
+  function escapeICS(str) {
+    return String(str || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  }
+
+  function exportICS() {
+    if (!state.schedule.length) generateSchedule();
+    const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
+    if (!timed.length) {
+      alert('No active future timeblocks left today to export (deferred tasks start tomorrow at 11:30).');
+      return;
+    }
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const dateStamp = `${y}${m}${d}`;
+
+    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//CommuteToDesk//ProductivityOS//EN\r\n';
+    timed.forEach((b, idx) => {
+      const sh = String(Math.floor(b.start / 60)).padStart(2, '0');
+      const sm = String(b.start % 60).padStart(2, '0');
+      const eh = String(Math.floor(b.end / 60)).padStart(2, '0');
+      const em = String(b.end % 60).padStart(2, '0');
+      ics += `BEGIN:VEVENT\r\nUID:c2d-${dateStamp}-${idx}@ajeyachakrav\r\nDTSTAMP:${dateStamp}T060000Z\r\nDTSTART:${dateStamp}T${sh}${sm}00\r\nDTEND:${dateStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(b.title)}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+    });
+    ics += 'END:VCALENDAR';
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `commute-to-desk-${dateStamp}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Analytics
+  let analyticsRange = 'week';
+  function setAnalyticsRange(range) {
+    analyticsRange = range;
+    ['week', 'month', 'year'].forEach(r => {
+      document.getElementById('range-' + r).classList.toggle('btn-primary', r === range);
+    });
+    renderAnalytics();
+  }
+
+  function renderAnalytics() {
+    const doneToday = state.tasks.filter(t => t.done).length;
+    const totalToday = state.tasks.length;
+    const top3Done = state.tasks.filter(t => t.done && t.top3).length;
+    const histEntries = Object.values(state.history);
+    const histCompleted = histEntries.reduce((s, x) => s + (x.completed || 0), 0);
+    const histFocus = histEntries.reduce((s, x) => s + (x.focusMins || 0), 0);
+
+    const mult = analyticsRange === 'week' ? 1 : (analyticsRange === 'month' ? 4 : 12);
+    const totalDone = doneToday + histCompleted;
+    const totalFocus = (state.todayFocusMins || 0) + histFocus;
+    const completionPct = totalToday ? Math.round((doneToday / totalToday) * 100) : 0;
+
+    document.getElementById('kpiGrid').innerHTML = `
+      <div class="kpi-card"><div class="kpi-val">${totalDone}</div><div class="kpi-lbl">Tasks Completed (${analyticsRange})</div></div>
+      <div class="kpi-card"><div class="kpi-val">${top3Done}/3</div><div class="kpi-lbl">Today's Rule of 3</div></div>
+      <div class="kpi-card"><div class="kpi-val">${totalFocus}m</div><div class="kpi-lbl">Deep Focus Logged</div></div>
+      <div class="kpi-card"><div class="kpi-val">${completionPct}%</div><div class="kpi-lbl">Today's Completion Rate</div></div>
+    `;
+
+    const labels = analyticsRange === 'week'
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today']
+      : analyticsRange === 'month'
+        ? ['Wk 1', 'Wk 2', 'Wk 3', 'Current']
+        : ['Q1', 'Q2', 'Q3', 'Q4'];
+    const vals = labels.map((_, i) => i === labels.length - 1 ? Math.max(doneToday, 1) : Math.max(1, (i + 2) * mult));
+    const maxVal = Math.max(...vals, 5);
+
+    document.getElementById('barChart').innerHTML = vals.map((v, i) => `
+      <div class="bar-col">
+        <div class="bar-fill" style="height:${Math.round((v / maxVal) * 100)}%"></div>
+        <div class="bar-lbl">${labels[i]}</div>
+      </div>`).join('');
+  }
+
+  // Settings Modal
+  function openSettings() {
+    document.getElementById('settingsKeyInput').value = getStoredApiKey();
+    document.getElementById('settingsModelSelect').value = state.model || 'gemini-3.5-flash-lite';
+    updateKeyIndicators();
+    document.getElementById('settingsModal').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('open');
+  }
+  function saveModelPref(m) {
+    state.model = m;
+    saveState();
+  }
+  function saveSettingsAndClose() {
+    liveSaveKey(document.getElementById('settingsKeyInput').value);
+    closeSettings();
+    setStatus('Settings saved.');
+  }
+
+  // Navigation
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'schedule') renderSchedule();
+    if (tab === 'analytics') renderAnalytics();
+  }
+
+  // Data Coach Bot
+  function toggleBot() {
+    document.getElementById('botPanel').classList.toggle('open');
+  }
+
+  function appendBotMsg(text, who) {
+    const box = document.getElementById('botMsgs');
+    const div = document.createElement('div');
+    div.className = 'bot-msg ' + who;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sendBotQuery() {
+    const input = document.getElementById('botInput');
+    const q = input.value.trim();
+    if (!q) return;
+    appendBotMsg(q, 'user');
+    input.value = '';
+
+    const top3 = state.tasks.filter(t => t.top3 && !t.done).map(t => t.title);
+    const workPending = state.tasks.filter(t => !t.done && t.bucket === 'work').length;
+    const persPending = state.tasks.filter(t => !t.done && t.bucket === 'personal').length;
+    const done = state.tasks.filter(t => t.done).length;
+    const rolled = state.tasks.filter(t => t.rolledOver && !t.done).length;
+
+    let reply = '';
+    if (/top\s*3|priorit/i.test(q)) {
+      reply = top3.length
+        ? `Your active Rule of 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
+        : 'You have 0 active Top 3 priorities pinned right now. Tap ★ on your top tasks!';
+    } else if (/focus|pomodoro|time/i.test(q)) {
+      reply = `You have logged ${state.todayFocusMins || 0} deep-focus minutes today across ${done} completed tasks.`;
+    } else if (/roll|miss|yesterday/i.test(q)) {
+      reply = `You currently have ${rolled} rolled-over task(s) carried forward from previous days.`;
+    } else {
+      reply = `Today's snapshot: ${done} completed, ${workPending} pending work tasks, ${persPending} pending personal/evening tasks, and ${state.todayFocusMins || 0} focus mins logged.`;
+    }
+    setTimeout(() => appendBotMsg(reply, 'ai'), 180);
+  }
+
+  function renderAll() {
+    const now = new Date();
+    document.getElementById('dateSubtitle').textContent = now.toLocaleDateString('en-IN', {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+    });
+    updateKeyIndicators();
+    renderTasks();
+    updateTimerDisplay();
+    renderSchedule();
+    renderAnalytics();
+  }
+
+  loadState();
+  renderAll();
+</script>
+</body>
+</html>
