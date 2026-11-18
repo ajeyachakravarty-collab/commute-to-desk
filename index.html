@@ -273,7 +273,7 @@
       font-weight: 700;
     }
 
-    textarea, input[type="text"], input[type="password"], input[type="time"], select {
+    textarea, input[type="text"], input[type="password"], input[type="time"], input[type="number"], select {
       width: 100%;
       border: 1.5px solid #e2e8f0;
       border-radius: 14px;
@@ -783,6 +783,10 @@
           <button class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
           <button class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
         </div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px;">
+          <input type="number" id="customFocusMins" min="1" max="300" placeholder="Custom mins (1–300)" onkeydown="if(event.key==='Enter')applyCustomFocusTime()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#fff;height:40px;min-height:40px;padding:8px 12px;border-radius:11px;font-size:16px;" />
+          <button class="p-chip" style="padding:0 16px;height:40px;background:rgba(59,130,246,0.28);border-color:#60a5fa;color:#fff;" onclick="applyCustomFocusTime()">Set Time</button>
+        </div>
         <div class="focus-ctrls">
           <button id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
           <button class="btn" onclick="resetTimer()">↺ Reset</button>
@@ -975,7 +979,7 @@
   </div>
 </div>
 
-<!-- Non-Blocking Notification Toast (Replaces native alert) -->
+<!-- Non-Blocking Notification Toast -->
 <div id="appToast" style="position:fixed;left:50%;bottom:calc(74px + var(--safe-bottom));transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 10px 25px rgba(15,23,42,0.3);z-index:80;display:none;max-width:90vw;text-align:center;"></div>
 
 <script>
@@ -1000,7 +1004,6 @@
     const w = size - pad * 2;
     const h = size - pad * 2;
 
-    // Rounded background
     const g = ctx.createLinearGradient(0, 0, size, size);
     g.addColorStop(0, '#1d4ed8');
     g.addColorStop(0.55, '#4f46e5');
@@ -1019,18 +1022,15 @@
     ctx.closePath();
     ctx.fill();
 
-    // Subtle inner border highlight
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = Math.max(2, Math.round(size * 0.015));
     ctx.stroke();
 
-    // Checkmark accent badge
     ctx.fillStyle = '#10b981';
     ctx.beginPath();
     ctx.arc(size * 0.76, size * 0.26, size * 0.11, 0, Math.PI * 2);
     ctx.fill();
 
-    // Crisp C2D monogram
     ctx.fillStyle = '#ffffff';
     ctx.font = `800 ${Math.round(size * 0.31)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.textAlign = 'center';
@@ -1267,7 +1267,7 @@
       btn.textContent = '🎤 Tap to Speak';
       setStatus('Voice captured. Tap Smart Split or AI Polish.');
     };
-    recognition.start();
+    try { recognition.start(); } catch (err) { setStatus('Mic already active.', true); }
   }
 
   function loadSampleDump() {
@@ -1640,7 +1640,7 @@
       timerState.presetMins = mins;
       timerState.remainingSec = mins * 60;
       document.querySelectorAll('.p-chip').forEach(b => {
-        b.classList.toggle('active', b.textContent.startsWith(mins + 'm'));
+        b.classList.toggle('active', [25, 5, 90].includes(mins) && b.textContent.startsWith(mins + 'm'));
       });
       updateTimerDisplay();
     }
@@ -1656,6 +1656,18 @@
     document.querySelectorAll('.p-chip').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     updateTimerDisplay();
+  }
+
+  function applyCustomFocusTime() {
+    const inp = document.getElementById('customFocusMins');
+    const val = parseInt(inp?.value, 10);
+    if (!val || val < 1 || val > 300) {
+      showToast('Enter a duration between 1 and 300 mins');
+      return;
+    }
+    setTimerPreset(val, null);
+    inp.value = '';
+    showToast(`Timer set to ${val} mins`);
   }
 
   function updateTimerDisplay() {
@@ -1761,31 +1773,23 @@
     const ps = document.getElementById('personalStartInput')?.value;
     const pe = document.getElementById('personalEndInput')?.value;
     if (ws) state.workStart = ws;
-    if (we) {
-      const wStartM = parseTimeToMins(state.workStart, 690);
-      const wEndM = parseTimeToMins(we, 1140);
-      if (wEndM <= wStartM) {
-        const clamped = Math.min(1435, wStartM + 60);
-        state.workEnd = fmtMins(clamped);
-        document.getElementById('workEndInput').value = state.workEnd;
-        showToast(`Work End adjusted to ${state.workEnd}`);
-      } else {
-        state.workEnd = we;
-      }
-    }
+    if (we) state.workEnd = we;
     if (ps) state.personalStart = ps;
-    if (pe) {
-      const pStartM = parseTimeToMins(state.personalStart, 1200);
-      const pEndM = parseTimeToMins(pe, 1320);
-      if (pEndM <= pStartM) {
-        const clamped = Math.min(1435, pStartM + 60);
-        state.personalEnd = fmtMins(clamped);
-        document.getElementById('personalEndInput').value = state.personalEnd;
-        showToast(`Personal End adjusted to ${state.personalEnd}`);
-      } else {
-        state.personalEnd = pe;
-      }
+    if (pe) state.personalEnd = pe;
+
+    const wS = parseTimeToMins(state.workStart, 690);
+    const wE = parseTimeToMins(state.workEnd, 1140);
+    if (wE <= wS) {
+      state.workEnd = fmtMins(Math.min(1435, wS + 60));
+      showToast(`Work End adjusted to ${state.workEnd}`);
     }
+    const pS = parseTimeToMins(state.personalStart, 1200);
+    const pE = parseTimeToMins(state.personalEnd, 1320);
+    if (pE <= pS) {
+      state.personalEnd = fmtMins(Math.min(1435, pS + 60));
+      showToast(`Personal End adjusted to ${state.personalEnd}`);
+    }
+    syncScheduleInputs();
     saveState();
     if (state.schedule.length) generateSchedule();
   }
@@ -2065,14 +2069,15 @@
 
       const contextSnapshot = JSON.stringify({
         date: getLocalDateKey(),
-        workWindow: `${state.workStart || '11:30'}-${state.workEnd || '19:00'}`,
-        personalWindow: `${state.personalStart || '20:00'}-${state.personalEnd || '22:00'}`,
+        workWindow: `${state.workStart}-${state.workEnd}`,
+        personalWindow: `${state.personalStart}-${state.personalEnd}`,
         top3Active: top3,
         workPending: workPending.map(t => `${t.title} (${t.mins}m)`),
         personalPending: persPending.map(t => `${t.title} (${t.mins}m)`),
         completedToday: done,
         rolledOverCount: rolled,
         focusMinsToday: state.todayFocusMins || 0,
+        historyDaysLogged: Object.keys(state.history || {}).length,
         schedule: state.schedule.map(s => `${s.start !== null ? fmtMins(s.start) + '-' + fmtMins(s.end) : 'Tomorrow'}: ${s.title}`)
       });
 
