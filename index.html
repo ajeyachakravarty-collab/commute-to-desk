@@ -87,7 +87,7 @@
       display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff;
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
-    .brand-text h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-text h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
     .brand-text p { font-size: 11px; color: #94a3b8; font-weight: 500; }
 
     .header-pills { display: flex; align-items: center; gap: 8px; }
@@ -273,7 +273,7 @@
       font-weight: 700;
     }
 
-    textarea, input[type="text"], input[type="password"], select {
+    textarea, input[type="text"], input[type="password"], input[type="time"], select {
       width: 100%;
       border: 1.5px solid #e2e8f0;
       border-radius: 14px;
@@ -815,8 +815,30 @@
         <div class="card-title">🗓 Auto-Timeblocker</div>
       </div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
-        Slots pending tasks from right now forward around your anchors (<strong>07:30</strong> Gym, <strong>11:30–19:00</strong> Work, <strong>20:00</strong> Walk).
+        Customize your daily Work and Personal/Evening windows below, then tap <strong>⚡ Auto-Plan</strong> to slot your tasks from now forward.
       </p>
+      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">💼 Work Start</label>
+            <input type="time" id="workStartInput" value="11:30" onchange="saveSchedulePrefs()" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">💼 Work End</label>
+            <input type="time" id="workEndInput" value="19:00" onchange="saveSchedulePrefs()" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">🏡 Personal Start</label>
+            <input type="time" id="personalStartInput" value="20:00" onchange="saveSchedulePrefs()" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">🏡 Personal End</label>
+            <input type="time" id="personalEndInput" value="22:00" onchange="saveSchedulePrefs()" />
+          </div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
         <button class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Plan</button>
         <button class="btn btn-success" onclick="exportICS()">📲 Export .ICS</button>
@@ -907,6 +929,7 @@
       <select id="settingsModelSelect" onchange="saveModelPref(this.value)">
         <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Recommended · Fast)</option>
         <option value="gemini-3.8-flash">gemini-3.8-flash (Multimodal Workhorse)</option>
+        <option value="gemini-4-hydrogen">gemini-4-hydrogen (Latest Gemini 4 Fast)</option>
         <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
       </select>
     </div>
@@ -917,7 +940,7 @@
   </div>
 </div>
 
-<!-- Install Instructions Bottom Sheet -->
+<!-- Install Instructions Bottom Sheet (Fallback when browser prompt isn't auto-fired) -->
 <div id="installModal" class="sheet-backdrop" onclick="if(event.target===this)closeInstallModal()">
   <div class="sheet-card">
     <div class="sheet-grabber"></div>
@@ -952,7 +975,20 @@
   </div>
 </div>
 
+<!-- Non-Blocking Notification Toast (Replaces native alert) -->
+<div id="appToast" style="position:fixed;left:50%;bottom:calc(74px + var(--safe-bottom));transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 10px 25px rgba(15,23,42,0.3);z-index:80;display:none;max-width:90vw;text-align:center;"></div>
+
 <script>
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('appToast');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3200);
+  }
+
   // High-res PNG icon generator for Android WebAPK, Desktop PWA, Favicon & Apple Touch Icon
   function renderAppIconDataURL(size) {
     const c = document.createElement('canvas');
@@ -964,6 +1000,7 @@
     const w = size - pad * 2;
     const h = size - pad * 2;
 
+    // Rounded background
     const g = ctx.createLinearGradient(0, 0, size, size);
     g.addColorStop(0, '#1d4ed8');
     g.addColorStop(0.55, '#4f46e5');
@@ -982,15 +1019,18 @@
     ctx.closePath();
     ctx.fill();
 
+    // Subtle inner border highlight
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = Math.max(2, Math.round(size * 0.015));
     ctx.stroke();
 
+    // Checkmark accent badge
     ctx.fillStyle = '#10b981';
     ctx.beginPath();
     ctx.arc(size * 0.76, size * 0.26, size * 0.11, 0, Math.PI * 2);
     ctx.fill();
 
+    // Crisp C2D monogram
     ctx.fillStyle = '#ffffff';
     ctx.font = `800 ${Math.round(size * 0.31)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.textAlign = 'center';
@@ -1000,7 +1040,7 @@
     return c.toDataURL('image/png');
   }
 
-  // Dynamic PWA Manifest + Inline Service Worker Setup
+  // Dynamic PWA Manifest + Safe Same-Origin Service Worker Setup
   (function initPWA() {
     try {
       const icon64 = renderAppIconDataURL(64);
@@ -1034,29 +1074,7 @@
     document.getElementById('dynamic-manifest').href = URL.createObjectURL(mBlob);
 
     if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE = 'c2d-shell-v1';
-        self.addEventListener('install', e => {
-          self.skipWaiting();
-        });
-        self.addEventListener('activate', e => {
-          e.waitUntil(self.clients.claim());
-        });
-        self.addEventListener('fetch', e => {
-          if (e.request.method !== 'GET') return;
-          e.respondWith(
-            fetch(e.request)
-              .then(res => {
-                const copy = res.clone();
-                caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
-                return res;
-              })
-              .catch(() => caches.match(e.request))
-          );
-        });
-      `;
-      const swBlob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
   })();
 
@@ -1139,6 +1157,10 @@
     lastActiveDate: getLocalDateKey(),
     apiKey: '',
     model: 'gemini-3.5-flash-lite',
+    workStart: '11:30',
+    workEnd: '19:00',
+    personalStart: '20:00',
+    personalEnd: '22:00',
     tasks: [],
     schedule: [],
     history: {},
@@ -1189,6 +1211,7 @@
     checkDayRollover();
     renderAll();
     setStatus('Simulated rollover: unfinished tasks carried forward with ↻ badge.');
+    showToast('Simulated next-day rollover');
   }
 
   function setStatus(msg, isErr = false) {
@@ -1253,13 +1276,20 @@
     setStatus('Sample brain dump loaded.');
   }
 
+  function snapDuration(rawMins) {
+    const allowed = [2, 15, 25, 45, 60, 90];
+    const n = Number(rawMins) || 25;
+    return allowed.reduce((prev, curr) => Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev);
+  }
+
   function addTasksFromItems(items) {
     let top3Current = state.tasks.filter(t => t.top3 && !t.done).length;
     items.forEach(item => {
       const title = (item.title || '').trim();
       if (!title) return;
       const bucket = item.bucket === 'personal' ? 'personal' : 'work';
-      const mins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
+      const rawMins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
+      const mins = snapDuration(rawMins);
       let isTop3 = Boolean(item.top3);
       if (isTop3 && top3Current >= 3) isTop3 = false;
       if (isTop3) top3Current++;
@@ -1291,7 +1321,7 @@
 
     const items = parts.map(p => {
       const isPers = personalRx.test(p);
-      const mins = /\b2\s*min/i.test(p) ? 2 : (isPers ? 20 : 30);
+      const mins = /\b2\s*min/i.test(p) ? 2 : (isPers ? 15 : 25);
       let top3 = false;
       if (!isPers && (currentTop3 + workAdded) < 3) {
         top3 = true;
@@ -1312,6 +1342,8 @@
 
   async function testApiKey() {
     const badge = document.getElementById('keySavedBadge');
+    const inputEl = document.getElementById('settingsKeyInput');
+    if (inputEl && inputEl.value.trim()) liveSaveKey(inputEl.value);
     const apiKey = getStoredApiKey();
     if (!apiKey) {
       badge.style.color = '#dc2626';
@@ -1357,7 +1389,7 @@
     if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '⏳ Polishing...'; }
     setStatus('✨ Polishing with Gemini AI...');
 
-    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
     const prompt = [
       'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
       '{"tasks":[{"title":"Clean concise action item","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
@@ -1435,7 +1467,7 @@
     } else {
       const count = state.tasks.filter(x => x.top3 && !x.done).length;
       if (count >= 3) {
-        alert('Rule of 3 allows up to 3 active priorities. Tap ★ on one to unpin first.');
+        showToast('Rule of 3 allows up to 3 active priorities. Tap ★ on one to unpin first.');
         return;
       }
       t.top3 = true;
@@ -1466,7 +1498,7 @@
     document.getElementById('editTaskId').value = t.id;
     document.getElementById('editTaskTitle').value = t.title;
     document.getElementById('editTaskBucket').value = t.bucket;
-    document.getElementById('editTaskMins').value = String(t.mins || 25);
+    document.getElementById('editTaskMins').value = String(snapDuration(t.mins || 25));
     document.getElementById('editTaskTop3').checked = Boolean(t.top3);
     document.getElementById('editModal').classList.add('open');
   }
@@ -1485,13 +1517,13 @@
     if (wantTop3 && !t.top3) {
       const count = state.tasks.filter(x => x.top3 && !x.done && x.id !== id).length;
       if (count >= 3) {
-        alert('You already have 3 Top Priorities. Unstar one first.');
+        showToast('You already have 3 Top Priorities. Unstar one first.');
         return;
       }
     }
     t.title = newTitle;
     t.bucket = document.getElementById('editTaskBucket').value;
-    t.mins = Number(document.getElementById('editTaskMins').value) || 25;
+    t.mins = snapDuration(document.getElementById('editTaskMins').value);
     t.top3 = wantTop3;
     if (timerState.taskId === id) {
       document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
@@ -1567,15 +1599,25 @@
     const lines = state.tasks
       .filter(t => t.bucket === 'work' || t.top3)
       .map(t => `- [${t.done ? 'x' : ' '}] ${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`);
-    if (!lines.length) { alert('No work tasks to copy.'); return; }
-    navigator.clipboard?.writeText(lines.join('\n'));
-    setStatus('Copied Markdown checklist!');
+    if (!lines.length) { showToast('No work tasks to copy.'); return; }
+    fallbackCopy(lines.join('\n'));
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); setStatus('Copied Markdown checklist!'); showToast('Copied Markdown checklist'); }
+    catch (e) { setStatus('Could not auto-copy on this browser.', true); }
+    document.body.removeChild(ta);
   }
 
   function shutdownRitual() {
     const done = state.tasks.filter(t => t.done).length;
     const rem = state.tasks.filter(t => !t.done).length;
-    alert(`Shutdown Complete!\n\n✓ Completed today: ${done} tasks (${state.todayFocusMins} focus mins)\n↻ Unfinished tasks (${rem}) will auto-roll to tomorrow.`);
+    showToast(`Shutdown: ${done} done (${state.todayFocusMins}m) · ${rem} roll tomorrow`);
   }
 
   let timerState = {
@@ -1673,11 +1715,19 @@
     timerState.running = false;
     playChime();
     state.todayFocusMins = (state.todayFocusMins || 0) + timerState.presetMins;
+    if (timerState.taskId) {
+      const pinned = state.tasks.find(x => x.id === timerState.taskId);
+      if (pinned && !pinned.done) pinned.done = true;
+    }
     const today = getLocalDateKey();
     if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0 };
+    state.history[today].completed = state.tasks.filter(x => x.done).length;
+    state.history[today].top3Hit = state.tasks.filter(x => x.done && x.top3).length;
     state.history[today].focusMins = state.todayFocusMins;
     saveState();
     resetTimer();
+    renderAll();
+    showToast(`Logged ${timerState.presetMins}m focus session`);
     timerState.isCompleting = false;
   }
 
@@ -1687,15 +1737,73 @@
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
+  function parseTimeToMins(str, fallback) {
+    if (!str || !str.includes(':')) return fallback;
+    const [h, m] = str.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return fallback;
+    return h * 60 + m;
+  }
+
+  function syncScheduleInputs() {
+    const ws = document.getElementById('workStartInput');
+    const we = document.getElementById('workEndInput');
+    const ps = document.getElementById('personalStartInput');
+    const pe = document.getElementById('personalEndInput');
+    if (ws) ws.value = state.workStart || '11:30';
+    if (we) we.value = state.workEnd || '19:00';
+    if (ps) ps.value = state.personalStart || '20:00';
+    if (pe) pe.value = state.personalEnd || '22:00';
+  }
+
+  function saveSchedulePrefs() {
+    const ws = document.getElementById('workStartInput')?.value;
+    const we = document.getElementById('workEndInput')?.value;
+    const ps = document.getElementById('personalStartInput')?.value;
+    const pe = document.getElementById('personalEndInput')?.value;
+    if (ws) state.workStart = ws;
+    if (we) {
+      const wStartM = parseTimeToMins(state.workStart, 690);
+      const wEndM = parseTimeToMins(we, 1140);
+      if (wEndM <= wStartM) {
+        const clamped = Math.min(1435, wStartM + 60);
+        state.workEnd = fmtMins(clamped);
+        document.getElementById('workEndInput').value = state.workEnd;
+        showToast(`Work End adjusted to ${state.workEnd}`);
+      } else {
+        state.workEnd = we;
+      }
+    }
+    if (ps) state.personalStart = ps;
+    if (pe) {
+      const pStartM = parseTimeToMins(state.personalStart, 1200);
+      const pEndM = parseTimeToMins(pe, 1320);
+      if (pEndM <= pStartM) {
+        const clamped = Math.min(1435, pStartM + 60);
+        state.personalEnd = fmtMins(clamped);
+        document.getElementById('personalEndInput').value = state.personalEnd;
+        showToast(`Personal End adjusted to ${state.personalEnd}`);
+      } else {
+        state.personalEnd = pe;
+      }
+    }
+    saveState();
+    if (state.schedule.length) generateSchedule();
+  }
+
   function generateSchedule() {
     const now = new Date();
     const currentMins = now.getHours() * 60 + now.getMinutes();
     const roundedNow = Math.ceil(currentMins / 5) * 5;
 
+    const wStart = parseTimeToMins(state.workStart, 690);
+    const wEnd = Math.max(wStart + 15, parseTimeToMins(state.workEnd, 1140));
+    const pStart = parseTimeToMins(state.personalStart, 1200);
+    const pEnd = Math.max(pStart + 15, parseTimeToMins(state.personalEnd, 1320));
+
     const blocks = [
       { start: 450, end: 540, title: '🏋️ Morning Gym & Mobility', type: 'fixed' },
-      { start: 690, end: 1140, title: '💼 Core Work Window', type: 'fixed' },
-      { start: 1200, end: 1290, title: '🚶 Evening Walk & Chores', type: 'fixed' }
+      { start: wStart, end: wEnd, title: '💼 Core Work Window', type: 'fixed' },
+      { start: pStart, end: pEnd, title: '🏡 Personal & Evening Window', type: 'fixed' }
     ];
 
     const pending = [
@@ -1704,25 +1812,25 @@
       ...state.tasks.filter(t => !t.done && !t.top3 && t.bucket === 'personal')
     ];
 
-    let workCursor = Math.max(690, roundedNow);
-    let persCursor = Math.max(1200, roundedNow);
+    let workCursor = Math.max(wStart, roundedNow);
+    let persCursor = Math.max(pStart, roundedNow);
     const generated = [];
 
     pending.forEach(t => {
       const dur = t.mins || 25;
       if (t.bucket === 'work' || t.top3) {
-        if (workCursor + dur <= 1140) {
+        if (workCursor + dur <= wEnd) {
           generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
           workCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, title: `↻ Tomorrow 11:30: ${t.title}`, type: 'deferred' });
+          generated.push({ start: null, end: null, title: `↻ Tomorrow ${fmtMins(wStart)}: ${t.title}`, type: 'deferred' });
         }
       } else {
-        if (persCursor + dur <= 1320) {
+        if (persCursor + dur <= pEnd) {
           generated.push({ start: persCursor, end: persCursor + dur, title: t.title, type: 'pers' });
           persCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, title: `↻ Tomorrow 20:00: ${t.title}`, type: 'deferred' });
+          generated.push({ start: null, end: null, title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`, type: 'deferred' });
         }
       }
     });
@@ -1753,7 +1861,7 @@
     if (!state.schedule.length) generateSchedule();
     const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
     if (!timed.length) {
-      alert('No active future timeblocks left today to export (deferred tasks start tomorrow at 11:30).');
+      showToast(`No active future timeblocks left today (deferred tasks start tomorrow ${state.workStart || '11:30'})`);
       return;
     }
     const now = new Date();
@@ -1779,6 +1887,7 @@
     a.download = `commute-to-desk-${dateStamp}.ics`;
     a.click();
     URL.revokeObjectURL(url);
+    showToast('Exported .ICS calendar file');
   }
 
   let analyticsRange = 'week';
@@ -1793,16 +1902,76 @@
   }
 
   function renderAnalytics() {
+    const now = new Date();
+    const todayKey = getLocalDateKey(now);
     const doneToday = state.tasks.filter(t => t.done).length;
     const totalToday = state.tasks.length;
     const top3Done = state.tasks.filter(t => t.done && t.top3).length;
-    const histEntries = Object.values(state.history);
-    const histCompleted = histEntries.reduce((s, x) => s + (x.completed || 0), 0);
-    const histFocus = histEntries.reduce((s, x) => s + (x.focusMins || 0), 0);
+    const focusToday = state.todayFocusMins || 0;
 
-    const mult = analyticsRange === 'week' ? 1 : (analyticsRange === 'month' ? 4 : 12);
-    const totalDone = doneToday + histCompleted;
-    const totalFocus = (state.todayFocusMins || 0) + histFocus;
+    // Build real date-keyed lookup combining saved history + live today state
+    const dailyMap = {};
+    Object.entries(state.history || {}).forEach(([k, v]) => {
+      dailyMap[k] = {
+        completed: Number(v.completed) || 0,
+        focusMins: Number(v.focusMins) || 0
+      };
+    });
+    dailyMap[todayKey] = { completed: doneToday, focusMins: focusToday };
+
+    let labels = [];
+    let vals = [];
+    let totalDone = 0;
+    let totalFocus = 0;
+
+    if (analyticsRange === 'week') {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const k = getLocalDateKey(d);
+        const entry = dailyMap[k] || { completed: 0, focusMins: 0 };
+        labels.push(i === 0 ? 'Today' : dayNames[d.getDay()]);
+        vals.push(entry.completed);
+        totalDone += entry.completed;
+        totalFocus += entry.focusMins;
+      }
+    } else if (analyticsRange === 'month') {
+      // Last 4 rolling 7-day windows (28 days total)
+      for (let w = 3; w >= 0; w--) {
+        let wkDone = 0;
+        let wkFocus = 0;
+        for (let offset = w * 7 + 6; offset >= w * 7; offset--) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
+          const entry = dailyMap[getLocalDateKey(d)] || { completed: 0, focusMins: 0 };
+          wkDone += entry.completed;
+          wkFocus += entry.focusMins;
+        }
+        labels.push(w === 0 ? 'This Wk' : `-${w}w`);
+        vals.push(wkDone);
+        totalDone += wkDone;
+        totalFocus += wkFocus;
+      }
+    } else {
+      // Last 12 months
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      for (let m = 11; m >= 0; m--) {
+        const target = new Date(now.getFullYear(), now.getMonth() - m, 1);
+        const prefix = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-`;
+        let mDone = 0;
+        let mFocus = 0;
+        Object.entries(dailyMap).forEach(([k, entry]) => {
+          if (k.startsWith(prefix)) {
+            mDone += entry.completed;
+            mFocus += entry.focusMins;
+          }
+        });
+        labels.push(monthNames[target.getMonth()][0]);
+        vals.push(mDone);
+        totalDone += mDone;
+        totalFocus += mFocus;
+      }
+    }
+
     const completionPct = totalToday ? Math.round((doneToday / totalToday) * 100) : 0;
 
     document.getElementById('kpiGrid').innerHTML = `
@@ -1812,19 +1981,19 @@
       <div class="kpi-tile"><div class="kpi-num">${completionPct}%</div><div class="kpi-name">Completion Rate</div></div>
     `;
 
-    const labels = analyticsRange === 'week'
-      ? ['M', 'T', 'W', 'T', 'F', 'S', 'Now']
-      : analyticsRange === 'month'
-        ? ['Wk1', 'Wk2', 'Wk3', 'Now']
-        : ['Q1', 'Q2', 'Q3', 'Q4'];
-    const vals = labels.map((_, i) => i === labels.length - 1 ? Math.max(doneToday, 1) : Math.max(1, (i + 2) * mult));
-    const maxVal = Math.max(...vals, 5);
+    const maxVal = Math.max(...vals, 1);
+    const hasAnyData = vals.some(v => v > 0);
 
-    document.getElementById('barChart').innerHTML = vals.map((v, i) => `
-      <div class="bar-col">
-        <div class="bar-fill" style="height:${Math.round((v / maxVal) * 100)}%"></div>
-        <div class="bar-lbl">${labels[i]}</div>
-      </div>`).join('');
+    document.getElementById('barChart').innerHTML = vals.map((v, i) => {
+      const pct = hasAnyData && v > 0 ? Math.max(8, Math.round((v / maxVal) * 84)) : 2;
+      const fillBg = v > 0 ? 'var(--primary-grad)' : '#cbd5e1';
+      return `
+        <div class="bar-col">
+          <div style="font-size:10px;font-weight:700;color:${v > 0 ? '#1e293b' : '#94a3b8'};">${v}</div>
+          <div class="bar-fill" style="height:${pct}%;background:${fillBg};"></div>
+          <div class="bar-lbl">${labels[i]}</div>
+        </div>`;
+    }).join('');
   }
 
   function openSettings() {
@@ -1872,7 +2041,7 @@
     box.scrollTop = box.scrollHeight;
   }
 
-  function sendBotQuery() {
+  async function sendBotQuery() {
     const input = document.getElementById('botInput');
     const q = input.value.trim();
     if (!q) return;
@@ -1880,26 +2049,74 @@
     input.value = '';
 
     const top3 = state.tasks.filter(t => t.top3 && !t.done).map(t => t.title);
-    const workPending = state.tasks.filter(t => !t.done && t.bucket === 'work').length;
-    const persPending = state.tasks.filter(t => !t.done && t.bucket === 'personal').length;
+    const workPending = state.tasks.filter(t => !t.done && t.bucket === 'work');
+    const persPending = state.tasks.filter(t => !t.done && t.bucket === 'personal');
     const done = state.tasks.filter(t => t.done).length;
     const rolled = state.tasks.filter(t => t.rolledOver && !t.done).length;
+
+    const apiKey = getStoredApiKey();
+    if (apiKey) {
+      const box = document.getElementById('botMsgs');
+      const thinking = document.createElement('div');
+      thinking.className = 'bot-msg ai';
+      thinking.textContent = 'Analyzing your workspace...';
+      box.appendChild(thinking);
+      box.scrollTop = box.scrollHeight;
+
+      const contextSnapshot = JSON.stringify({
+        date: getLocalDateKey(),
+        workWindow: `${state.workStart || '11:30'}-${state.workEnd || '19:00'}`,
+        personalWindow: `${state.personalStart || '20:00'}-${state.personalEnd || '22:00'}`,
+        top3Active: top3,
+        workPending: workPending.map(t => `${t.title} (${t.mins}m)`),
+        personalPending: persPending.map(t => `${t.title} (${t.mins}m)`),
+        completedToday: done,
+        rolledOverCount: rolled,
+        focusMinsToday: state.todayFocusMins || 0,
+        schedule: state.schedule.map(s => `${s.start !== null ? fmtMins(s.start) + '-' + fmtMins(s.end) : 'Tomorrow'}: ${s.title}`)
+      });
+
+      try {
+        const model = state.model || 'gemini-3.5-flash-lite';
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `You are a concise productivity coach. Answer strictly from this live user workspace data in 1-3 short sentences.\nData: ${contextSnapshot}\nQuestion: ${q}` }] }]
+          })
+        });
+        const data = await res.json();
+        const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (res.ok && aiText) {
+          thinking.textContent = aiText.trim();
+          box.scrollTop = box.scrollHeight;
+          return;
+        }
+      } catch (e) {}
+      thinking.remove();
+    }
 
     let reply = '';
     if (/top\s*3|priorit/i.test(q)) {
       reply = top3.length
         ? `Active Top 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
         : '0 active Top 3 priorities pinned right now. Tap "☆ Top 3" on your top tasks!';
+    } else if (/sched|plan|block|next/i.test(q)) {
+      const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
+      reply = timed.length
+        ? `Scheduled blocks today: ${timed.map(b => `${fmtMins(b.start)} ${b.title}`).join('; ')}.`
+        : `No active task blocks scheduled yet (Work window ${state.workStart || '11:30'}–${state.workEnd || '19:00'}). Open Plan and tap ⚡ Auto-Plan!`;
     } else if (/focus|pomodoro|time/i.test(q)) {
       reply = `Logged ${state.todayFocusMins || 0} deep-focus mins today across ${done} completed tasks.`;
     } else if (/roll|miss|yesterday/i.test(q)) {
       reply = `${rolled} rolled-over task(s) carried forward from previous days.`;
     } else {
-      reply = `Today: ${done} done, ${workPending} work pending, ${persPending} personal pending, ${state.todayFocusMins || 0}m focus logged.`;
+      reply = `Today: ${done} done, ${workPending.length} work pending, ${persPending.length} personal pending, ${state.todayFocusMins || 0}m focus logged.`;
     }
-    setTimeout(() => appendBotMsg(reply, 'ai'), 160);
+    setTimeout(() => appendBotMsg(reply, 'ai'), 140);
   }
 
+  // Sync wall-clock timer & midnight rollover when app resumes on phone
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       checkDayRollover();
@@ -1925,6 +2142,7 @@
       weekday: 'short', day: 'numeric', month: 'short'
     });
     updateKeyIndicators();
+    syncScheduleInputs();
     renderTasks();
     updateTimerDisplay();
     renderSchedule();
