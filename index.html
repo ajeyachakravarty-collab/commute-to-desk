@@ -1225,6 +1225,27 @@
     todayFocusMins: 0
   };
 
+  function enforceTop3Cap() {
+    const todayKey = getLocalDateKey();
+    let kept = 0;
+    let changed = false;
+    state.tasks.forEach(t => {
+      const isFuture = (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
+      if (isFuture && t.top3) {
+        t.top3 = false;
+        changed = true;
+      } else if (!isFuture && t.top3) {
+        if (kept < 3) {
+          kept++;
+        } else {
+          t.top3 = false;
+          changed = true;
+        }
+      }
+    });
+    return changed;
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
@@ -1244,6 +1265,7 @@
         day: isFuture ? 'tomorrow' : 'today'
       };
     });
+    enforceTop3Cap();
     const k = getStoredApiKey();
     if (k) state.apiKey = k;
     checkDayRollover();
@@ -1254,55 +1276,47 @@
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   }
 
-  function syncTodayHistory() {
-    const today = getLocalDateKey();
-    const doneTasks = state.tasks.filter(t => t.done && (t.dueDate || today) <= today);
-    state.history[today] = {
-      completed: doneTasks.length,
-      top3Hit: doneTasks.filter(t => t.top3).length,
-      focusMins: state.todayFocusMins || 0,
-      completedTitles: doneTasks.map(t => t.title)
-    };
-  }
-
   function checkDayRollover() {
     const today = getLocalDateKey();
     if (state.lastActiveDate && state.lastActiveDate !== today) {
       const prevDate = state.lastActiveDate;
-      const prevDone = state.tasks.filter(t => t.done && (t.dueDate || prevDate) <= prevDate);
+      const doneTasks = state.tasks.filter(t => t.done);
+      const top3Done = doneTasks.filter(t => t.top3).length;
       state.history[prevDate] = {
-        completed: prevDone.length,
-        top3Hit: prevDone.filter(t => t.top3).length,
+        completed: doneTasks.length,
+        top3Hit: top3Done,
         focusMins: state.todayFocusMins || 0,
-        completedTitles: prevDone.map(t => t.title)
+        completedTitles: doneTasks.map(t => t.title)
       };
       state.tasks = state.tasks
         .filter(t => !t.done)
         .map(t => {
-          const due = t.dueDate || today;
-          if (due > today) {
-            return { ...t, day: 'tomorrow', dueDate: due };
+          const d = t.dueDate || (t.day === 'tomorrow' ? today : prevDate);
+          if (d > today) {
+            return { ...t, dueDate: d, day: 'tomorrow', rolledOver: false };
           }
-          const wasScheduledAhead = due > prevDate || t.day === 'tomorrow';
-          return {
-            ...t,
-            day: 'today',
-            dueDate: today,
-            rolledOver: !wasScheduledAhead
-          };
+          const wasScheduledForToday = d >= today;
+          return { ...t, dueDate: today, day: 'today', rolledOver: !wasScheduledForToday };
         });
       state.todayFocusMins = 0;
       state.schedule = [];
       state.lastActiveDate = today;
+      enforceTop3Cap();
       saveState();
     }
   }
 
   function simulateNextDayRollover() {
+    const today = getLocalDateKey();
+    const tmrw = getTomorrowDateKey();
+    state.tasks = state.tasks.map(t => {
+      if (t.dueDate === tmrw) return { ...t, dueDate: today, day: 'today' };
+      return t;
+    });
     state.lastActiveDate = '2000-01-01';
     checkDayRollover();
     renderAll();
-    setStatus('Simulated rollover: unfinished tasks carried forward with ↻ badge.');
+    setStatus('Simulated rollover: scheduled tasks promoted and unfinished tasks carried forward.');
   }
 
   function setStatus(msg, isErr = false) {
@@ -1363,20 +1377,20 @@
 
   function loadSampleDump() {
     document.getElementById('dumpInput').value =
-      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), buy groceries during my 8 PM walk, water the balcony lucky bamboo, and prepare sprint demo tomorrow.';
+      'Check RDP VM logs before standup, review Jira ticket KAN-104 tomorrow, reply to manager email (2 mins), buy groceries on evening walk, and water the lucky bamboo tomorrow morning.';
     setStatus('Sample brain dump loaded.');
   }
 
   function addTasksFromItems(items) {
     const todayKey = getLocalDateKey();
     const tmrwKey = getTomorrowDateKey();
-    let top3Current = state.tasks.filter(t => t.top3 && !t.done && (t.dueDate || todayKey) <= todayKey).length;
+    enforceTop3Cap();
+    let top3Current = state.tasks.filter(t => t.top3 && (t.dueDate || todayKey) <= todayKey).length;
     items.forEach(item => {
       const title = (item.title || '').trim();
       if (!title) return;
       const dueDate = item.dueDate || (item.day === 'tomorrow' ? tmrwKey : todayKey);
       const isFuture = dueDate > todayKey;
-      const day = isFuture ? 'tomorrow' : 'today';
       const bucket = item.bucket === 'personal' ? 'personal' : 'work';
       const rawMins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
       const validDurs = [2, 15, 25, 45, 60, 90];
@@ -1388,7 +1402,7 @@
         id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         title,
         dueDate,
-        day,
+        day: isFuture ? 'tomorrow' : 'today',
         bucket,
         mins,
         top3: isTop3,
@@ -1410,10 +1424,13 @@
         moved++;
       }
     });
-    if (!moved) { showToast('No upcoming tasks to move.'); return; }
+    if (!moved) {
+      showToast('No upcoming tasks to move.');
+      return;
+    }
     saveState();
     renderAll();
-    showToast(`Moved ${moved} task(s) into Today.`);
+    setStatus(`Moved ${moved} upcoming task(s) into Today.`);
   }
 
   function splitOffline() {
@@ -1424,35 +1441,35 @@
       .map(s => s.replace(/^[-*•\d.)\s]+/, '').trim())
       .filter(s => s.length > 2);
 
+    const todayKey = getLocalDateKey();
+    const tmrwKey = getTomorrowDateKey();
     const personalRx = /\b(grocer|walk|bamboo|plant|guitar|home|buy|bill|sbi|gym|dinner|laundry|clean|chore|milk|veg|fruit|water the)\b/i;
-    const tomorrowRx = /\b(tomorrow|tmrw)\b/i;
     let workAdded = 0;
-    const currentTop3 = state.tasks.filter(t => t.top3 && !t.done).length;
+    const currentTop3 = state.tasks.filter(t => t.top3 && (t.dueDate || todayKey) <= todayKey).length;
 
     const items = parts.map(p => {
-      const isPers = personalRx.test(p);
-      const isTmrw = tomorrowRx.test(p);
-      const cleanTitle = p.replace(/\b(for\s+)?(tomorrow|tmrw)(\s+(morning|afternoon|evening|night))?\b/ig, '').replace(/\s{2,}/g, ' ').trim() || p;
-      const mins = /\b2\s*min/i.test(p) ? 2 : (isPers ? 15 : 25);
+      const isTmrw = /\btomorrow\b/i.test(p);
+      const cleanTitle = p.replace(/\b(?:for\s+|on\s+)?tomorrow\b/gi, '').replace(/\s{2,}/g, ' ').trim() || p;
+      const isPers = personalRx.test(cleanTitle);
+      const mins = /\b2\s*min/i.test(cleanTitle) ? 2 : (isPers ? 20 : 30);
       let top3 = false;
-      if (!isPers && !isTmrw && (currentTop3 + workAdded) < 3) {
+      if (!isTmrw && !isPers && (currentTop3 + workAdded) < 3) {
         top3 = true;
         workAdded++;
       }
       return {
         title: cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1),
-        bucket: isPers ? 'personal' : 'work',
+        dueDate: isTmrw ? tmrwKey : todayKey,
         day: isTmrw ? 'tomorrow' : 'today',
-        dueDate: isTmrw ? getTomorrowDateKey() : getLocalDateKey(),
+        bucket: isPers ? 'personal' : 'work',
         mins,
         top3
       };
     });
 
-    const tmrwCount = items.filter(x => x.day === 'tomorrow').length;
     addTasksFromItems(items);
     document.getElementById('dumpInput').value = '';
-    setStatus(`Split ${items.length} task(s)${tmrwCount ? ` (${tmrwCount} scheduled for Tomorrow)` : ''}.`);
+    setStatus(`Split ${items.length} tasks into Today & Upcoming.`);
   }
 
   function saveAndRunAi() {
@@ -1509,11 +1526,14 @@
     if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '⏳ Polishing...'; }
     setStatus('✨ Polishing with Gemini AI...');
 
-    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+    const todayKey = getLocalDateKey();
+    const tmrwKey = getTomorrowDateKey();
+    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
     const prompt = [
+      `Today is ${todayKey}. Tomorrow is ${tmrwKey}.`,
       'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
-      '{"tasks":[{"title":"Clean concise action item","day":"today"|"tomorrow","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
-      'Rules: Set day:"tomorrow" if the user mentions tomorrow/next day, otherwise "today". Mark at most 3 high-impact today work tasks as top3:true. Keep titles crisp.',
+      '{"tasks":[{"title":"Clean concise action item","dueDate":"YYYY-MM-DD","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
+      `Rules: Set dueDate to "${tmrwKey}" (or exact YYYY-MM-DD if a specific future date is mentioned), otherwise "${todayKey}". Mark at most 3 high-impact today work tasks as top3:true. Keep titles crisp.`,
       'Brain dump: ' + JSON.stringify(raw)
     ].join('\n');
 
@@ -1541,15 +1561,13 @@
           const cleaned = text.replace(/```json|```/gi, '').trim();
           const parsed = JSON.parse(cleaned);
           if (Array.isArray(parsed.tasks) && parsed.tasks.length) {
-            const normalized = parsed.tasks.map(x => ({
-              ...x,
-              day: (x.scheduledFor === 'tomorrow' || x.day === 'tomorrow') ? 'tomorrow' : 'today',
-              dueDate: x.dueDate || ((x.scheduledFor === 'tomorrow' || x.day === 'tomorrow') ? getTomorrowDateKey() : getLocalDateKey())
-            }));
+            const normalized = parsed.tasks.map(t => {
+              const d = (t.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) && t.dueDate >= todayKey) ? t.dueDate : todayKey;
+              return { ...t, dueDate: d, day: d > todayKey ? 'tomorrow' : 'today' };
+            });
             addTasksFromItems(normalized);
             document.getElementById('dumpInput').value = '';
-            const tmrwCount = normalized.filter(x => x.day === 'tomorrow').length;
-            setStatus(`✨ AI Polish (${model}) organized ${normalized.length} tasks${tmrwCount ? ` (${tmrwCount} for Tomorrow)` : ''}!`);
+            setStatus(`✨ AI Polish (${model}) organized ${normalized.length} tasks!`);
             return;
           }
         } catch (err) {
@@ -1571,7 +1589,8 @@
     const isFuture = dueDate > todayKey;
     const bucket = document.getElementById('quickBucket').value;
     const mins = Number(document.getElementById('quickMins').value) || 25;
-    const top3Count = state.tasks.filter(t => t.top3 && !t.done && (t.dueDate || todayKey) <= todayKey).length;
+    enforceTop3Cap();
+    const top3Count = state.tasks.filter(t => t.top3 && (t.dueDate || todayKey) <= todayKey).length;
     addTasksFromItems([{ title, dueDate, day: isFuture ? 'tomorrow' : 'today', bucket, mins, top3: !isFuture && bucket === 'work' && top3Count < 3 }]);
     input.value = '';
   }
@@ -1583,19 +1602,23 @@
     t.day = 'today';
     saveState();
     renderAll();
-    showToast('Moved task to Today');
+    showToast('Moved to Today.');
   }
 
   function toggleTaskDone(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
-    const todayKey = getLocalDateKey();
     t.done = !t.done;
-    if (t.done && ((t.dueDate && t.dueDate > todayKey) || t.day === 'tomorrow')) {
-      t.dueDate = todayKey;
+    const today = getLocalDateKey();
+    if (t.done && t.dueDate > today) {
+      t.dueDate = today;
       t.day = 'today';
     }
-    syncTodayHistory();
+    const doneNow = state.tasks.filter(x => x.done && (x.dueDate || today) <= today);
+    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: state.todayFocusMins, completedTitles: [] };
+    state.history[today].completed = doneNow.length;
+    state.history[today].top3Hit = doneNow.filter(x => x.top3).length;
+    state.history[today].completedTitles = doneNow.map(x => x.title);
     saveState();
     renderAll();
   }
@@ -1603,19 +1626,21 @@
   function toggleTop3(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
+    enforceTop3Cap();
     if (t.top3) {
       t.top3 = false;
     } else {
       const todayKey = getLocalDateKey();
-      const count = state.tasks.filter(x => t.top3 && !x.done && (x.dueDate || todayKey) <= todayKey).length;
+      const count = state.tasks.filter(x => x.top3 && (x.dueDate || todayKey) <= todayKey).length;
       if (count >= 3) {
-        showToast('Rule of 3 allows up to 3 active priorities. Unstar one first.');
+        showToast('Rule of 3 is full (3/3). Tap ★ Top 3 on an existing priority to swap it out.');
         return;
       }
       t.dueDate = todayKey;
       t.day = 'today';
       t.top3 = true;
     }
+    enforceTop3Cap();
     saveState();
     renderAll();
   }
@@ -1639,14 +1664,11 @@
   function openEditModal(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
-    const todayKey = getLocalDateKey();
     document.getElementById('editTaskId').value = t.id;
     document.getElementById('editTaskTitle').value = t.title;
     const ed = document.getElementById('editTaskDate');
-    if (ed) {
-      ed.min = todayKey;
-      ed.value = t.dueDate || (t.day === 'tomorrow' ? getTomorrowDateKey() : todayKey);
-    }
+    ed.min = getLocalDateKey();
+    ed.value = t.dueDate || getLocalDateKey();
     document.getElementById('editTaskBucket').value = t.bucket;
     document.getElementById('editTaskMins').value = String(t.mins || 25);
     document.getElementById('editTaskTop3').checked = Boolean(t.top3);
@@ -1667,10 +1689,11 @@
     const newDueDate = document.getElementById('editTaskDate')?.value || todayKey;
     const isFuture = newDueDate > todayKey;
     const wantTop3 = !isFuture && document.getElementById('editTaskTop3').checked;
+    enforceTop3Cap();
     if (wantTop3 && !t.top3) {
-      const count = state.tasks.filter(x => x.top3 && !x.done && (x.dueDate || todayKey) <= todayKey && x.id !== id).length;
+      const count = state.tasks.filter(x => x.top3 && (x.dueDate || todayKey) <= todayKey && x.id !== id).length;
       if (count >= 3) {
-        showToast('You already have 3 Top Priorities. Unstar one first.');
+        showToast('Rule of 3 is full (3/3). Unstar one of your 3 priorities first.');
         return;
       }
     }
@@ -1680,6 +1703,7 @@
     t.bucket = document.getElementById('editTaskBucket').value;
     t.mins = Number(document.getElementById('editTaskMins').value) || 25;
     t.top3 = wantTop3;
+    enforceTop3Cap();
     if (timerState.taskId === id) {
       document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     }
@@ -1699,24 +1723,23 @@
     const isFuture = (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
     const twoMinTag = t.mins <= 2 ? `<span class="tag tag-2m">⚡ 2m</span>` : '';
     const rollTag = t.rolledOver ? `<span class="tag tag-roll">↻ Rolled</span>` : '';
-    const dateLabel = formatFriendlyDate(t.dueDate || (t.day === 'tomorrow' ? getTomorrowDateKey() : todayKey));
-    const tmrTag = isFuture ? `<span class="tag tag-tmrw">📅 ${escapeHtml(dateLabel)}</span>` : '';
+    const dateTag = isFuture ? `<span class="tag tag-tmrw">📅 ${escapeHtml(formatFriendlyDate(t.dueDate))}</span>` : '';
     const bucketTag = t.bucket === 'work'
       ? `<span class="tag tag-work">Work</span>`
       : `<span class="tag tag-pers">Personal</span>`;
 
-    const secondActionBtn = isFuture
+    const secondBtn = isFuture
       ? `<button class="t-btn move-today" onclick="moveTaskToToday('${t.id}')">↑ Today</button>`
       : `<button class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>`;
 
     return `
-      <div class="task-card ${t.top3 && !isFuture ? 'top3' : ''} ${isFuture ? 'tomorrow-card' : ''} ${t.done ? 'done' : ''}">
+      <div class="task-card ${t.top3 ? 'top3' : ''} ${isFuture ? 'tomorrow-card' : ''} ${t.done ? 'done' : ''}">
         <div class="task-main">
           <button type="button" class="check-circle" aria-label="Complete" onclick="toggleTaskDone('${t.id}')">✓</button>
           <div class="task-body">
             <div class="task-title">${escapeHtml(t.title)}</div>
             <div class="task-tags">
-              ${tmrTag}
+              ${dateTag}
               ${bucketTag}
               <span class="tag tag-time">⏱ ${t.mins}m</span>
               ${twoMinTag}
@@ -1726,7 +1749,7 @@
         </div>
         <div class="task-bar">
           <button class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
-          ${secondActionBtn}
+          ${secondBtn}
           <button class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
           <button class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
         </div>
@@ -1734,6 +1757,7 @@
   }
 
   function renderTasks() {
+    if (enforceTop3Cap()) saveState();
     const todayKey = getLocalDateKey();
     const only2Min = document.getElementById('filter2Min').checked;
     const filtered = state.tasks.filter(t => !only2Min || t.mins <= 2);
@@ -1746,12 +1770,12 @@
     const work = todayTasks.filter(t => !t.top3 && t.bucket === 'work');
     const pers = todayTasks.filter(t => !t.top3 && t.bucket === 'personal');
 
-    const activeTop3Count = state.tasks.filter(t => t.top3 && !t.done && !isUpcoming(t)).length;
+    const pinnedTop3Count = state.tasks.filter(t => t.top3 && !isUpcoming(t)).length;
     const doneTodayCount = state.tasks.filter(t => t.done && !isUpcoming(t)).length;
 
-    document.getElementById('top3Count').textContent = activeTop3Count;
+    document.getElementById('top3Count').textContent = pinnedTop3Count;
     document.getElementById('tomorrowCount').textContent = tomorrowTasks.length;
-    document.getElementById('heroTop3').textContent = `${activeTop3Count} / 3`;
+    document.getElementById('heroTop3').textContent = `${pinnedTop3Count} / 3`;
     document.getElementById('heroDone').textContent = doneTodayCount;
     document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
 
@@ -1760,37 +1784,29 @@
       : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Tap <strong>☆ Top 3</strong> on up to 3 needle-moving tasks.</div>';
     document.getElementById('workList').innerHTML = work.length
       ? work.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks for Today.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks for today.</div>';
     document.getElementById('personalList').innerHTML = pers.length
       ? pers.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands for Today.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands for today.</div>';
     document.getElementById('tomorrowList').innerHTML = tomorrowTasks.length
       ? tomorrowTasks.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Pick any future date in Quick Add or say "tomorrow" in Brain Dump to schedule ahead.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Pick any future date in <strong>Quick Add</strong> or say "tomorrow" in Brain Dump.</div>';
   }
 
   function copyWorkMarkdown() {
     const todayKey = getLocalDateKey();
-    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
-    const todayLines = state.tasks
-      .filter(t => !isUpcoming(t) && (t.bucket === 'work' || t.top3))
+    const lines = state.tasks
+      .filter(t => (t.bucket === 'work' || t.top3) && (t.dueDate || todayKey) <= todayKey)
       .map(t => `- [${t.done ? 'x' : ' '}] ${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`);
-    const tmrwLines = state.tasks
-      .filter(t => isUpcoming(t))
-      .map(t => `- [ ] 📅 [${formatFriendlyDate(t.dueDate || getTomorrowDateKey())}] ${t.title} (${t.mins}m)`);
-    const lines = [...todayLines, ...tmrwLines];
-    if (!lines.length) { showToast('No tasks to copy.'); return; }
-    fallbackCopy(lines.join('\n'));
-  }
-
-  function fallbackCopy(text) {
+    if (!lines.length) { showToast('No work tasks for today to copy.'); return; }
+    const md = lines.join('\n');
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => showToast('Copied Markdown checklist!')).catch(() => execCopy(text));
+      navigator.clipboard.writeText(md).then(() => showToast('Copied Markdown checklist!')).catch(() => fallbackCopy(md));
     } else {
-      execCopy(text);
+      fallbackCopy(md);
     }
   }
-  function execCopy(text) {
+  function fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
@@ -1798,17 +1814,16 @@
     document.body.appendChild(ta);
     ta.select();
     try { document.execCommand('copy'); showToast('Copied Markdown checklist!'); }
-    catch (e) { showToast('Could not copy on this browser.'); }
+    catch (e) { showToast('Could not auto-copy on this browser.'); }
     document.body.removeChild(ta);
   }
 
   function shutdownRitual() {
     const todayKey = getLocalDateKey();
-    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
-    const done = state.tasks.filter(t => !isUpcoming(t) && t.done).length;
-    const remToday = state.tasks.filter(t => !isUpcoming(t) && !t.done).length;
-    const queuedFuture = state.tasks.filter(t => isUpcoming(t) && !t.done).length;
-    showToast(`Shutdown: ${done} done (${state.todayFocusMins}m) · ${remToday + queuedFuture} queued ahead`);
+    const done = state.tasks.filter(t => t.done && (t.dueDate || todayKey) <= todayKey).length;
+    const rem = state.tasks.filter(t => !t.done && (t.dueDate || todayKey) <= todayKey).length;
+    const tmrw = state.tasks.filter(t => !t.done && t.dueDate > todayKey).length;
+    showToast(`Shutdown: ${done} done, ${rem} rolling over, ${tmrw} upcoming.`);
   }
 
   let timerState = {
@@ -1853,12 +1868,11 @@
     const inp = document.getElementById('customFocusMins');
     const val = parseInt(inp?.value, 10);
     if (!val || val < 1 || val > 300) {
-      showToast('Enter a focus duration between 1 and 300 mins.');
+      showToast('Enter a focus duration between 1 and 300 minutes.');
       return;
     }
     setTimerPreset(val, null);
     inp.value = '';
-    showToast(`Focus timer set to ${val} mins`);
   }
 
   function updateTimerDisplay() {
@@ -1918,20 +1932,28 @@
     timerState.running = false;
     playChime();
     state.todayFocusMins = (state.todayFocusMins || 0) + timerState.presetMins;
+    const today = getLocalDateKey();
     if (timerState.taskId) {
       const pinned = state.tasks.find(x => x.id === timerState.taskId);
       if (pinned && !pinned.done) {
-        pinned.dueDate = getLocalDateKey();
-        pinned.day = 'today';
         pinned.done = true;
+        if (pinned.dueDate > today) {
+          pinned.dueDate = today;
+          pinned.day = 'today';
+        }
       }
     }
-    syncTodayHistory();
+    const doneTimerTasks = state.tasks.filter(x => x.done && (x.dueDate || today) <= today);
+    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [] };
+    state.history[today].completed = doneTimerTasks.length;
+    state.history[today].top3Hit = doneTimerTasks.filter(x => x.top3).length;
+    state.history[today].focusMins = state.todayFocusMins;
+    state.history[today].completedTitles = doneTimerTasks.map(x => x.title);
     saveState();
     resetTimer();
     renderAll();
+    showToast(`+${timerState.presetMins}m focus logged!`);
     timerState.isCompleting = false;
-    showToast(`Logged +${timerState.presetMins}m Deep Focus!`);
   }
 
   function fmtMins(totalMins) {
@@ -1986,6 +2008,7 @@
   function generateSchedule() {
     const now = new Date();
     const todayKey = getLocalDateKey(now);
+    const tmrwKey = getTomorrowDateKey();
     const currentMins = now.getHours() * 60 + now.getMinutes();
     const roundedNow = Math.ceil(currentMins / 5) * 5;
 
@@ -2005,21 +2028,38 @@
       ...state.tasks.filter(t => !t.done && !isUpcoming(t) && t.top3),
       ...state.tasks.filter(t => !t.done && !isUpcoming(t) && !t.top3 && t.bucket === 'work'),
       ...state.tasks.filter(t => !t.done && !isUpcoming(t) && !t.top3 && t.bucket === 'personal'),
-      ...state.tasks
-        .filter(t => !t.done && isUpcoming(t))
-        .sort((a, b) => (a.dueDate || getTomorrowDateKey()).localeCompare(b.dueDate || getTomorrowDateKey()))
+      ...state.tasks.filter(t => !t.done && isUpcoming(t)).sort((a, b) => (a.dueDate || tmrwKey).localeCompare(b.dueDate || tmrwKey))
     ];
 
     let workCursor = Math.max(wStart, roundedNow);
     let persCursor = Math.max(pStart, roundedNow);
+    const futureCursors = {};
     const generated = [];
 
     pending.forEach(t => {
       const dur = t.mins || 25;
       if (isUpcoming(t)) {
-        const startStr = t.bucket === 'work' ? fmtMins(wStart) : fmtMins(pStart);
-        const dateStr = formatFriendlyDate(t.dueDate || getTomorrowDateKey());
-        generated.push({ start: null, end: null, dayLabel: dateStr, title: `📅 ${dateStr} ${startStr}: ${t.title}`, type: 'deferred' });
+        const targetDate = t.dueDate || tmrwKey;
+        if (!futureCursors[targetDate]) {
+          futureCursors[targetDate] = { work: wStart, personal: pStart };
+        }
+        const isWork = t.bucket === 'work';
+        const fStart = isWork ? futureCursors[targetDate].work : futureCursors[targetDate].personal;
+        const fEnd = fStart + dur;
+        if (isWork) futureCursors[targetDate].work = fEnd + 5;
+        else futureCursors[targetDate].personal = fEnd + 5;
+
+        const dayLabel = formatFriendlyDate(targetDate);
+        generated.push({
+          start: null,
+          end: null,
+          futureDate: targetDate,
+          futureStart: fStart,
+          futureEnd: fEnd,
+          badgeLabel: dayLabel,
+          title: `📅 ${dayLabel} ${fmtMins(fStart)}: ${t.title}`,
+          type: 'deferred'
+        });
         return;
       }
       if (t.bucket === 'work' || t.top3) {
@@ -2027,14 +2067,38 @@
           generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
           workCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, dayLabel: 'Tomorrow', title: `↻ Tomorrow ${fmtMins(wStart)}: ${t.title}`, type: 'deferred' });
+          if (!futureCursors[tmrwKey]) futureCursors[tmrwKey] = { work: wStart, personal: pStart };
+          const fStart = futureCursors[tmrwKey].work;
+          futureCursors[tmrwKey].work = fStart + dur + 5;
+          generated.push({
+            start: null,
+            end: null,
+            futureDate: tmrwKey,
+            futureStart: fStart,
+            futureEnd: fStart + dur,
+            badgeLabel: 'Tomorrow (Overflow)',
+            title: `↻ Tomorrow ${fmtMins(fStart)}: ${t.title}`,
+            type: 'deferred'
+          });
         }
       } else {
         if (persCursor + dur <= pEnd) {
           generated.push({ start: persCursor, end: persCursor + dur, title: t.title, type: 'pers' });
           persCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, dayLabel: 'Tomorrow', title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`, type: 'deferred' });
+          if (!futureCursors[tmrwKey]) futureCursors[tmrwKey] = { work: wStart, personal: pStart };
+          const fStart = futureCursors[tmrwKey].personal;
+          futureCursors[tmrwKey].personal = fStart + dur + 5;
+          generated.push({
+            start: null,
+            end: null,
+            futureDate: tmrwKey,
+            futureStart: fStart,
+            futureEnd: fStart + dur,
+            badgeLabel: 'Tomorrow (Overflow)',
+            title: `↻ Tomorrow ${fmtMins(fStart)}: ${t.title}`,
+            type: 'deferred'
+          });
         }
       }
     });
@@ -2052,7 +2116,7 @@
     }
     el.innerHTML = state.schedule.map(b => `
       <div class="timeline-card ${b.type}">
-        <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : (b.dayLabel || 'Upcoming')}</div>
+        <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : escapeHtml(b.badgeLabel || 'Upcoming')}</div>
         <div style="font-size:14px;font-weight:700;">${escapeHtml(b.title)}</div>
       </div>`).join('');
   }
@@ -2063,55 +2127,32 @@
 
   function exportICS() {
     if (!state.schedule.length) generateSchedule();
-    const now = new Date();
-    const todayKey = getLocalDateKey(now);
-    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
-    const timedToday = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
-    const upcomingTasks = state.tasks.filter(t => isUpcoming(t) && !t.done);
+    const todayTimed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
+    const futureTimed = state.schedule.filter(b => b.start === null && b.futureDate && typeof b.futureStart === 'number');
 
-    if (!timedToday.length && !upcomingTasks.length) {
-      showToast('No future timeblocks to export');
+    if (!todayTimed.length && !futureTimed.length) {
+      showToast('No pending tasks to export to calendar.');
       return;
     }
-
-    const fmtDateStamp = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-    const todayStamp = fmtDateStamp(now);
-    const tmrwKey = getTomorrowDateKey();
+    const now = new Date();
+    const todayStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 
     let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//CommuteToDesk//ProductivityOS//EN\r\n';
-    timedToday.forEach((b, idx) => {
+    todayTimed.forEach((b, idx) => {
       const sh = String(Math.floor(b.start / 60)).padStart(2, '0');
       const sm = String(b.start % 60).padStart(2, '0');
       const eh = String(Math.floor(b.end / 60)).padStart(2, '0');
       const em = String(b.end % 60).padStart(2, '0');
       ics += `BEGIN:VEVENT\r\nUID:c2d-${todayStamp}-${idx}@ajeyachakrav\r\nDTSTAMP:${todayStamp}T060000Z\r\nDTSTART:${todayStamp}T${sh}${sm}00\r\nDTEND:${todayStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(b.title)}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
     });
-
-    // Export all upcoming/future-dated tasks on their exact scheduled dates
-    const cursorsByDate = {};
-    upcomingTasks.forEach((t, idx) => {
-      const dKey = t.dueDate || tmrwKey;
-      const dStamp = dKey.replace(/-/g, '');
-      if (!cursorsByDate[dKey]) {
-        cursorsByDate[dKey] = {
-          work: parseTimeToMins(state.workStart, 690),
-          pers: parseTimeToMins(state.personalStart, 1200)
-        };
-      }
-      const dur = t.mins || 25;
-      const isPers = t.bucket === 'personal';
-      const startM = isPers ? cursorsByDate[dKey].pers : cursorsByDate[dKey].work;
-      const endM = startM + dur;
-      if (isPers) cursorsByDate[dKey].pers = endM + 5;
-      else cursorsByDate[dKey].work = endM + 5;
-
-      const sh = String(Math.floor(startM / 60)).padStart(2, '0');
-      const sm = String(startM % 60).padStart(2, '0');
-      const eh = String(Math.floor(endM / 60)).padStart(2, '0');
-      const em = String(endM % 60).padStart(2, '0');
-      ics += `BEGIN:VEVENT\r\nUID:c2d-${dStamp}-fut-${idx}@ajeyachakrav\r\nDTSTAMP:${todayStamp}T060000Z\r\nDTSTART:${dStamp}T${sh}${sm}00\r\nDTEND:${dStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(t.title)}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+    futureTimed.forEach((b, idx) => {
+      const dStamp = b.futureDate.replace(/-/g, '');
+      const sh = String(Math.floor(b.futureStart / 60)).padStart(2, '0');
+      const sm = String(b.futureStart % 60).padStart(2, '0');
+      const eh = String(Math.floor(b.futureEnd / 60)).padStart(2, '0');
+      const em = String(b.futureEnd % 60).padStart(2, '0');
+      ics += `BEGIN:VEVENT\r\nUID:c2d-${dStamp}-f${idx}@ajeyachakrav\r\nDTSTAMP:${todayStamp}T060000Z\r\nDTSTART:${dStamp}T${sh}${sm}00\r\nDTEND:${dStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(b.title.replace(/^(?:📅\s*[^:]+:\s*|↻\s*Tomorrow\s*\d{2}:\d{2}:\s*)/, ''))}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
     });
-
     ics += 'END:VCALENDAR';
 
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
@@ -2121,7 +2162,7 @@
     a.download = `commute-to-desk-${todayStamp}.ics`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Downloaded .ICS calendar file');
+    showToast('Exported .ICS calendar file!');
   }
 
   let analyticsRange = 'week';
@@ -2350,13 +2391,12 @@
 
     const todayKey = getLocalDateKey();
     const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
-    const todayTasks = state.tasks.filter(t => !isUpcoming(t));
-    const top3 = todayTasks.filter(t => t.top3 && !t.done).map(t => t.title);
-    const workPending = todayTasks.filter(t => !t.done && t.bucket === 'work');
-    const persPending = todayTasks.filter(t => !t.done && t.bucket === 'personal');
-    const tomorrowTasks = state.tasks.filter(t => isUpcoming(t) && !t.done);
-    const done = todayTasks.filter(t => t.done).length;
-    const rolled = todayTasks.filter(t => t.rolledOver && !t.done).length;
+    const top3 = state.tasks.filter(t => t.top3 && !t.done && !isUpcoming(t)).map(t => t.title);
+    const workPending = state.tasks.filter(t => !t.done && t.bucket === 'work' && !isUpcoming(t));
+    const persPending = state.tasks.filter(t => !t.done && t.bucket === 'personal' && !isUpcoming(t));
+    const upcomingTasks = state.tasks.filter(t => !t.done && isUpcoming(t));
+    const done = state.tasks.filter(t => t.done && !isUpcoming(t)).length;
+    const rolled = state.tasks.filter(t => t.rolledOver && !t.done).length;
 
     const apiKey = getStoredApiKey();
     if (apiKey) {
@@ -2374,12 +2414,12 @@
         top3Active: top3,
         workPending: workPending.map(t => `${t.title} (${t.mins}m)`),
         personalPending: persPending.map(t => `${t.title} (${t.mins}m)`),
-        upcomingScheduled: tomorrowTasks.map(t => `${t.title} [${formatFriendlyDate(t.dueDate || getTomorrowDateKey())}] (${t.bucket}, ${t.mins}m)`),
+        upcomingPlanned: upcomingTasks.map(t => `[${formatFriendlyDate(t.dueDate)}] ${t.title} (${t.mins}m)`),
         completedToday: done,
         rolledOverCount: rolled,
         focusMinsToday: state.todayFocusMins || 0,
         historyDaysLogged: Object.keys(state.history || {}).length,
-        schedule: state.schedule.map(s => `${s.start !== null ? fmtMins(s.start) + '-' + fmtMins(s.end) : (s.dayLabel || 'Upcoming')}: ${s.title}`)
+        schedule: state.schedule.map(s => `${s.start !== null ? fmtMins(s.start) + '-' + fmtMins(s.end) : (s.badgeLabel || 'Upcoming')}: ${s.title}`)
       });
 
       try {
@@ -2403,14 +2443,14 @@
     }
 
     let reply = '';
-    if (/tomorrow|tmrw|upcoming|future|date/i.test(q)) {
-      reply = tomorrowTasks.length
-        ? `Upcoming scheduled tasks (${tomorrowTasks.length}): ${tomorrowTasks.map(t => `${t.title} [${formatFriendlyDate(t.dueDate || getTomorrowDateKey())}] (${t.mins}m)`).join('; ')}.`
-        : 'No upcoming tasks scheduled yet. Pick a future date in Quick Add or say "tomorrow" in Brain Dump!';
-    } else if (/top\s*3|priorit/i.test(q)) {
+    if (/top\s*3|priorit/i.test(q)) {
       reply = top3.length
         ? `Active Top 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
         : '0 active Top 3 priorities pinned right now. Tap "☆ Top 3" on your top tasks!';
+    } else if (/tomorrow|upcoming|future|date/i.test(q)) {
+      reply = upcomingTasks.length
+        ? `Upcoming scheduled tasks (${upcomingTasks.length}): ${upcomingTasks.map(t => `${t.title} (${formatFriendlyDate(t.dueDate)})`).join('; ')}.`
+        : 'No tasks scheduled for future dates yet.';
     } else if (/sched|plan|block|next/i.test(q)) {
       const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
       reply = timed.length
@@ -2421,7 +2461,7 @@
     } else if (/roll|miss|yesterday/i.test(q)) {
       reply = `${rolled} rolled-over task(s) carried forward from previous days.`;
     } else {
-      reply = `Today: ${done} done, ${workPending.length} work pending, ${persPending.length} personal pending, ${tomorrowTasks.length} upcoming, ${state.todayFocusMins || 0}m focus logged.`;
+      reply = `Today: ${done} done, ${workPending.length} work pending, ${persPending.length} personal pending, ${upcomingTasks.length} upcoming, ${state.todayFocusMins || 0}m focus logged.`;
     }
     setTimeout(() => appendBotMsg(reply, 'ai'), 140);
   }
