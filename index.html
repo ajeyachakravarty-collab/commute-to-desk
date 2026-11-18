@@ -194,6 +194,7 @@
       align-items: center;
       justify-content: space-between;
       margin: 16px 2px 8px;
+      gap: 8px;
     }
     .section-label h2 {
       font-size: 13px;
@@ -331,12 +332,16 @@
     .inline-key-box.visible { display: block; }
     .status-msg { font-size: 12px; margin-top: 8px; color: var(--text-secondary); font-weight: 500; }
 
-    /* Quick Add Bar */
+    /* Quick Add Bar (Today/Tomorrow + Bucket + Duration + Add) */
     .quick-row {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
       margin-top: 8px;
+    }
+    .quick-row select {
+      padding: 10px 10px;
+      font-size: 14px;
     }
 
     /* Native App Task Cards */
@@ -354,6 +359,10 @@
     .task-card.top3 {
       border: 1.5px solid #fcd34d;
       background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+    }
+    .task-card.tomorrow-card {
+      border: 1.5px dashed #c7d2fe;
+      background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
     }
     .task-card.done {
       opacity: 0.58;
@@ -411,6 +420,7 @@
     .tag-pers { background: #fef3c7; color: #92400e; }
     .tag-time { background: #f1f5f9; color: #475569; }
     .tag-roll { background: #f3e8ff; color: #6b21a8; }
+    .tag-tmrw { background: #e0e7ff; color: #3730a3; }
     .tag-2m { background: #dcfce7; color: #166534; }
 
     /* Segmented Action Strip */
@@ -437,6 +447,7 @@
     }
     .t-btn:active { transform: scale(0.95); background: #e2e8f0; }
     .t-btn.star-on { background: #fef3c7; color: #b45309; }
+    .t-btn.move-today { background: #dbeafe; color: #1d4ed8; }
     .t-btn.del-btn { background: #fef2f2; color: #dc2626; }
 
     /* Circular App Focus Timer */
@@ -536,9 +547,9 @@
     .bar-chart {
       display: flex;
       align-items: flex-end;
-      gap: 6px;
-      height: 156px;
-      padding: 16px 4px 6px;
+      gap: 8px;
+      height: 150px;
+      padding: 16px 4px 4px;
       border-bottom: 1px solid var(--border);
     }
     .bar-col {
@@ -546,15 +557,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       height: 100%;
       justify-content: flex-end;
       cursor: pointer;
       padding: 4px 2px;
       border-radius: 10px;
-      transition: background 0.15s, transform 0.1s;
+      transition: background 0.15s;
     }
-    .bar-col:active { transform: scale(0.95); }
     .bar-col.selected {
       background: #eff6ff;
       outline: 1.5px solid #93c5fd;
@@ -565,52 +575,8 @@
       background: var(--primary-grad);
       border-radius: 8px 8px 0 0;
       min-height: 6px;
-      transition: height 0.25s ease;
     }
     .bar-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
-    .bar-col.selected .bar-lbl { color: #1d4ed8; font-weight: 800; }
-
-    .bar-detail-box {
-      margin-top: 12px;
-      padding: 13px 14px;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 15px;
-      animation: fadeIn 0.18s ease-out;
-    }
-    .detail-metrics {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 8px 0;
-    }
-    .detail-pill {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      padding: 4px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #1e293b;
-    }
-    .detail-tasks {
-      list-style: none;
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .detail-tasks li {
-      font-size: 13px;
-      color: #334155;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      padding: 7px 10px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
 
     /* Bottom Sheets */
     .sheet-backdrop {
@@ -763,7 +729,7 @@
           <button class="btn btn-chip" onclick="loadSampleDump()">Sample</button>
         </div>
         <button id="micBtn" class="btn voice-trigger" onclick="toggleVoice()">🎤 Tap to Speak</button>
-        <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs, review Jira ticket, buy groceries on evening walk..."></textarea>
+        <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs today, review Jira ticket tomorrow morning, buy groceries on evening walk..."></textarea>
         <div class="dual-actions">
           <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
           <button id="aiPolishBtn" class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
@@ -788,6 +754,10 @@
         </div>
         <input type="text" id="quickTitle" placeholder="Add a single action item..." onkeydown="if(event.key==='Enter')addManualTask()" />
         <div class="quick-row">
+          <select id="quickDay">
+            <option value="today" selected>📅 Today</option>
+            <option value="tomorrow">🌅 Tomorrow</option>
+          </select>
           <select id="quickBucket">
             <option value="work">💼 Work</option>
             <option value="personal">🏡 Personal</option>
@@ -800,8 +770,8 @@
             <option value="60">60 min</option>
             <option value="90">90 min</option>
           </select>
-          <button class="btn btn-primary" onclick="addManualTask()">Add</button>
         </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addManualTask()">Add Task</button>
       </div>
 
       <!-- Top 3 Section -->
@@ -823,6 +793,13 @@
         <h2>🏡 Personal & Evening Walk</h2>
       </div>
       <div id="personalList" class="task-list"></div>
+
+      <!-- Scheduled for Tomorrow Section -->
+      <div class="section-label">
+        <h2>🌅 Scheduled for Tomorrow (<span id="tomorrowCount">0</span>)</h2>
+        <button id="moveAllTodayBtn" class="btn btn-chip" style="display:none;" onclick="promoteAllTomorrowToToday()">↑ Move All to Today</button>
+      </div>
+      <div id="tomorrowList" class="task-list"></div>
     </section>
 
     <!-- TAB 2: FOCUS -->
@@ -917,12 +894,9 @@
         </div>
       </div>
       <div class="kpi-grid" id="kpiGrid"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-        <div class="card-title" style="font-size:14px;">Completed Tasks Trend</div>
-        <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Tap any bar for details</span>
-      </div>
+      <div class="card-title" style="margin-top:8px;font-size:14px;">Completed Tasks Trend <span style="font-size:11px;font-weight:500;color:var(--text-muted);">(Tap a bar for details)</span></div>
       <div class="bar-chart" id="barChart"></div>
-      <div id="barDetailPanel"></div>
+      <div id="barDetailBox" style="margin-top:12px;background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:13px;"></div>
     </div>
   </section>
 </main>
@@ -940,7 +914,14 @@
       <label>Task Title</label>
       <input type="text" id="editTaskTitle" />
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div class="form-group">
+        <label>Day</label>
+        <select id="editTaskDay">
+          <option value="today">Today</option>
+          <option value="tomorrow">Tomorrow</option>
+        </select>
+      </div>
       <div class="form-group">
         <label>Bucket</label>
         <select id="editTaskBucket">
@@ -1029,7 +1010,7 @@
     <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 6px;" onclick="toggleBot()">✕</button>
   </div>
   <div id="botMsgs" class="bot-msgs">
-    <div class="bot-msg ai">Ask me about your Top 3 priorities, pending work/personal tasks, focus minutes, or rollover items!</div>
+    <div class="bot-msg ai">Ask me about your Top 3 priorities, pending Today or Tomorrow tasks, focus minutes, or rollover items!</div>
   </div>
   <div class="bot-input-row">
     <input type="text" id="botInput" placeholder="Ask about your tasks..." onkeydown="if(event.key==='Enter')sendBotQuery()" />
@@ -1233,6 +1214,10 @@
         state = { ...state, ...parsed };
       }
     } catch (e) {}
+    state.tasks = (state.tasks || []).map(t => ({
+      ...t,
+      scheduledFor: t.scheduledFor === 'tomorrow' ? 'tomorrow' : 'today'
+    }));
     const k = getStoredApiKey();
     if (k) state.apiKey = k;
     checkDayRollover();
@@ -1245,12 +1230,12 @@
 
   function syncTodayHistory() {
     const today = getLocalDateKey();
-    const doneTasks = state.tasks.filter(t => t.done);
+    const doneTasks = state.tasks.filter(t => t.done && (t.scheduledFor || 'today') === 'today');
     state.history[today] = {
       completed: doneTasks.length,
       top3Hit: doneTasks.filter(t => t.top3).length,
       focusMins: state.todayFocusMins || 0,
-      completedTitles: doneTasks.map(t => `${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`)
+      completedTitles: doneTasks.map(t => t.title)
     };
   }
 
@@ -1258,16 +1243,31 @@
     const today = getLocalDateKey();
     if (state.lastActiveDate && state.lastActiveDate !== today) {
       const prevDate = state.lastActiveDate;
-      const doneTasks = state.tasks.filter(t => t.done);
+      const doneTasks = state.tasks.filter(t => t.done && (t.scheduledFor || 'today') === 'today');
       state.history[prevDate] = {
         completed: doneTasks.length,
         top3Hit: doneTasks.filter(t => t.top3).length,
         focusMins: state.todayFocusMins || 0,
-        completedTitles: doneTasks.map(t => `${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`)
+        completedTitles: doneTasks.map(t => t.title)
       };
+
+      // Promote "tomorrow" tasks into Today cleanly, and roll over unfinished Today tasks with ↻
+      let top3Promoted = 0;
       state.tasks = state.tasks
         .filter(t => !t.done)
-        .map(t => ({ ...t, rolledOver: true }));
+        .map(t => {
+          if (t.scheduledFor === 'tomorrow') {
+            let keepTop3 = Boolean(t.top3);
+            if (keepTop3 && top3Promoted >= 3) keepTop3 = false;
+            if (keepTop3) top3Promoted++;
+            return { ...t, scheduledFor: 'today', top3: keepTop3, rolledOver: false };
+          }
+          let keepTop3 = Boolean(t.top3);
+          if (keepTop3 && top3Promoted >= 3) keepTop3 = false;
+          if (keepTop3) top3Promoted++;
+          return { ...t, scheduledFor: 'today', top3: keepTop3, rolledOver: true };
+        });
+
       state.todayFocusMins = 0;
       state.schedule = [];
       state.lastActiveDate = today;
@@ -1279,7 +1279,7 @@
     state.lastActiveDate = '2000-01-01';
     checkDayRollover();
     renderAll();
-    setStatus('Simulated rollover: unfinished tasks carried forward with ↻ badge.');
+    setStatus('Simulated next day: Tomorrow tasks moved into Today & unfinished tasks rolled over.');
     showToast('Simulated next-day rollover');
   }
 
@@ -1341,8 +1341,8 @@
 
   function loadSampleDump() {
     document.getElementById('dumpInput').value =
-      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), buy groceries during my 8 PM walk, water the balcony lucky bamboo, and practice guitar barre chords.';
-    setStatus('Sample brain dump loaded.');
+      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), prepare sprint demo deck tomorrow morning, buy groceries during my 8 PM walk, and water the balcony lucky bamboo.';
+    setStatus('Sample brain dump loaded (includes a task for tomorrow).');
   }
 
   function snapDuration(rawMins) {
@@ -1352,20 +1352,22 @@
   }
 
   function addTasksFromItems(items) {
-    let top3Current = state.tasks.filter(t => t.top3 && !t.done).length;
+    let top3Current = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
     items.forEach(item => {
       const title = (item.title || '').trim();
       if (!title) return;
       const bucket = item.bucket === 'personal' ? 'personal' : 'work';
+      const scheduledFor = item.scheduledFor === 'tomorrow' ? 'tomorrow' : 'today';
       const rawMins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
       const mins = snapDuration(rawMins);
-      let isTop3 = Boolean(item.top3);
+      let isTop3 = scheduledFor === 'today' && Boolean(item.top3);
       if (isTop3 && top3Current >= 3) isTop3 = false;
       if (isTop3) top3Current++;
       state.tasks.push({
         id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         title,
         bucket,
+        scheduledFor,
         mins,
         top3: isTop3,
         done: false,
@@ -1385,23 +1387,33 @@
       .filter(s => s.length > 2);
 
     const personalRx = /\b(grocer|walk|bamboo|plant|guitar|home|buy|bill|sbi|gym|dinner|laundry|clean|chore|milk|veg|fruit|water the)\b/i;
+    const tomorrowRx = /\b(tomorrow|tmrw|next\s+day)\b/i;
     let workAdded = 0;
-    const currentTop3 = state.tasks.filter(t => t.top3 && !t.done).length;
+    const currentTop3 = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
 
     const items = parts.map(p => {
       const isPers = personalRx.test(p);
+      const isTmrw = tomorrowRx.test(p);
+      const cleanTitle = p.replace(/\b(for\s+)?(tomorrow|tmrw)(\s+(morning|afternoon|evening|night))?\b/ig, '').replace(/\s{2,}/g, ' ').trim() || p;
       const mins = /\b2\s*min/i.test(p) ? 2 : (isPers ? 15 : 25);
       let top3 = false;
-      if (!isPers && (currentTop3 + workAdded) < 3) {
+      if (!isPers && !isTmrw && (currentTop3 + workAdded) < 3) {
         top3 = true;
         workAdded++;
       }
-      return { title: p.charAt(0).toUpperCase() + p.slice(1), bucket: isPers ? 'personal' : 'work', mins, top3 };
+      return {
+        title: cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1),
+        bucket: isPers ? 'personal' : 'work',
+        scheduledFor: isTmrw ? 'tomorrow' : 'today',
+        mins,
+        top3
+      };
     });
 
+    const tmrwCount = items.filter(x => x.scheduledFor === 'tomorrow').length;
     addTasksFromItems(items);
     document.getElementById('dumpInput').value = '';
-    setStatus(`Split ${items.length} tasks into Work & Personal.`);
+    setStatus(`Split ${items.length} task(s)${tmrwCount ? ` (${tmrwCount} scheduled for Tomorrow)` : ''}.`);
   }
 
   function saveAndRunAi() {
@@ -1461,8 +1473,8 @@
     const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
     const prompt = [
       'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
-      '{"tasks":[{"title":"Clean concise action item","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
-      'Rules: Mark at most 3 high-impact work tasks as top3:true. Keep titles crisp.',
+      '{"tasks":[{"title":"Clean concise action item","bucket":"work"|"personal","scheduledFor":"today"|"tomorrow","mins":2|15|25|45|60|90,"top3":true|false}]}',
+      'Rules: Set scheduledFor:"tomorrow" if the user explicitly mentions tomorrow/next day, otherwise "today". Mark at most 3 high-impact "today" work tasks as top3:true (never mark tomorrow tasks as top3:true). Keep titles crisp.',
       'Brain dump: ' + JSON.stringify(raw)
     ].join('\n');
 
@@ -1492,7 +1504,8 @@
           if (Array.isArray(parsed.tasks) && parsed.tasks.length) {
             addTasksFromItems(parsed.tasks);
             document.getElementById('dumpInput').value = '';
-            setStatus(`✨ AI Polish (${model}) organized ${parsed.tasks.length} tasks!`);
+            const tmrwCount = parsed.tasks.filter(x => x.scheduledFor === 'tomorrow').length;
+            setStatus(`✨ AI Polish (${model}) organized ${parsed.tasks.length} tasks${tmrwCount ? ` (${tmrwCount} for Tomorrow)` : ''}!`);
             return;
           }
         } catch (err) {
@@ -1509,17 +1522,48 @@
     const input = document.getElementById('quickTitle');
     const title = input.value.trim();
     if (!title) return;
+    const scheduledFor = document.getElementById('quickDay').value === 'tomorrow' ? 'tomorrow' : 'today';
     const bucket = document.getElementById('quickBucket').value;
     const mins = Number(document.getElementById('quickMins').value) || 25;
-    const top3Count = state.tasks.filter(t => t.top3 && !t.done).length;
-    addTasksFromItems([{ title, bucket, mins, top3: bucket === 'work' && top3Count < 3 }]);
+    const top3Count = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
+    addTasksFromItems([{
+      title,
+      bucket,
+      scheduledFor,
+      mins,
+      top3: scheduledFor === 'today' && bucket === 'work' && top3Count < 3
+    }]);
     input.value = '';
+    if (scheduledFor === 'tomorrow') {
+      showToast('Added to Tomorrow’s list');
+    }
+  }
+
+  function moveTaskToToday(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    t.scheduledFor = 'today';
+    saveState();
+    renderAll();
+    showToast('Moved task to Today');
+  }
+
+  function promoteAllTomorrowToToday() {
+    const tmrwTasks = state.tasks.filter(t => t.scheduledFor === 'tomorrow');
+    if (!tmrwTasks.length) return;
+    tmrwTasks.forEach(t => { t.scheduledFor = 'today'; });
+    saveState();
+    renderAll();
+    showToast(`Moved ${tmrwTasks.length} task(s) to Today`);
   }
 
   function toggleTaskDone(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
     t.done = !t.done;
+    if (t.done && t.scheduledFor === 'tomorrow') {
+      t.scheduledFor = 'today';
+    }
     syncTodayHistory();
     saveState();
     renderAll();
@@ -1528,12 +1572,15 @@
   function toggleTop3(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
+    if (t.scheduledFor === 'tomorrow') {
+      t.scheduledFor = 'today';
+    }
     if (t.top3) {
       t.top3 = false;
     } else {
-      const count = state.tasks.filter(x => x.top3 && !x.done).length;
+      const count = state.tasks.filter(x => (x.scheduledFor || 'today') === 'today' && x.top3 && !x.done).length;
       if (count >= 3) {
-        showToast('Rule of 3 allows up to 3 active priorities. Tap ★ on one to unpin first.');
+        showToast('Rule of 3 allows up to 3 active priorities today. Unstar one first.');
         return;
       }
       t.top3 = true;
@@ -1566,9 +1613,10 @@
     if (!t) return;
     document.getElementById('editTaskId').value = t.id;
     document.getElementById('editTaskTitle').value = t.title;
+    document.getElementById('editTaskDay').value = t.scheduledFor === 'tomorrow' ? 'tomorrow' : 'today';
     document.getElementById('editTaskBucket').value = t.bucket;
     document.getElementById('editTaskMins').value = String(snapDuration(t.mins || 25));
-    document.getElementById('editTaskTop3').checked = Boolean(t.top3);
+    document.getElementById('editTaskTop3').checked = Boolean(t.top3 && (t.scheduledFor || 'today') === 'today');
     document.getElementById('editModal').classList.add('open');
   }
 
@@ -1582,15 +1630,17 @@
     if (!t) return;
     const newTitle = document.getElementById('editTaskTitle').value.trim();
     if (!newTitle) return;
-    const wantTop3 = document.getElementById('editTaskTop3').checked;
+    const newDay = document.getElementById('editTaskDay').value === 'tomorrow' ? 'tomorrow' : 'today';
+    const wantTop3 = newDay === 'today' && document.getElementById('editTaskTop3').checked;
     if (wantTop3 && !t.top3) {
-      const count = state.tasks.filter(x => x.top3 && !x.done && x.id !== id).length;
+      const count = state.tasks.filter(x => (x.scheduledFor || 'today') === 'today' && x.top3 && !x.done && x.id !== id).length;
       if (count >= 3) {
-        showToast('You already have 3 Top Priorities. Unstar one first.');
+        showToast('You already have 3 Top Priorities today. Unstar one first.');
         return;
       }
     }
     t.title = newTitle;
+    t.scheduledFor = newDay;
     t.bucket = document.getElementById('editTaskBucket').value;
     t.mins = snapDuration(document.getElementById('editTaskMins').value);
     t.top3 = wantTop3;
@@ -1610,19 +1660,26 @@
   }
 
   function renderTaskRow(t) {
+    const isTmrw = t.scheduledFor === 'tomorrow';
     const twoMinTag = t.mins <= 2 ? `<span class="tag tag-2m">⚡ 2m</span>` : '';
     const rollTag = t.rolledOver ? `<span class="tag tag-roll">↻ Rolled</span>` : '';
+    const tmrwTag = isTmrw ? `<span class="tag tag-tmrw">🌅 Tomorrow</span>` : '';
     const bucketTag = t.bucket === 'work'
       ? `<span class="tag tag-work">Work</span>`
       : `<span class="tag tag-pers">Personal</span>`;
 
+    const secondActionBtn = isTmrw
+      ? `<button class="t-btn move-today" onclick="moveTaskToToday('${t.id}')">↑ Today</button>`
+      : `<button class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>`;
+
     return `
-      <div class="task-card ${t.top3 ? 'top3' : ''} ${t.done ? 'done' : ''}">
+      <div class="task-card ${t.top3 && !isTmrw ? 'top3' : ''} ${isTmrw ? 'tomorrow-card' : ''} ${t.done ? 'done' : ''}">
         <div class="task-main">
           <button type="button" class="check-circle" aria-label="Complete" onclick="toggleTaskDone('${t.id}')">✓</button>
           <div class="task-body">
             <div class="task-title">${escapeHtml(t.title)}</div>
             <div class="task-tags">
+              ${tmrwTag}
               ${bucketTag}
               <span class="tag tag-time">⏱ ${t.mins}m</span>
               ${twoMinTag}
@@ -1632,7 +1689,7 @@
         </div>
         <div class="task-bar">
           <button class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
-          <button class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>
+          ${secondActionBtn}
           <button class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
           <button class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
         </div>
@@ -1642,34 +1699,50 @@
   function renderTasks() {
     const only2Min = document.getElementById('filter2Min').checked;
     const filtered = state.tasks.filter(t => !only2Min || t.mins <= 2);
-    const top3 = filtered.filter(t => t.top3);
-    const work = filtered.filter(t => !t.top3 && t.bucket === 'work');
-    const pers = filtered.filter(t => !t.top3 && t.bucket === 'personal');
 
-    const activeTop3Count = state.tasks.filter(t => t.top3 && !t.done).length;
-    const doneTodayCount = state.tasks.filter(t => t.done).length;
+    const todayFiltered = filtered.filter(t => (t.scheduledFor || 'today') === 'today');
+    const tomorrowFiltered = filtered.filter(t => t.scheduledFor === 'tomorrow');
+
+    const top3 = todayFiltered.filter(t => t.top3);
+    const work = todayFiltered.filter(t => !t.top3 && t.bucket === 'work');
+    const pers = todayFiltered.filter(t => !t.top3 && t.bucket === 'personal');
+
+    const activeTop3Count = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
+    const doneTodayCount = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.done).length;
+    const totalTomorrowCount = state.tasks.filter(t => t.scheduledFor === 'tomorrow').length;
 
     document.getElementById('top3Count').textContent = activeTop3Count;
     document.getElementById('heroTop3').textContent = `${activeTop3Count} / 3`;
     document.getElementById('heroDone').textContent = doneTodayCount;
     document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
+    document.getElementById('tomorrowCount').textContent = totalTomorrowCount;
+
+    const moveAllBtn = document.getElementById('moveAllTodayBtn');
+    if (moveAllBtn) moveAllBtn.style.display = totalTomorrowCount > 0 ? 'inline-flex' : 'none';
 
     document.getElementById('top3List').innerHTML = top3.length
       ? top3.map(renderTaskRow).join('')
       : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Tap <strong>☆ Top 3</strong> on up to 3 needle-moving tasks.</div>';
     document.getElementById('workList').innerHTML = work.length
       ? work.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks for today.</div>';
     document.getElementById('personalList').innerHTML = pers.length
       ? pers.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands yet.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands for today.</div>';
+    document.getElementById('tomorrowList').innerHTML = tomorrowFiltered.length
+      ? tomorrowFiltered.map(renderTaskRow).join('')
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No tasks queued for tomorrow yet. Pick <strong>🌅 Tomorrow</strong> in Quick Add or say <em>"tomorrow"</em> in Brain Dump.</div>';
   }
 
   function copyWorkMarkdown() {
-    const lines = state.tasks
-      .filter(t => t.bucket === 'work' || t.top3)
+    const todayLines = state.tasks
+      .filter(t => (t.scheduledFor || 'today') === 'today' && (t.bucket === 'work' || t.top3))
       .map(t => `- [${t.done ? 'x' : ' '}] ${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`);
-    if (!lines.length) { showToast('No work tasks to copy.'); return; }
+    const tmrwLines = state.tasks
+      .filter(t => t.scheduledFor === 'tomorrow')
+      .map(t => `- [ ] 🌅 [Tomorrow] ${t.title} (${t.mins}m)`);
+    const lines = [...todayLines, ...tmrwLines];
+    if (!lines.length) { showToast('No tasks to copy.'); return; }
     fallbackCopy(lines.join('\n'));
   }
   function fallbackCopy(text) {
@@ -1685,9 +1758,10 @@
   }
 
   function shutdownRitual() {
-    const done = state.tasks.filter(t => t.done).length;
-    const rem = state.tasks.filter(t => !t.done).length;
-    showToast(`Shutdown: ${done} done (${state.todayFocusMins}m) · ${rem} roll tomorrow`);
+    const done = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.done).length;
+    const remToday = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done).length;
+    const queuedTmrw = state.tasks.filter(t => t.scheduledFor === 'tomorrow').length;
+    showToast(`Shutdown: ${done} done (${state.todayFocusMins}m) · ${remToday + queuedTmrw} ready tomorrow`);
   }
 
   let timerState = {
@@ -1799,7 +1873,10 @@
     state.todayFocusMins = (state.todayFocusMins || 0) + timerState.presetMins;
     if (timerState.taskId) {
       const pinned = state.tasks.find(x => x.id === timerState.taskId);
-      if (pinned && !pinned.done) pinned.done = true;
+      if (pinned && !pinned.done) {
+        pinned.scheduledFor = 'today';
+        pinned.done = true;
+      }
     }
     syncTodayHistory();
     saveState();
@@ -1876,17 +1953,19 @@
       { start: pStart, end: pEnd, title: '🏡 Personal & Evening Window', type: 'fixed' }
     ];
 
-    const pending = [
-      ...state.tasks.filter(t => !t.done && t.top3),
-      ...state.tasks.filter(t => !t.done && !t.top3 && t.bucket === 'work'),
-      ...state.tasks.filter(t => !t.done && !t.top3 && t.bucket === 'personal')
+    const todayPending = [
+      ...state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done && t.top3),
+      ...state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done && !t.top3 && t.bucket === 'work'),
+      ...state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done && !t.top3 && t.bucket === 'personal')
     ];
+
+    const tomorrowQueued = state.tasks.filter(t => t.scheduledFor === 'tomorrow' && !t.done);
 
     let workCursor = Math.max(wStart, roundedNow);
     let persCursor = Math.max(pStart, roundedNow);
     const generated = [];
 
-    pending.forEach(t => {
+    todayPending.forEach(t => {
       const dur = t.mins || 25;
       if (t.bucket === 'work' || t.top3) {
         if (workCursor + dur <= wEnd) {
@@ -1903,6 +1982,11 @@
           generated.push({ start: null, end: null, title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`, type: 'deferred' });
         }
       }
+    });
+
+    tomorrowQueued.forEach(t => {
+      const anchor = t.bucket === 'personal' ? fmtMins(pStart) : fmtMins(wStart);
+      generated.push({ start: null, end: null, title: `🌅 Tomorrow ${anchor}: ${t.title} (${t.mins}m)`, type: 'deferred' });
     });
 
     state.schedule = [...blocks, ...generated].sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
@@ -1929,44 +2013,65 @@
 
   function exportICS() {
     if (!state.schedule.length) generateSchedule();
-    const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
-    if (!timed.length) {
-      showToast(`No active future timeblocks left today (deferred tasks start tomorrow ${state.workStart || '11:30'})`);
+    const timedToday = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
+    const tomorrowTasks = state.tasks.filter(t => t.scheduledFor === 'tomorrow' && !t.done);
+
+    if (!timedToday.length && !tomorrowTasks.length) {
+      showToast(`No future timeblocks to export`);
       return;
     }
+
     const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const dateStamp = `${y}${m}${d}`;
+    const fmtDateStamp = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    const todayStamp = fmtDateStamp(now);
+    const tmrwDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tmrwStamp = fmtDateStamp(tmrwDate);
 
     let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//CommuteToDesk//ProductivityOS//EN\r\n';
-    timed.forEach((b, idx) => {
+    timedToday.forEach((b, idx) => {
       const sh = String(Math.floor(b.start / 60)).padStart(2, '0');
       const sm = String(b.start % 60).padStart(2, '0');
       const eh = String(Math.floor(b.end / 60)).padStart(2, '0');
       const em = String(b.end % 60).padStart(2, '0');
-      ics += `BEGIN:VEVENT\r\nUID:c2d-${dateStamp}-${idx}@ajeyachakrav\r\nDTSTAMP:${dateStamp}T060000Z\r\nDTSTART:${dateStamp}T${sh}${sm}00\r\nDTEND:${dateStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(b.title)}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+      ics += `BEGIN:VEVENT\r\nUID:c2d-${todayStamp}-${idx}@ajeyachakrav\r\nDTSTAMP:${todayStamp}T060000Z\r\nDTSTART:${todayStamp}T${sh}${sm}00\r\nDTEND:${todayStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(b.title)}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
     });
+
+    // Also include Tomorrow's queued tasks on tomorrow's calendar date
+    let tmrwWorkCursor = parseTimeToMins(state.workStart, 690);
+    let tmrwPersCursor = parseTimeToMins(state.personalStart, 1200);
+    tomorrowTasks.forEach((t, idx) => {
+      const dur = t.mins || 25;
+      const startM = t.bucket === 'personal' ? tmrwPersCursor : tmrwWorkCursor;
+      const endM = startM + dur;
+      if (t.bucket === 'personal') tmrwPersCursor = endM + 5;
+      else tmrwWorkCursor = endM + 5;
+
+      const sh = String(Math.floor(startM / 60)).padStart(2, '0');
+      const sm = String(startM % 60).padStart(2, '0');
+      const eh = String(Math.floor(endM / 60)).padStart(2, '0');
+      const em = String(endM % 60).padStart(2, '0');
+      ics += `BEGIN:VEVENT\r\nUID:c2d-${tmrwStamp}-tmrw-${idx}@ajeyachakrav\r\nDTSTAMP:${todayStamp}T060000Z\r\nDTSTART:${tmrwStamp}T${sh}${sm}00\r\nDTEND:${tmrwStamp}T${eh}${em}00\r\nSUMMARY:${escapeICS(t.title)}\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+    });
+
     ics += 'END:VCALENDAR';
 
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `commute-to-desk-${dateStamp}.ics`;
+    a.download = `commute-to-desk-${todayStamp}.ics`;
     a.click();
     URL.revokeObjectURL(url);
     showToast('Exported .ICS calendar file');
   }
 
   let analyticsRange = 'week';
-  let selectedBarIdx = -1;
+  let selectedBarIdx = null;
   let analyticsBuckets = [];
 
   function setAnalyticsRange(range) {
     analyticsRange = range;
-    selectedBarIdx = -1;
+    selectedBarIdx = null;
     ['week', 'month', 'year'].forEach(r => {
       const el = document.getElementById('range-' + r);
       el.style.background = r === range ? '#2563eb' : '#f1f5f9';
@@ -1976,20 +2081,40 @@
   }
 
   function selectAnalyticsBar(idx) {
-    selectedBarIdx = (selectedBarIdx === idx) ? -1 : idx;
-    renderAnalytics();
+    selectedBarIdx = idx;
+    document.querySelectorAll('#barChart .bar-col').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    renderBarDetail(idx);
+  }
+
+  function renderBarDetail(idx) {
+    const box = document.getElementById('barDetailBox');
+    const b = analyticsBuckets[idx];
+    if (!box || !b) return;
+    const tasksHtml = b.titles && b.titles.length
+      ? `<ul style="margin-top:6px;padding-left:18px;color:#334155;display:flex;flex-direction:column;gap:3px;">${b.titles.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
+      : `<div style="margin-top:4px;color:var(--text-muted);font-size:12px;">No tasks completed in this period.</div>`;
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong style="color:#0f172a;">${escapeHtml(b.fullLabel)}</strong>
+        <span style="font-size:12px;font-weight:700;color:#2563eb;">✓ ${b.completed} done · ⏱ ${b.focusMins}m focus · ★ ${b.top3Hit} Top-3</span>
+      </div>
+      ${tasksHtml}
+    `;
   }
 
   function renderAnalytics() {
     const now = new Date();
     const todayKey = getLocalDateKey(now);
-    const doneTasksToday = state.tasks.filter(t => t.done);
+    const todayTasks = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today');
+    const doneTasksToday = todayTasks.filter(t => t.done);
     const doneToday = doneTasksToday.length;
-    const totalToday = state.tasks.length;
+    const totalToday = todayTasks.length;
     const top3Done = doneTasksToday.filter(t => t.top3).length;
     const focusToday = state.todayFocusMins || 0;
 
-    // Combine saved history + live today state
+    // Build real date-keyed lookup combining saved history + live today state
     const dailyMap = {};
     Object.entries(state.history || {}).forEach(([k, v]) => {
       dailyMap[k] = {
@@ -2003,7 +2128,7 @@
       completed: doneToday,
       top3Hit: top3Done,
       focusMins: focusToday,
-      completedTitles: doneTasksToday.map(t => `${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`)
+      completedTitles: doneTasksToday.map(t => t.title)
     };
 
     analyticsBuckets = [];
@@ -2016,12 +2141,10 @@
         const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
         const k = getLocalDateKey(d);
         const entry = dailyMap[k] || { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [] };
-        const fullTitle = i === 0
-          ? `Today (${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`
-          : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        const fullLabel = (i === 0 ? 'Today · ' : '') + d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
         analyticsBuckets.push({
           shortLabel: i === 0 ? 'Today' : dayNames[d.getDay()],
-          fullTitle,
+          fullLabel,
           completed: entry.completed,
           top3Hit: entry.top3Hit,
           focusMins: entry.focusMins,
@@ -2039,14 +2162,14 @@
           const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
           const entry = dailyMap[getLocalDateKey(d)] || { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [] };
           wkDone += entry.completed;
-          wkTop3 += entry.top3Hit;
           wkFocus += entry.focusMins;
+          wkTop3 += entry.top3Hit;
           wkTitles.push(...entry.completedTitles);
         }
-        const rangeText = `${startD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${endD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+        const rangeStr = `${startD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${endD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
         analyticsBuckets.push({
           shortLabel: w === 0 ? 'This Wk' : `-${w}w`,
-          fullTitle: w === 0 ? `This Week (${rangeText})` : rangeText,
+          fullLabel: `${w === 0 ? 'This Week' : `${w} Week(s) Ago`} (${rangeStr})`,
           completed: wkDone,
           top3Hit: wkTop3,
           focusMins: wkFocus,
@@ -2064,14 +2187,14 @@
         Object.entries(dailyMap).forEach(([k, entry]) => {
           if (k.startsWith(prefix)) {
             mDone += entry.completed;
-            mTop3 += entry.top3Hit;
             mFocus += entry.focusMins;
+            mTop3 += entry.top3Hit;
             mTitles.push(...entry.completedTitles);
           }
         });
         analyticsBuckets.push({
           shortLabel: monthNames[target.getMonth()][0],
-          fullTitle: target.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+          fullLabel: `${monthNames[target.getMonth()]} ${target.getFullYear()}`,
           completed: mDone,
           top3Hit: mTop3,
           focusMins: mFocus,
@@ -2082,7 +2205,6 @@
       }
     }
 
-    if (selectedBarIdx >= analyticsBuckets.length) selectedBarIdx = -1;
     const completionPct = totalToday ? Math.round((doneToday / totalToday) * 100) : 0;
 
     document.getElementById('kpiGrid').innerHTML = `
@@ -2092,44 +2214,26 @@
       <div class="kpi-tile"><div class="kpi-num">${completionPct}%</div><div class="kpi-name">Completion Rate</div></div>
     `;
 
-    const maxVal = Math.max(...analyticsBuckets.map(b => b.completed), 1);
-    const hasAnyData = analyticsBuckets.some(b => b.completed > 0);
+    const vals = analyticsBuckets.map(b => b.completed);
+    const maxVal = Math.max(...vals, 1);
+    const hasAnyData = vals.some(v => v > 0);
+    if (selectedBarIdx === null || selectedBarIdx >= analyticsBuckets.length) {
+      selectedBarIdx = analyticsBuckets.length - 1;
+    }
 
     document.getElementById('barChart').innerHTML = analyticsBuckets.map((b, i) => {
-      const pct = hasAnyData && b.completed > 0 ? Math.max(8, Math.round((b.completed / maxVal) * 84)) : 2;
-      const fillBg = b.completed > 0 ? 'var(--primary-grad)' : '#cbd5e1';
-      const isSel = selectedBarIdx === i;
+      const v = b.completed;
+      const pct = hasAnyData && v > 0 ? Math.max(8, Math.round((v / maxVal) * 84)) : 2;
+      const fillBg = v > 0 ? 'var(--primary-grad)' : '#cbd5e1';
       return `
-        <div class="bar-col ${isSel ? 'selected' : ''}" role="button" tabindex="0" onclick="selectAnalyticsBar(${i})">
-          <div style="font-size:10px;font-weight:700;color:${b.completed > 0 ? '#1e293b' : '#94a3b8'};">${b.completed}</div>
+        <div class="bar-col ${i === selectedBarIdx ? 'selected' : ''}" onclick="selectAnalyticsBar(${i})">
+          <div style="font-size:10px;font-weight:700;color:${v > 0 ? '#1e293b' : '#94a3b8'};">${v}</div>
           <div class="bar-fill" style="height:${pct}%;background:${fillBg};"></div>
           <div class="bar-lbl">${b.shortLabel}</div>
         </div>`;
     }).join('');
 
-    const detailEl = document.getElementById('barDetailPanel');
-    if (selectedBarIdx >= 0 && analyticsBuckets[selectedBarIdx]) {
-      const sel = analyticsBuckets[selectedBarIdx];
-      const listHtml = sel.titles.length
-        ? `<ul class="detail-tasks">${sel.titles.map(t => `<li><span style="color:#10b981;font-weight:800;">✓</span><span>${escapeHtml(t)}</span></li>`).join('')}</ul>`
-        : `<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">No tasks completed during this period.</div>`;
-
-      detailEl.innerHTML = `
-        <div class="bar-detail-box">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-            <strong style="font-size:14px;color:var(--text-main);">📅 ${escapeHtml(sel.fullTitle)}</strong>
-            <button class="btn-chip" style="min-height:26px;padding:0 9px;font-size:11px;" onclick="selectAnalyticsBar(${selectedBarIdx})">✕</button>
-          </div>
-          <div class="detail-metrics">
-            <span class="detail-pill">✅ ${sel.completed} Completed</span>
-            <span class="detail-pill">⏱ ${sel.focusMins}m Focus</span>
-            <span class="detail-pill">★ ${sel.top3Hit} Rule of 3</span>
-          </div>
-          ${listHtml}
-        </div>`;
-    } else {
-      detailEl.innerHTML = '';
-    }
+    renderBarDetail(selectedBarIdx);
   }
 
   function openSettings() {
@@ -2184,11 +2288,13 @@
     appendBotMsg(q, 'user');
     input.value = '';
 
-    const top3 = state.tasks.filter(t => t.top3 && !t.done).map(t => t.title);
-    const workPending = state.tasks.filter(t => !t.done && t.bucket === 'work');
-    const persPending = state.tasks.filter(t => !t.done && t.bucket === 'personal');
-    const done = state.tasks.filter(t => t.done).length;
-    const rolled = state.tasks.filter(t => t.rolledOver && !t.done).length;
+    const todayTasks = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today');
+    const top3 = todayTasks.filter(t => t.top3 && !t.done).map(t => t.title);
+    const workPending = todayTasks.filter(t => !t.done && t.bucket === 'work');
+    const persPending = todayTasks.filter(t => !t.done && t.bucket === 'personal');
+    const tomorrowTasks = state.tasks.filter(t => t.scheduledFor === 'tomorrow' && !t.done);
+    const done = todayTasks.filter(t => t.done).length;
+    const rolled = todayTasks.filter(t => t.rolledOver && !t.done).length;
 
     const apiKey = getStoredApiKey();
     if (apiKey) {
@@ -2206,6 +2312,7 @@
         top3Active: top3,
         workPending: workPending.map(t => `${t.title} (${t.mins}m)`),
         personalPending: persPending.map(t => `${t.title} (${t.mins}m)`),
+        tomorrowQueued: tomorrowTasks.map(t => `${t.title} (${t.bucket}, ${t.mins}m)`),
         completedToday: done,
         rolledOverCount: rolled,
         focusMinsToday: state.todayFocusMins || 0,
@@ -2234,7 +2341,11 @@
     }
 
     let reply = '';
-    if (/top\s*3|priorit/i.test(q)) {
+    if (/tomorrow|tmrw/i.test(q)) {
+      reply = tomorrowTasks.length
+        ? `Scheduled for tomorrow (${tomorrowTasks.length}): ${tomorrowTasks.map(t => `${t.title} (${t.mins}m)`).join('; ')}.`
+        : 'No tasks scheduled for tomorrow yet. Select 🌅 Tomorrow in Quick Add or say "tomorrow" in Brain Dump!';
+    } else if (/top\s*3|priorit/i.test(q)) {
       reply = top3.length
         ? `Active Top 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
         : '0 active Top 3 priorities pinned right now. Tap "☆ Top 3" on your top tasks!';
@@ -2242,13 +2353,13 @@
       const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
       reply = timed.length
         ? `Scheduled blocks today: ${timed.map(b => `${fmtMins(b.start)} ${b.title}`).join('; ')}.`
-        : `No active task blocks scheduled yet (Work window ${state.workStart || '11:30'}–${state.workEnd || '19:00'}). Open Plan and tap ⚡ Auto-Plan!`;
+        : 'No active task blocks scheduled yet. Open Plan and tap ⚡ Auto-Plan!';
     } else if (/focus|pomodoro|time/i.test(q)) {
       reply = `Logged ${state.todayFocusMins || 0} deep-focus mins today across ${done} completed tasks.`;
     } else if (/roll|miss|yesterday/i.test(q)) {
       reply = `${rolled} rolled-over task(s) carried forward from previous days.`;
     } else {
-      reply = `Today: ${done} done, ${workPending.length} work pending, ${persPending.length} personal pending, ${state.todayFocusMins || 0}m focus logged.`;
+      reply = `Today: ${done} done, ${workPending.length} work pending, ${persPending.length} personal pending, ${tomorrowTasks.length} queued for tomorrow, and ${state.todayFocusMins || 0}m focus logged.`;
     }
     setTimeout(() => appendBotMsg(reply, 'ai'), 140);
   }
