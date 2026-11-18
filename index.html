@@ -332,7 +332,7 @@
     .inline-key-box.visible { display: block; }
     .status-msg { font-size: 12px; margin-top: 8px; color: var(--text-secondary); font-weight: 500; }
 
-    /* Quick Add Bar (Today/Tomorrow + Bucket + Duration + Add) */
+    /* Quick Add Bar */
     .quick-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -791,7 +791,7 @@
       </div>
       <div id="personalList" class="task-list"></div>
 
-      <!-- Tomorrow Queue Section -->
+      <!-- Upcoming & Tomorrow Queue Section -->
       <div class="section-label">
         <h2>🗓 Upcoming & Tomorrow (<span id="tomorrowCount">0</span>)</h2>
         <button class="btn btn-chip" onclick="promoteAllTomorrow()">Move All to Today</button>
@@ -1210,7 +1210,21 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
   }
-// ... existing code ... -->
+
+  let state = {
+    lastActiveDate: getLocalDateKey(),
+    apiKey: '',
+    model: 'gemini-3.5-flash-lite',
+    workStart: '11:30',
+    workEnd: '19:00',
+    personalStart: '20:00',
+    personalEnd: '22:00',
+    tasks: [],
+    schedule: [],
+    history: {},
+    todayFocusMins: 0
+  };
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
@@ -1250,7 +1264,171 @@
       completedTitles: doneTasks.map(t => t.title)
     };
   }
-// ... existing code ... -->
+
+  function checkDayRollover() {
+    const today = getLocalDateKey();
+    if (state.lastActiveDate && state.lastActiveDate !== today) {
+      const prevDate = state.lastActiveDate;
+      const prevDone = state.tasks.filter(t => t.done && (t.dueDate || prevDate) <= prevDate);
+      state.history[prevDate] = {
+        completed: prevDone.length,
+        top3Hit: prevDone.filter(t => t.top3).length,
+        focusMins: state.todayFocusMins || 0,
+        completedTitles: prevDone.map(t => t.title)
+      };
+      state.tasks = state.tasks
+        .filter(t => !t.done)
+        .map(t => {
+          const due = t.dueDate || today;
+          if (due > today) {
+            return { ...t, day: 'tomorrow', dueDate: due };
+          }
+          const wasScheduledAhead = due > prevDate || t.day === 'tomorrow';
+          return {
+            ...t,
+            day: 'today',
+            dueDate: today,
+            rolledOver: !wasScheduledAhead
+          };
+        });
+      state.todayFocusMins = 0;
+      state.schedule = [];
+      state.lastActiveDate = today;
+      saveState();
+    }
+  }
+
+  function simulateNextDayRollover() {
+    state.lastActiveDate = '2000-01-01';
+    checkDayRollover();
+    renderAll();
+    setStatus('Simulated rollover: unfinished tasks carried forward with ↻ badge.');
+  }
+
+  function setStatus(msg, isErr = false) {
+    const el = document.getElementById('dumpStatus');
+    el.style.color = isErr ? '#dc2626' : '#475569';
+    el.textContent = msg;
+  }
+
+  let recognition = null;
+  let isRecording = false;
+  let finalTranscript = '';
+
+  function toggleVoice() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setStatus('Speech input unavailable in this view. Type or paste below.', true);
+      return;
+    }
+    const btn = document.getElementById('micBtn');
+    const input = document.getElementById('dumpInput');
+    if (isRecording && recognition) {
+      recognition.stop();
+      return;
+    }
+    recognition = new SpeechRec();
+    recognition.lang = 'en-IN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    finalTranscript = input.value ? input.value.trim() + ' ' : '';
+
+    recognition.onstart = () => {
+      isRecording = true;
+      btn.classList.add('recording');
+      btn.textContent = '⏹ Stop Listening';
+      setStatus('Listening... speak naturally.');
+    };
+    recognition.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const txt = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          finalTranscript += txt.trim() + '. ';
+        } else {
+          interim += txt;
+        }
+      }
+      input.value = (finalTranscript + interim).trim();
+    };
+    recognition.onerror = (e) => setStatus('Mic error: ' + e.error, true);
+    recognition.onend = () => {
+      isRecording = false;
+      btn.classList.remove('recording');
+      btn.textContent = '🎤 Tap to Speak';
+      setStatus('Voice captured. Tap Smart Split or AI Polish.');
+    };
+    try { recognition.start(); } catch (err) { setStatus('Mic already active.', true); }
+  }
+
+  function loadSampleDump() {
+    document.getElementById('dumpInput').value =
+      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), buy groceries during my 8 PM walk, water the balcony lucky bamboo, and prepare sprint demo tomorrow.';
+    setStatus('Sample brain dump loaded.');
+  }
+
+  function addTasksFromItems(items) {
+    const todayKey = getLocalDateKey();
+    const tmrwKey = getTomorrowDateKey();
+    let top3Current = state.tasks.filter(t => t.top3 && !t.done && (t.dueDate || todayKey) <= todayKey).length;
+    items.forEach(item => {
+      const title = (item.title || '').trim();
+      if (!title) return;
+      const dueDate = item.dueDate || (item.day === 'tomorrow' ? tmrwKey : todayKey);
+      const isFuture = dueDate > todayKey;
+      const day = isFuture ? 'tomorrow' : 'today';
+      const bucket = item.bucket === 'personal' ? 'personal' : 'work';
+      const rawMins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
+      const validDurs = [2, 15, 25, 45, 60, 90];
+      const mins = validDurs.reduce((prev, curr) => Math.abs(curr - rawMins) < Math.abs(prev - rawMins) ? curr : prev);
+      let isTop3 = !isFuture && Boolean(item.top3);
+      if (isTop3 && top3Current >= 3) isTop3 = false;
+      if (isTop3) top3Current++;
+      state.tasks.push({
+        id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        title,
+        dueDate,
+        day,
+        bucket,
+        mins,
+        top3: isTop3,
+        done: false,
+        rolledOver: false
+      });
+    });
+    saveState();
+    renderAll();
+  }
+
+  function promoteAllTomorrow() {
+    const todayKey = getLocalDateKey();
+    let moved = 0;
+    state.tasks.forEach(t => {
+      if ((t.dueDate && t.dueDate > todayKey) || t.day === 'tomorrow') {
+        t.dueDate = todayKey;
+        t.day = 'today';
+        moved++;
+      }
+    });
+    if (!moved) { showToast('No upcoming tasks to move.'); return; }
+    saveState();
+    renderAll();
+    showToast(`Moved ${moved} task(s) into Today.`);
+  }
+
+  function splitOffline() {
+    const raw = document.getElementById('dumpInput').value.trim();
+    if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
+    const parts = raw
+      .split(/[\n.;]+|,\s*(?:and\s+|also\s+)?|\b(?:and also|also|then)\b/i)
+      .map(s => s.replace(/^[-*•\d.)\s]+/, '').trim())
+      .filter(s => s.length > 2);
+
+    const personalRx = /\b(grocer|walk|bamboo|plant|guitar|home|buy|bill|sbi|gym|dinner|laundry|clean|chore|milk|veg|fruit|water the)\b/i;
+    const tomorrowRx = /\b(tomorrow|tmrw)\b/i;
+    let workAdded = 0;
+    const currentTop3 = state.tasks.filter(t => t.top3 && !t.done).length;
+
     const items = parts.map(p => {
       const isPers = personalRx.test(p);
       const isTmrw = tomorrowRx.test(p);
@@ -1276,7 +1454,92 @@
     document.getElementById('dumpInput').value = '';
     setStatus(`Split ${items.length} task(s)${tmrwCount ? ` (${tmrwCount} scheduled for Tomorrow)` : ''}.`);
   }
-// ... existing code ... -->
+
+  function saveAndRunAi() {
+    liveSaveKey(document.getElementById('inlineKeyInput').value);
+    runAiPolish();
+  }
+
+  async function testApiKey() {
+    const badge = document.getElementById('keySavedBadge');
+    const inputEl = document.getElementById('settingsKeyInput');
+    if (inputEl && inputEl.value.trim()) liveSaveKey(inputEl.value);
+    const apiKey = getStoredApiKey();
+    if (!apiKey) {
+      badge.style.color = '#dc2626';
+      badge.textContent = 'Paste an API key first.';
+      return;
+    }
+    badge.style.color = '#2563eb';
+    badge.textContent = 'Testing key...';
+    const model = state.model || 'gemini-3.5-flash-lite';
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'Reply with OK' }] }] })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        badge.style.color = '#059669';
+        badge.textContent = `✓ Verified! Connected to ${model}.`;
+      } else {
+        badge.style.color = '#dc2626';
+        badge.textContent = `✗ Error: ${data?.error?.message || res.status}`;
+      }
+    } catch (e) {
+      badge.style.color = '#dc2626';
+      badge.textContent = `✗ Network error: ${e.message}`;
+    }
+  }
+
+  async function runAiPolish() {
+    const raw = document.getElementById('dumpInput').value.trim();
+    if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
+
+    const apiKey = getStoredApiKey();
+    if (!apiKey) {
+      document.getElementById('inlineKeyBox').classList.add('visible');
+      document.getElementById('inlineKeyInput').focus();
+      setStatus('Paste your Gemini API key above, or use ⚡ Smart Split.', true);
+      return;
+    }
+
+    const aiBtn = document.getElementById('aiPolishBtn');
+    if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '⏳ Polishing...'; }
+    setStatus('✨ Polishing with Gemini AI...');
+
+    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+    const prompt = [
+      'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
+      '{"tasks":[{"title":"Clean concise action item","day":"today"|"tomorrow","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
+      'Rules: Set day:"tomorrow" if the user mentions tomorrow/next day, otherwise "today". Mark at most 3 high-impact today work tasks as top3:true. Keep titles crisp.',
+      'Brain dump: ' + JSON.stringify(raw)
+    ].join('\n');
+
+    let lastErr = '';
+    try {
+      for (const model of [...new Set(modelsToTry)]) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            lastErr = data?.error?.message || `HTTP ${res.status}`;
+            continue;
+          }
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const cleaned = text.replace(/```json|```/gi, '').trim();
+          const parsed = JSON.parse(cleaned);
           if (Array.isArray(parsed.tasks) && parsed.tasks.length) {
             const normalized = parsed.tasks.map(x => ({
               ...x,
@@ -1289,7 +1552,16 @@
             setStatus(`✨ AI Polish (${model}) organized ${normalized.length} tasks${tmrwCount ? ` (${tmrwCount} for Tomorrow)` : ''}!`);
             return;
           }
-// ... existing code ... -->
+        } catch (err) {
+          lastErr = err.message;
+        }
+      }
+      setStatus(`AI Polish error: ${lastErr}. Check API key in Settings.`, true);
+    } finally {
+      if (aiBtn) { aiBtn.disabled = false; aiBtn.textContent = '✨ AI Polish'; }
+    }
+  }
+
   function addManualTask() {
     const input = document.getElementById('quickTitle');
     const title = input.value.trim();
@@ -1314,10 +1586,6 @@
     showToast('Moved task to Today');
   }
 
-  function promoteAllTomorrowToToday() {
-    promoteAllTomorrow();
-  }
-
   function toggleTaskDone(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
@@ -1331,7 +1599,101 @@
     saveState();
     renderAll();
   }
-// ... existing code ... -->
+
+  function toggleTop3(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    if (t.top3) {
+      t.top3 = false;
+    } else {
+      const todayKey = getLocalDateKey();
+      const count = state.tasks.filter(x => t.top3 && !x.done && (x.dueDate || todayKey) <= todayKey).length;
+      if (count >= 3) {
+        showToast('Rule of 3 allows up to 3 active priorities. Unstar one first.');
+        return;
+      }
+      t.dueDate = todayKey;
+      t.day = 'today';
+      t.top3 = true;
+    }
+    saveState();
+    renderAll();
+  }
+
+  function deleteTask(id) {
+    state.tasks = state.tasks.filter(x => x.id !== id);
+    if (timerState.taskId === id) {
+      timerState.taskId = null;
+      document.getElementById('timerActiveTask').textContent = 'Tap "▶ Focus" on any task to pin it';
+    }
+    saveState();
+    renderAll();
+  }
+
+  function clearCompleted() {
+    state.tasks = state.tasks.filter(x => !x.done);
+    saveState();
+    renderAll();
+  }
+
+  function openEditModal(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    const todayKey = getLocalDateKey();
+    document.getElementById('editTaskId').value = t.id;
+    document.getElementById('editTaskTitle').value = t.title;
+    const ed = document.getElementById('editTaskDate');
+    if (ed) {
+      ed.min = todayKey;
+      ed.value = t.dueDate || (t.day === 'tomorrow' ? getTomorrowDateKey() : todayKey);
+    }
+    document.getElementById('editTaskBucket').value = t.bucket;
+    document.getElementById('editTaskMins').value = String(t.mins || 25);
+    document.getElementById('editTaskTop3').checked = Boolean(t.top3);
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+  }
+
+  function saveTaskEdit() {
+    const id = document.getElementById('editTaskId').value;
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    const newTitle = document.getElementById('editTaskTitle').value.trim();
+    if (!newTitle) return;
+    const todayKey = getLocalDateKey();
+    const newDueDate = document.getElementById('editTaskDate')?.value || todayKey;
+    const isFuture = newDueDate > todayKey;
+    const wantTop3 = !isFuture && document.getElementById('editTaskTop3').checked;
+    if (wantTop3 && !t.top3) {
+      const count = state.tasks.filter(x => x.top3 && !x.done && (x.dueDate || todayKey) <= todayKey && x.id !== id).length;
+      if (count >= 3) {
+        showToast('You already have 3 Top Priorities. Unstar one first.');
+        return;
+      }
+    }
+    t.title = newTitle;
+    t.dueDate = newDueDate;
+    t.day = isFuture ? 'tomorrow' : 'today';
+    t.bucket = document.getElementById('editTaskBucket').value;
+    t.mins = Number(document.getElementById('editTaskMins').value) || 25;
+    t.top3 = wantTop3;
+    if (timerState.taskId === id) {
+      document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
+    }
+    saveState();
+    closeEditModal();
+    renderAll();
+  }
+
+  function deleteFromEditModal() {
+    const id = document.getElementById('editTaskId').value;
+    closeEditModal();
+    deleteTask(id);
+  }
+
   function renderTaskRow(t) {
     const todayKey = getLocalDateKey();
     const isFuture = (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
@@ -1370,7 +1732,43 @@
         </div>
       </div>`;
   }
-// ... existing code ... -->
+
+  function renderTasks() {
+    const todayKey = getLocalDateKey();
+    const only2Min = document.getElementById('filter2Min').checked;
+    const filtered = state.tasks.filter(t => !only2Min || t.mins <= 2);
+    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
+    const todayTasks = filtered.filter(t => !isUpcoming(t));
+    const tomorrowTasks = filtered
+      .filter(t => isUpcoming(t))
+      .sort((a, b) => (a.dueDate || getTomorrowDateKey()).localeCompare(b.dueDate || getTomorrowDateKey()));
+    const top3 = todayTasks.filter(t => t.top3);
+    const work = todayTasks.filter(t => !t.top3 && t.bucket === 'work');
+    const pers = todayTasks.filter(t => !t.top3 && t.bucket === 'personal');
+
+    const activeTop3Count = state.tasks.filter(t => t.top3 && !t.done && !isUpcoming(t)).length;
+    const doneTodayCount = state.tasks.filter(t => t.done && !isUpcoming(t)).length;
+
+    document.getElementById('top3Count').textContent = activeTop3Count;
+    document.getElementById('tomorrowCount').textContent = tomorrowTasks.length;
+    document.getElementById('heroTop3').textContent = `${activeTop3Count} / 3`;
+    document.getElementById('heroDone').textContent = doneTodayCount;
+    document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
+
+    document.getElementById('top3List').innerHTML = top3.length
+      ? top3.map(renderTaskRow).join('')
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Tap <strong>☆ Top 3</strong> on up to 3 needle-moving tasks.</div>';
+    document.getElementById('workList').innerHTML = work.length
+      ? work.map(renderTaskRow).join('')
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks for Today.</div>';
+    document.getElementById('personalList').innerHTML = pers.length
+      ? pers.map(renderTaskRow).join('')
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands for Today.</div>';
+    document.getElementById('tomorrowList').innerHTML = tomorrowTasks.length
+      ? tomorrowTasks.map(renderTaskRow).join('')
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Pick any future date in Quick Add or say "tomorrow" in Brain Dump to schedule ahead.</div>';
+  }
+
   function copyWorkMarkdown() {
     const todayKey = getLocalDateKey();
     const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
@@ -1384,7 +1782,26 @@
     if (!lines.length) { showToast('No tasks to copy.'); return; }
     fallbackCopy(lines.join('\n'));
   }
-// ... existing code ... -->
+
+  function fallbackCopy(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => showToast('Copied Markdown checklist!')).catch(() => execCopy(text));
+    } else {
+      execCopy(text);
+    }
+  }
+  function execCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('Copied Markdown checklist!'); }
+    catch (e) { showToast('Could not copy on this browser.'); }
+    document.body.removeChild(ta);
+  }
+
   function shutdownRitual() {
     const todayKey = getLocalDateKey();
     const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
@@ -1393,7 +1810,114 @@
     const queuedFuture = state.tasks.filter(t => isUpcoming(t) && !t.done).length;
     showToast(`Shutdown: ${done} done (${state.todayFocusMins}m) · ${remToday + queuedFuture} queued ahead`);
   }
-// ... existing code ... -->
+
+  let timerState = {
+    presetMins: 25,
+    remainingSec: 25 * 60,
+    endTime: null,
+    running: false,
+    intervalId: null,
+    taskId: null,
+    isCompleting: false
+  };
+
+  function pinTaskToTimer(id, openFocusTab = false) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    timerState.taskId = id;
+    document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
+    if (!timerState.running) {
+      const mins = [25, 5, 90].includes(t.mins) ? t.mins : (t.mins || 25);
+      timerState.presetMins = mins;
+      timerState.remainingSec = mins * 60;
+      document.querySelectorAll('.p-chip').forEach(b => {
+        b.classList.toggle('active', [25, 5, 90].includes(mins) && b.textContent.startsWith(mins + 'm'));
+      });
+      updateTimerDisplay();
+    }
+    if (openFocusTab && window.innerWidth < 860) {
+      switchTab('focus');
+    }
+  }
+
+  function setTimerPreset(mins, btn) {
+    if (timerState.running) toggleTimer();
+    timerState.presetMins = mins;
+    timerState.remainingSec = mins * 60;
+    document.querySelectorAll('.p-chip').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    updateTimerDisplay();
+  }
+
+  function applyCustomFocusTime() {
+    const inp = document.getElementById('customFocusMins');
+    const val = parseInt(inp?.value, 10);
+    if (!val || val < 1 || val > 300) {
+      showToast('Enter a focus duration between 1 and 300 mins.');
+      return;
+    }
+    setTimerPreset(val, null);
+    inp.value = '';
+    showToast(`Focus timer set to ${val} mins`);
+  }
+
+  function updateTimerDisplay() {
+    const m = String(Math.floor(timerState.remainingSec / 60)).padStart(2, '0');
+    const s = String(timerState.remainingSec % 60).padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+    document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
+  }
+
+  function playChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    } catch (e) {}
+  }
+
+  function toggleTimer() {
+    const btn = document.getElementById('timerStartBtn');
+    if (timerState.running) {
+      clearInterval(timerState.intervalId);
+      timerState.running = false;
+      btn.textContent = '▶ Resume';
+    } else {
+      timerState.endTime = Date.now() + timerState.remainingSec * 1000;
+      timerState.running = true;
+      btn.textContent = '⏸ Pause';
+      timerState.intervalId = setInterval(() => {
+        const left = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
+        timerState.remainingSec = left;
+        updateTimerDisplay();
+        if (left <= 0) completeTimerSession();
+      }, 500);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerState.intervalId);
+    timerState.running = false;
+    timerState.remainingSec = timerState.presetMins * 60;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    updateTimerDisplay();
+  }
+
+  function completeTimerSession() {
+    if (timerState.isCompleting) return;
+    timerState.isCompleting = true;
+    clearInterval(timerState.intervalId);
+    timerState.running = false;
+    playChime();
+    state.todayFocusMins = (state.todayFocusMins || 0) + timerState.presetMins;
     if (timerState.taskId) {
       const pinned = state.tasks.find(x => x.id === timerState.taskId);
       if (pinned && !pinned.done) {
@@ -1403,7 +1927,140 @@
       }
     }
     syncTodayHistory();
-// ... existing code ... -->
+    saveState();
+    resetTimer();
+    renderAll();
+    timerState.isCompleting = false;
+    showToast(`Logged +${timerState.presetMins}m Deep Focus!`);
+  }
+
+  function fmtMins(totalMins) {
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function parseTimeToMins(str, fallback) {
+    if (!str || !str.includes(':')) return fallback;
+    const [h, m] = str.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return fallback;
+    return h * 60 + m;
+  }
+
+  function syncScheduleInputs() {
+    const ws = document.getElementById('workStartInput');
+    const we = document.getElementById('workEndInput');
+    const ps = document.getElementById('personalStartInput');
+    const pe = document.getElementById('personalEndInput');
+    if (ws) ws.value = state.workStart || '11:30';
+    if (we) we.value = state.workEnd || '19:00';
+    if (ps) ps.value = state.personalStart || '20:00';
+    if (pe) pe.value = state.personalEnd || '22:00';
+  }
+
+  function saveSchedulePrefs() {
+    const ws = document.getElementById('workStartInput')?.value;
+    const we = document.getElementById('workEndInput')?.value;
+    const ps = document.getElementById('personalStartInput')?.value;
+    const pe = document.getElementById('personalEndInput')?.value;
+    if (ws) state.workStart = ws;
+    if (we) state.workEnd = we;
+    if (ps) state.personalStart = ps;
+    if (pe) state.personalEnd = pe;
+
+    const wS = parseTimeToMins(state.workStart, 690);
+    const wE = parseTimeToMins(state.workEnd, 1140);
+    if (wE <= wS) {
+      state.workEnd = fmtMins(Math.min(1435, wS + 60));
+    }
+    const pS = parseTimeToMins(state.personalStart, 1200);
+    const pE = parseTimeToMins(state.personalEnd, 1320);
+    if (pE <= pS) {
+      state.personalEnd = fmtMins(Math.min(1435, pS + 60));
+    }
+    syncScheduleInputs();
+    saveState();
+    if (state.schedule.length) generateSchedule();
+  }
+
+  function generateSchedule() {
+    const now = new Date();
+    const todayKey = getLocalDateKey(now);
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    const roundedNow = Math.ceil(currentMins / 5) * 5;
+
+    const wStart = parseTimeToMins(state.workStart, 690);
+    const wEnd = Math.max(wStart + 15, parseTimeToMins(state.workEnd, 1140));
+    const pStart = parseTimeToMins(state.personalStart, 1200);
+    const pEnd = Math.max(pStart + 15, parseTimeToMins(state.personalEnd, 1320));
+
+    const blocks = [
+      { start: 450, end: 540, title: '🏋️ Morning Gym & Mobility', type: 'fixed' },
+      { start: wStart, end: wEnd, title: '💼 Core Work Window', type: 'fixed' },
+      { start: pStart, end: pEnd, title: '🏡 Personal & Evening Window', type: 'fixed' }
+    ];
+
+    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
+    const pending = [
+      ...state.tasks.filter(t => !t.done && !isUpcoming(t) && t.top3),
+      ...state.tasks.filter(t => !t.done && !isUpcoming(t) && !t.top3 && t.bucket === 'work'),
+      ...state.tasks.filter(t => !t.done && !isUpcoming(t) && !t.top3 && t.bucket === 'personal'),
+      ...state.tasks
+        .filter(t => !t.done && isUpcoming(t))
+        .sort((a, b) => (a.dueDate || getTomorrowDateKey()).localeCompare(b.dueDate || getTomorrowDateKey()))
+    ];
+
+    let workCursor = Math.max(wStart, roundedNow);
+    let persCursor = Math.max(pStart, roundedNow);
+    const generated = [];
+
+    pending.forEach(t => {
+      const dur = t.mins || 25;
+      if (isUpcoming(t)) {
+        const startStr = t.bucket === 'work' ? fmtMins(wStart) : fmtMins(pStart);
+        const dateStr = formatFriendlyDate(t.dueDate || getTomorrowDateKey());
+        generated.push({ start: null, end: null, dayLabel: dateStr, title: `📅 ${dateStr} ${startStr}: ${t.title}`, type: 'deferred' });
+        return;
+      }
+      if (t.bucket === 'work' || t.top3) {
+        if (workCursor + dur <= wEnd) {
+          generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
+          workCursor += dur + 5;
+        } else {
+          generated.push({ start: null, end: null, dayLabel: 'Tomorrow', title: `↻ Tomorrow ${fmtMins(wStart)}: ${t.title}`, type: 'deferred' });
+        }
+      } else {
+        if (persCursor + dur <= pEnd) {
+          generated.push({ start: persCursor, end: persCursor + dur, title: t.title, type: 'pers' });
+          persCursor += dur + 5;
+        } else {
+          generated.push({ start: null, end: null, dayLabel: 'Tomorrow', title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`, type: 'deferred' });
+        }
+      }
+    });
+
+    state.schedule = [...blocks, ...generated].sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
+    saveState();
+    renderSchedule();
+  }
+
+  function renderSchedule() {
+    const el = document.getElementById('scheduleList');
+    if (!state.schedule.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">Tap <strong>⚡ Auto-Plan</strong> to slot your tasks around your daily routine.</div>';
+      return;
+    }
+    el.innerHTML = state.schedule.map(b => `
+      <div class="timeline-card ${b.type}">
+        <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : (b.dayLabel || 'Upcoming')}</div>
+        <div style="font-size:14px;font-weight:700;">${escapeHtml(b.title)}</div>
+      </div>`).join('');
+  }
+
+  function escapeICS(str) {
+    return String(str || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  }
+
   function exportICS() {
     if (!state.schedule.length) generateSchedule();
     const now = new Date();
@@ -1456,7 +2113,56 @@
     });
 
     ics += 'END:VCALENDAR';
-// ... existing code ... -->
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `commute-to-desk-${todayStamp}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded .ICS calendar file');
+  }
+
+  let analyticsRange = 'week';
+  let selectedBarIdx = null;
+  let analyticsBuckets = [];
+
+  function setAnalyticsRange(range) {
+    analyticsRange = range;
+    selectedBarIdx = null;
+    ['week', 'month', 'year'].forEach(r => {
+      const el = document.getElementById('range-' + r);
+      el.style.background = r === range ? '#2563eb' : '#f1f5f9';
+      el.style.color = r === range ? '#fff' : '#334155';
+    });
+    renderAnalytics();
+  }
+
+  function selectAnalyticsBar(idx) {
+    selectedBarIdx = idx;
+    document.querySelectorAll('#barChart .bar-col').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    renderBarDetail(idx);
+  }
+
+  function renderBarDetail(idx) {
+    const box = document.getElementById('barDetailBox');
+    const b = analyticsBuckets[idx];
+    if (!box || !b) return;
+    const tasksHtml = b.titles && b.titles.length
+      ? `<ul style="margin-top:6px;padding-left:18px;color:#334155;display:flex;flex-direction:column;gap:3px;">${b.titles.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
+      : `<div style="margin-top:4px;color:var(--text-muted);font-size:12px;">No tasks completed in this period.</div>`;
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong style="color:#0f172a;">${escapeHtml(b.fullLabel)}</strong>
+        <span style="font-size:12px;font-weight:700;color:#2563eb;">✓ ${b.completed} done · ⏱ ${b.focusMins}m focus · ★ ${b.top3Hit} Top-3</span>
+      </div>
+      ${tasksHtml}
+    `;
+  }
+
   function renderAnalytics() {
     const now = new Date();
     const todayKey = getLocalDateKey(now);
@@ -1467,7 +2173,174 @@
     const totalToday = todayTasks.length;
     const top3Done = doneTasksToday.filter(t => t.top3).length;
     const focusToday = state.todayFocusMins || 0;
-// ... existing code ... -->
+
+    // Build real date-keyed lookup combining saved history + live today state
+    const dailyMap = {};
+    Object.entries(state.history || {}).forEach(([k, v]) => {
+      dailyMap[k] = {
+        completed: Number(v.completed) || 0,
+        top3Hit: Number(v.top3Hit) || 0,
+        focusMins: Number(v.focusMins) || 0,
+        completedTitles: Array.isArray(v.completedTitles) ? v.completedTitles : []
+      };
+    });
+    dailyMap[todayKey] = {
+      completed: doneToday,
+      top3Hit: top3Done,
+      focusMins: focusToday,
+      completedTitles: doneTasksToday.map(t => t.title)
+    };
+
+    analyticsBuckets = [];
+    let totalDone = 0;
+    let totalFocus = 0;
+
+    if (analyticsRange === 'week') {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const k = getLocalDateKey(d);
+        const entry = dailyMap[k] || { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [] };
+        const fullLabel = (i === 0 ? 'Today · ' : '') + d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        analyticsBuckets.push({
+          shortLabel: i === 0 ? 'Today' : dayNames[d.getDay()],
+          fullLabel,
+          completed: entry.completed,
+          top3Hit: entry.top3Hit,
+          focusMins: entry.focusMins,
+          titles: entry.completedTitles
+        });
+        totalDone += entry.completed;
+        totalFocus += entry.focusMins;
+      }
+    } else if (analyticsRange === 'month') {
+      for (let w = 3; w >= 0; w--) {
+        let wkDone = 0, wkFocus = 0, wkTop3 = 0, wkTitles = [];
+        const startD = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (w * 7 + 6));
+        const endD = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (w * 7));
+        for (let offset = w * 7 + 6; offset >= w * 7; offset--) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
+          const entry = dailyMap[getLocalDateKey(d)] || { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [] };
+          wkDone += entry.completed;
+          wkFocus += entry.focusMins;
+          wkTop3 += entry.top3Hit;
+          wkTitles.push(...entry.completedTitles);
+        }
+        const rangeStr = `${startD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${endD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+        analyticsBuckets.push({
+          shortLabel: w === 0 ? 'This Wk' : `-${w}w`,
+          fullLabel: `${w === 0 ? 'This Week' : `${w} Week(s) Ago`} (${rangeStr})`,
+          completed: wkDone,
+          top3Hit: wkTop3,
+          focusMins: wkFocus,
+          titles: wkTitles
+        });
+        totalDone += wkDone;
+        totalFocus += wkFocus;
+      }
+    } else {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      for (let m = 11; m >= 0; m--) {
+        const target = new Date(now.getFullYear(), now.getMonth() - m, 1);
+        const prefix = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-`;
+        let mDone = 0, mFocus = 0, mTop3 = 0, mTitles = [];
+        Object.entries(dailyMap).forEach(([k, entry]) => {
+          if (k.startsWith(prefix)) {
+            mDone += entry.completed;
+            mFocus += entry.focusMins;
+            mTop3 += entry.top3Hit;
+            mTitles.push(...entry.completedTitles);
+          }
+        });
+        analyticsBuckets.push({
+          shortLabel: monthNames[target.getMonth()][0],
+          fullLabel: `${monthNames[target.getMonth()]} ${target.getFullYear()}`,
+          completed: mDone,
+          top3Hit: mTop3,
+          focusMins: mFocus,
+          titles: mTitles
+        });
+        totalDone += mDone;
+        totalFocus += mFocus;
+      }
+    }
+
+    const completionPct = totalToday ? Math.round((doneToday / totalToday) * 100) : 0;
+
+    document.getElementById('kpiGrid').innerHTML = `
+      <div class="kpi-tile"><div class="kpi-num">${totalDone}</div><div class="kpi-name">Done (${analyticsRange})</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${top3Done}/3</div><div class="kpi-name">Rule of 3 Today</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${totalFocus}m</div><div class="kpi-name">Focus Logged</div></div>
+      <div class="kpi-tile"><div class="kpi-num">${completionPct}%</div><div class="kpi-name">Completion Rate</div></div>
+    `;
+
+    const vals = analyticsBuckets.map(b => b.completed);
+    const maxVal = Math.max(...vals, 1);
+    const hasAnyData = vals.some(v => v > 0);
+    if (selectedBarIdx === null || selectedBarIdx >= analyticsBuckets.length) {
+      selectedBarIdx = analyticsBuckets.length - 1;
+    }
+
+    document.getElementById('barChart').innerHTML = analyticsBuckets.map((b, i) => {
+      const v = b.completed;
+      const pct = hasAnyData && v > 0 ? Math.max(8, Math.round((v / maxVal) * 84)) : 2;
+      const fillBg = v > 0 ? 'var(--primary-grad)' : '#cbd5e1';
+      return `
+        <div class="bar-col ${i === selectedBarIdx ? 'selected' : ''}" onclick="selectAnalyticsBar(${i})">
+          <div style="font-size:10px;font-weight:700;color:${v > 0 ? '#1e293b' : '#94a3b8'};">${v}</div>
+          <div class="bar-fill" style="height:${pct}%;background:${fillBg};"></div>
+          <div class="bar-lbl">${b.shortLabel}</div>
+        </div>`;
+    }).join('');
+
+    renderBarDetail(selectedBarIdx);
+  }
+
+  function openSettings() {
+    document.getElementById('settingsKeyInput').value = getStoredApiKey();
+    document.getElementById('settingsModelSelect').value = state.model || 'gemini-3.5-flash-lite';
+    updateKeyIndicators();
+    document.getElementById('settingsModal').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('open');
+  }
+  function saveModelPref(m) {
+    state.model = m;
+    saveState();
+  }
+  function saveSettingsAndClose() {
+    liveSaveKey(document.getElementById('settingsKeyInput').value);
+    closeSettings();
+    setStatus('Settings saved.');
+  }
+
+  function switchTab(tab) {
+    if (window.innerWidth >= 860 && tab === 'focus') tab = 'today';
+    document.querySelectorAll('.nav-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('tab-' + tab);
+    if (target) target.classList.add('active');
+    if (tab === 'schedule') renderSchedule();
+    if (tab === 'analytics') renderAnalytics();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleBot() {
+    document.getElementById('botPanel').classList.toggle('open');
+  }
+
+  function appendBotMsg(text, who) {
+    const box = document.getElementById('botMsgs');
+    const div = document.createElement('div');
+    div.className = 'bot-msg ' + who;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
   async function sendBotQuery() {
     const input = document.getElementById('botInput');
     const q = input.value.trim();
@@ -1484,16 +2357,112 @@
     const tomorrowTasks = state.tasks.filter(t => isUpcoming(t) && !t.done);
     const done = todayTasks.filter(t => t.done).length;
     const rolled = todayTasks.filter(t => t.rolledOver && !t.done).length;
-// ... existing code ... -->
+
+    const apiKey = getStoredApiKey();
+    if (apiKey) {
+      const box = document.getElementById('botMsgs');
+      const thinking = document.createElement('div');
+      thinking.className = 'bot-msg ai';
+      thinking.textContent = 'Analyzing your workspace...';
+      box.appendChild(thinking);
+      box.scrollTop = box.scrollHeight;
+
+      const contextSnapshot = JSON.stringify({
+        date: todayKey,
+        workWindow: `${state.workStart}-${state.workEnd}`,
+        personalWindow: `${state.personalStart}-${state.personalEnd}`,
+        top3Active: top3,
         workPending: workPending.map(t => `${t.title} (${t.mins}m)`),
         personalPending: persPending.map(t => `${t.title} (${t.mins}m)`),
         upcomingScheduled: tomorrowTasks.map(t => `${t.title} [${formatFriendlyDate(t.dueDate || getTomorrowDateKey())}] (${t.bucket}, ${t.mins}m)`),
         completedToday: done,
-// ... existing code ... -->
+        rolledOverCount: rolled,
+        focusMinsToday: state.todayFocusMins || 0,
+        historyDaysLogged: Object.keys(state.history || {}).length,
+        schedule: state.schedule.map(s => `${s.start !== null ? fmtMins(s.start) + '-' + fmtMins(s.end) : (s.dayLabel || 'Upcoming')}: ${s.title}`)
+      });
+
+      try {
+        const model = state.model || 'gemini-3.5-flash-lite';
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `You are a concise productivity coach. Answer strictly from this live user workspace data in 1-3 short sentences.\nData: ${contextSnapshot}\nQuestion: ${q}` }] }]
+          })
+        });
+        const data = await res.json();
+        const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (res.ok && aiText) {
+          thinking.textContent = aiText.trim();
+          box.scrollTop = box.scrollHeight;
+          return;
+        }
+      } catch (e) {}
+      thinking.remove();
+    }
+
     let reply = '';
     if (/tomorrow|tmrw|upcoming|future|date/i.test(q)) {
       reply = tomorrowTasks.length
         ? `Upcoming scheduled tasks (${tomorrowTasks.length}): ${tomorrowTasks.map(t => `${t.title} [${formatFriendlyDate(t.dueDate || getTomorrowDateKey())}] (${t.mins}m)`).join('; ')}.`
         : 'No upcoming tasks scheduled yet. Pick a future date in Quick Add or say "tomorrow" in Brain Dump!';
     } else if (/top\s*3|priorit/i.test(q)) {
-// ... existing code ... -->
+      reply = top3.length
+        ? `Active Top 3 priorities: ${top3.map((t, i) => `${i + 1}) ${t}`).join('; ')}.`
+        : '0 active Top 3 priorities pinned right now. Tap "☆ Top 3" on your top tasks!';
+    } else if (/sched|plan|block|next/i.test(q)) {
+      const timed = state.schedule.filter(b => b.start !== null && b.type !== 'fixed');
+      reply = timed.length
+        ? `Scheduled blocks today: ${timed.map(b => `${fmtMins(b.start)} ${b.title}`).join('; ')}.`
+        : 'No active task blocks scheduled yet. Open Plan and tap ⚡ Auto-Plan!';
+    } else if (/focus|pomodoro|time/i.test(q)) {
+      reply = `Logged ${state.todayFocusMins || 0} deep-focus mins today across ${done} completed tasks.`;
+    } else if (/roll|miss|yesterday/i.test(q)) {
+      reply = `${rolled} rolled-over task(s) carried forward from previous days.`;
+    } else {
+      reply = `Today: ${done} done, ${workPending.length} work pending, ${persPending.length} personal pending, ${tomorrowTasks.length} upcoming, ${state.todayFocusMins || 0}m focus logged.`;
+    }
+    setTimeout(() => appendBotMsg(reply, 'ai'), 140);
+  }
+
+  // Sync wall-clock timer & midnight rollover when app resumes on phone
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      checkDayRollover();
+      if (timerState.running && timerState.endTime) {
+        const left = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
+        timerState.remainingSec = left;
+        updateTimerDisplay();
+        if (left <= 0) completeTimerSession();
+      }
+      renderAll();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 860 && document.getElementById('tab-focus').classList.contains('active')) {
+      switchTab('today');
+    }
+  });
+
+  function renderAll() {
+    const now = new Date();
+    document.getElementById('dateSubtitle').textContent = now.toLocaleDateString('en-IN', {
+      weekday: 'short', day: 'numeric', month: 'short'
+    });
+    updateKeyIndicators();
+    syncQuickDateDefault();
+    syncScheduleInputs();
+    renderTasks();
+    updateTimerDisplay();
+    renderSchedule();
+    renderAnalytics();
+  }
+
+  loadState();
+  setAnalyticsRange('week');
+  renderAll();
+</script>
+</body>
+</html>
