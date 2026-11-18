@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1120" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Commute2Desk" />
   <title>Commute-to-Desk · Daily Productivity OS</title>
+  <link id="app-favicon" rel="icon" type="image/png" />
+  <link id="apple-touch-icon" rel="apple-touch-icon" />
   <link id="dynamic-manifest" rel="manifest" />
   <style>
     :root {
@@ -17,7 +20,6 @@
       --bg-surface: #ffffff;
       --bg-subtle: #f8fafc;
       --border: #e2e8f0;
-      --border-strong: #cbd5e1;
       --text-main: #0f172a;
       --text-secondary: #475569;
       --text-muted: #94a3b8;
@@ -25,14 +27,11 @@
       --primary-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
       --ai-grad: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
       --amber: #f59e0b;
-      --amber-bg: #fffbeb;
       --emerald: #10b981;
       --emerald-bg: #ecfdf5;
       --danger: #ef4444;
       --danger-bg: #fef2f2;
       --radius-xl: 20px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
       --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.04);
       --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
       --safe-top: env(safe-area-inset-top, 0px);
@@ -41,18 +40,29 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    html, body {
+    /* Unlocked native document scrolling for mobile & desktop */
+    html {
+      height: auto;
+      min-height: 100%;
+      overflow-y: auto;
+      overflow-x: clip;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+      min-height: 100dvh;
+      height: auto;
+      overflow-y: visible;
+      overflow-x: clip;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Inter, sans-serif;
       background: var(--bg-body);
       color: var(--text-main);
       line-height: 1.45;
-      overflow-x: hidden;
-      overscroll-behavior-y: none;
       -webkit-font-smoothing: antialiased;
-      padding-bottom: calc(84px + var(--safe-bottom));
+      padding-bottom: calc(96px + var(--safe-bottom));
     }
 
-    /* Native-Style App Bar + Top Text Navigation */
+    /* Dark App Bar + Top Text Navigation */
     .app-header {
       background: var(--bg-header-grad);
       color: #f8fafc;
@@ -83,7 +93,6 @@
     .header-pills { display: flex; align-items: center; gap: 8px; }
     .pill-btn {
       background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
       color: #f8fafc;
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 999px;
@@ -101,7 +110,6 @@
     .pill-install {
       background: #2563eb;
       border-color: #60a5fa;
-      display: none;
     }
 
     /* Live Summary Chips inside Header */
@@ -168,7 +176,7 @@
     }
 
     @media (min-width: 860px) {
-      body { padding-bottom: 40px; }
+      body { padding-bottom: 48px; }
       .nav-tab { flex: 0 0 auto; padding: 10px 18px 11px; }
       .nav-tab[data-tab="focus"] { display: none; }
       .grid-desktop {
@@ -239,6 +247,7 @@
       transition: transform 0.08s, box-shadow 0.15s;
     }
     .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.6; pointer-events: none; }
     .btn-primary {
       background: var(--primary-grad);
       color: #fff;
@@ -262,7 +271,6 @@
       border: 1px solid #e2e8f0;
       color: #334155;
       font-weight: 700;
-      cursor: pointer;
     }
 
     textarea, input[type="text"], input[type="password"], select {
@@ -341,7 +349,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      transition: transform 0.1s;
     }
     .task-card.top3 {
       border: 1.5px solid #fcd34d;
@@ -359,18 +366,17 @@
       gap: 12px;
     }
     .check-circle {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       border: 2px solid #cbd5e1;
       background: #fff;
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      margin-top: 0;
+      margin-top: 1px;
       cursor: pointer;
       font-size: 14px;
-      font-weight: 800;
       color: transparent;
       transition: all 0.15s;
     }
@@ -415,7 +421,7 @@
       border-top: 1px solid #f1f5f9;
     }
     .t-btn {
-      height: 40px;
+      height: 38px;
       border-radius: 10px;
       border: none;
       background: #f1f5f9;
@@ -481,7 +487,7 @@
       background: rgba(255,255,255,0.08);
       color: #cbd5e1;
       border: 1px solid rgba(255,255,255,0.12);
-      height: 40px;
+      height: 38px;
       border-radius: 11px;
       font-size: 12px;
       font-weight: 700;
@@ -557,7 +563,6 @@
       position: fixed;
       inset: 0;
       background: rgba(11, 17, 32, 0.58);
-      backdrop-filter: blur(3px);
       display: none;
       align-items: flex-end;
       justify-content: center;
@@ -569,8 +574,9 @@
       border-radius: 24px 24px 0 0;
       width: 100%;
       max-width: 520px;
-      max-height: 90dvh;
+      max-height: 85dvh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 14px 18px calc(22px + var(--safe-bottom));
       box-shadow: 0 -12px 32px rgba(11, 17, 32, 0.25);
     }
@@ -633,6 +639,7 @@
       padding: 12px;
       max-height: 240px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -705,7 +712,7 @@
         <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs, review Jira ticket, buy groceries on evening walk..."></textarea>
         <div class="dual-actions">
           <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
-          <button class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
+          <button id="aiPolishBtn" class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
         </div>
 
         <div id="inlineKeyBox" class="inline-key-box">
@@ -772,9 +779,9 @@
           <div id="timerDisplay" class="timer-digits">25:00</div>
         </div>
         <div class="preset-row">
-          <button class="p-chip active" data-mins="25" onclick="setTimerPreset(25, this)">25m Focus</button>
-          <button class="p-chip" data-mins="5" onclick="setTimerPreset(5, this)">5m Break</button>
-          <button class="p-chip" data-mins="90" onclick="setTimerPreset(90, this)">90m Sprint</button>
+          <button class="p-chip active" onclick="setTimerPreset(25, this)">25m Focus</button>
+          <button class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
+          <button class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
         </div>
         <div class="focus-ctrls">
           <button id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
@@ -788,9 +795,10 @@
           <div class="card-title">🧭 Daily Rituals & Rules</div>
         </div>
         <ul style="font-size:13px;color:#334155;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
-          <li><strong>Rule of 3:</strong> Pin up to 3 must-win tasks. Unfinished items auto-roll tomorrow.</li>
-          <li><strong>2-Minute Rule:</strong> Knock out ≤2m tasks between meetings.</li>
-          <li><strong>90-Min Ultradian Sprint:</strong> Deep engineering & VM blocks.</li>
+          <li><strong>Rule of 3 (Ivy Lee):</strong> Pin up to 3 must-win tasks. Unfinished items auto-roll tomorrow.</li>
+          <li><strong>2-Minute Rule:</strong> Knock out ≤2m tasks immediately between meetings.</li>
+          <li><strong>90-Min Ultradian Sprint:</strong> Deep engineering & VM debugging blocks.</li>
+          <li><strong>Timeblocking (Cal Newport):</strong> Auto-slots priorities around gym, work, and walk anchors.</li>
         </ul>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
           <button class="btn" onclick="simulateNextDayRollover()">↻ Rollover</button>
@@ -881,7 +889,7 @@
   </div>
 </div>
 
-<!-- Settings Bottom Sheet -->
+<!-- Settings & Install Guide Bottom Sheet -->
 <div id="settingsModal" class="sheet-backdrop" onclick="if(event.target===this)closeSettings()">
   <div class="sheet-card">
     <div class="sheet-grabber"></div>
@@ -897,12 +905,34 @@
     <div class="form-group">
       <label>Gemini Model</label>
       <select id="settingsModelSelect" onchange="saveModelPref(this.value)">
-        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Fast)</option>
-        <option value="gemini-3.8-flash">gemini-3.8-flash</option>
-        <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Recommended · Fast)</option>
+        <option value="gemini-3.8-flash">gemini-3.8-flash (Multimodal Workhorse)</option>
+        <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
       </select>
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="saveSettingsAndClose()">Save & Close</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button class="btn" onclick="testApiKey()">🔌 Test Key</button>
+      <button class="btn btn-primary" onclick="saveSettingsAndClose()">Save & Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Install Instructions Bottom Sheet -->
+<div id="installModal" class="sheet-backdrop" onclick="if(event.target===this)closeInstallModal()">
+  <div class="sheet-card">
+    <div class="sheet-grabber"></div>
+    <div class="card-header">
+      <div class="card-title">📲 Install Commute2Desk App</div>
+      <button class="btn btn-chip" onclick="closeInstallModal()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+      Install this app to your home screen / desktop with a custom <strong>C2D</strong> icon and full-screen offline support:
+    </p>
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:13px;line-height:1.6;color:#1e293b;">
+      <div><strong>Android (Galaxy S26 Chrome / Samsung Internet):</strong> Tap browser menu <strong>⋮</strong> (or <strong>☰</strong>) → <strong>Add to home screen</strong> → <strong>Install</strong>.</div>
+      <div style="margin-top:8px;"><strong>Desktop (Chrome / Edge):</strong> Click the <strong>Install icon (⊕)</strong> on the right side of the address bar → <strong>Install</strong>.</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="closeInstallModal()">Got It</button>
   </div>
 </div>
 
@@ -923,36 +953,81 @@
 </div>
 
 <script>
+  // High-res PNG icon generator for Android WebAPK, Desktop PWA, Favicon & Apple Touch Icon
+  function renderAppIconDataURL(size) {
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+    const pad = Math.round(size * 0.06);
+    const r = Math.round(size * 0.22);
+    const w = size - pad * 2;
+    const h = size - pad * 2;
+
+    const g = ctx.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, '#1d4ed8');
+    g.addColorStop(0.55, '#4f46e5');
+    g.addColorStop(1, '#7c3aed');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(pad + r, pad);
+    ctx.lineTo(pad + w - r, pad);
+    ctx.quadraticCurveTo(pad + w, pad, pad + w, pad + r);
+    ctx.lineTo(pad + w, pad + h - r);
+    ctx.quadraticCurveTo(pad + w, pad + h, pad + w - r, pad + h);
+    ctx.lineTo(pad + r, pad + h);
+    ctx.quadraticCurveTo(pad, pad + h, pad, pad + h - r);
+    ctx.lineTo(pad, pad + r);
+    ctx.quadraticCurveTo(pad, pad, pad + r, pad);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = Math.max(2, Math.round(size * 0.015));
+    ctx.stroke();
+
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.arc(size * 0.76, size * 0.26, size * 0.11, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `800 ${Math.round(size * 0.31)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('C2D', size / 2, size * 0.54);
+
+    return c.toDataURL('image/png');
+  }
+
   // Dynamic PWA Manifest + Inline Service Worker Setup
   (function initPWA() {
+    try {
+      const icon64 = renderAppIconDataURL(64);
+      const icon180 = renderAppIconDataURL(180);
+      document.getElementById('app-favicon').href = icon64;
+      document.getElementById('apple-touch-icon').href = icon180;
+    } catch (e) {}
+
     if (!location.protocol.startsWith('http')) return;
-    function makeIcon(size) {
-      const c = document.createElement('canvas');
-      c.width = size; c.height = size;
-      const ctx = c.getContext('2d');
-      const g = ctx.createLinearGradient(0, 0, size, size);
-      g.addColorStop(0, '#2563eb');
-      g.addColorStop(1, '#7c3aed');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, size, size);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${Math.round(size * 0.34)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('C2D', size / 2, size / 2);
-      return c.toDataURL('image/png');
-    }
+
+    const baseDir = location.href.replace(/[^/]*$/, '');
     const manifest = {
-      name: 'Commute-to-Desk · Productivity OS',
+      id: baseDir,
+      name: 'Commute-to-Desk · Daily Productivity OS',
       short_name: 'Commute2Desk',
+      description: 'Voice brain-dump, Rule of 3 priorities, Pomodoro timer, and auto-timeblocker.',
       start_url: location.href,
-      scope: location.pathname.replace(/[^/]*$/, ''),
+      scope: baseDir,
       display: 'standalone',
+      orientation: 'portrait-primary',
       background_color: '#0b1120',
       theme_color: '#0b1120',
       icons: [
-        { src: makeIcon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-        { src: makeIcon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+        { src: renderAppIconDataURL(192), sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: renderAppIconDataURL(192), sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: renderAppIconDataURL(512), sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: renderAppIconDataURL(512), sizes: '512x512', type: 'image/png', purpose: 'maskable' }
       ]
     };
     const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
@@ -960,10 +1035,24 @@
 
     if ('serviceWorker' in navigator) {
       const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+        const CACHE = 'c2d-shell-v1';
+        self.addEventListener('install', e => {
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', e => {
+          e.waitUntil(self.clients.claim());
+        });
         self.addEventListener('fetch', e => {
-          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+          if (e.request.method !== 'GET') return;
+          e.respondWith(
+            fetch(e.request)
+              .then(res => {
+                const copy = res.clone();
+                caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+                return res;
+              })
+              .catch(() => caches.match(e.request))
+          );
         });
       `;
       const swBlob = new Blob([swCode], { type: 'application/javascript' });
@@ -975,16 +1064,19 @@
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    const btn = document.getElementById('installAppBtn');
-    if (btn) btn.style.display = 'inline-flex';
   });
 
   async function triggerInstall() {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    document.getElementById('installAppBtn').style.display = 'none';
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+    } else {
+      document.getElementById('installModal').classList.add('open');
+    }
+  }
+  function closeInstallModal() {
+    document.getElementById('installModal').classList.remove('open');
   }
 
   const STORAGE_KEY = 'c2d_productivity_os_v3';
@@ -1218,6 +1310,37 @@
     runAiPolish();
   }
 
+  async function testApiKey() {
+    const badge = document.getElementById('keySavedBadge');
+    const apiKey = getStoredApiKey();
+    if (!apiKey) {
+      badge.style.color = '#dc2626';
+      badge.textContent = 'Paste an API key first.';
+      return;
+    }
+    badge.style.color = '#2563eb';
+    badge.textContent = 'Testing key...';
+    const model = state.model || 'gemini-3.5-flash-lite';
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'Reply with OK' }] }] })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        badge.style.color = '#059669';
+        badge.textContent = `✓ Verified! Connected to ${model}.`;
+      } else {
+        badge.style.color = '#dc2626';
+        badge.textContent = `✗ Error: ${data?.error?.message || res.status}`;
+      }
+    } catch (e) {
+      badge.style.color = '#dc2626';
+      badge.textContent = `✗ Network error: ${e.message}`;
+    }
+  }
+
   async function runAiPolish() {
     const raw = document.getElementById('dumpInput').value.trim();
     if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
@@ -1230,8 +1353,11 @@
       return;
     }
 
+    const aiBtn = document.getElementById('aiPolishBtn');
+    if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '⏳ Polishing...'; }
     setStatus('✨ Polishing with Gemini AI...');
-    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-2.5-flash-lite'];
+
+    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
     const prompt = [
       'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
       '{"tasks":[{"title":"Clean concise action item","bucket":"work"|"personal","mins":2|15|25|45|60|90,"top3":true|false}]}',
@@ -1240,38 +1366,42 @@
     ].join('\n');
 
     let lastErr = '';
-    for (const model of [...new Set(modelsToTry)]) {
-      try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          lastErr = data?.error?.message || `HTTP ${res.status}`;
-          continue;
+    try {
+      for (const model of [...new Set(modelsToTry)]) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            lastErr = data?.error?.message || `HTTP ${res.status}`;
+            continue;
+          }
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const cleaned = text.replace(/```json|```/gi, '').trim();
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed.tasks) && parsed.tasks.length) {
+            addTasksFromItems(parsed.tasks);
+            document.getElementById('dumpInput').value = '';
+            setStatus(`✨ AI Polish (${model}) organized ${parsed.tasks.length} tasks!`);
+            return;
+          }
+        } catch (err) {
+          lastErr = err.message;
         }
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleaned = text.replace(/```json|```/gi, '').trim();
-        const parsed = JSON.parse(cleaned);
-        if (Array.isArray(parsed.tasks) && parsed.tasks.length) {
-          addTasksFromItems(parsed.tasks);
-          document.getElementById('dumpInput').value = '';
-          setStatus(`✨ AI Polish (${model}) organized ${parsed.tasks.length} tasks!`);
-          return;
-        }
-      } catch (err) {
-        lastErr = err.message;
       }
+      setStatus(`AI Polish error: ${lastErr}. Check API key in Settings.`, true);
+    } finally {
+      if (aiBtn) { aiBtn.disabled = false; aiBtn.textContent = '✨ AI Polish'; }
     }
-    setStatus(`AI Polish error: ${lastErr}. Check API key in Settings.`, true);
   }
 
   function addManualTask() {
@@ -1363,7 +1493,7 @@
     t.bucket = document.getElementById('editTaskBucket').value;
     t.mins = Number(document.getElementById('editTaskMins').value) || 25;
     t.top3 = wantTop3;
-    if (timerState.taskId === id && !timerState.running) {
+    if (timerState.taskId === id) {
       document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     }
     saveState();
@@ -1458,22 +1588,18 @@
     isCompleting: false
   };
 
-  function syncPresetChips(mins) {
-    document.querySelectorAll('.p-chip').forEach(b => {
-      b.classList.toggle('active', Number(b.dataset.mins) === mins);
-    });
-  }
-
   function pinTaskToTimer(id, openFocusTab = false) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
     timerState.taskId = id;
     document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     if (!timerState.running) {
-      const mins = t.mins || 25;
+      const mins = [25, 5, 90].includes(t.mins) ? t.mins : (t.mins || 25);
       timerState.presetMins = mins;
       timerState.remainingSec = mins * 60;
-      syncPresetChips(mins);
+      document.querySelectorAll('.p-chip').forEach(b => {
+        b.classList.toggle('active', b.textContent.startsWith(mins + 'm'));
+      });
       updateTimerDisplay();
     }
     if (openFocusTab && window.innerWidth < 860) {
@@ -1482,14 +1608,11 @@
   }
 
   function setTimerPreset(mins, btn) {
-    if (timerState.running) {
-      clearInterval(timerState.intervalId);
-      timerState.running = false;
-      document.getElementById('timerStartBtn').textContent = '▶ Start';
-    }
+    if (timerState.running) toggleTimer();
     timerState.presetMins = mins;
     timerState.remainingSec = mins * 60;
-    syncPresetChips(mins);
+    document.querySelectorAll('.p-chip').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     updateTimerDisplay();
   }
 
@@ -1499,16 +1622,6 @@
     document.getElementById('timerDisplay').textContent = `${m}:${s}`;
     document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
   }
-
-  // Sync timer immediately if user switches apps or locks screen on mobile
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && timerState.running && timerState.endTime) {
-      const left = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
-      timerState.remainingSec = left;
-      updateTimerDisplay();
-      if (left <= 0) completeTimerSession();
-    }
-  });
 
   function playChime() {
     try {
@@ -1734,6 +1847,7 @@
   }
 
   function switchTab(tab) {
+    if (window.innerWidth >= 860 && tab === 'focus') tab = 'today';
     document.querySelectorAll('.nav-tab').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tab);
     });
@@ -1785,6 +1899,25 @@
     }
     setTimeout(() => appendBotMsg(reply, 'ai'), 160);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      checkDayRollover();
+      if (timerState.running && timerState.endTime) {
+        const left = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
+        timerState.remainingSec = left;
+        updateTimerDisplay();
+        if (left <= 0) completeTimerSession();
+      }
+      renderAll();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 860 && document.getElementById('tab-focus').classList.contains('active')) {
+      switchTab('today');
+    }
+  });
 
   function renderAll() {
     const now = new Date();
