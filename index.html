@@ -275,7 +275,7 @@
       cursor: pointer;
     }
 
-    textarea, input[type="text"], input[type="password"], input[type="time"], input[type="number"], select {
+    textarea, input[type="text"], input[type="password"], input[type="time"], input[type="date"], input[type="number"], select {
       width: 100%;
       border: 1.5px solid #e2e8f0;
       border-radius: 14px;
@@ -753,11 +753,8 @@
           </label>
         </div>
         <input type="text" id="quickTitle" placeholder="Add a single action item..." onkeydown="if(event.key==='Enter')addManualTask()" />
-        <div class="quick-row">
-          <select id="quickDay">
-            <option value="today" selected>📅 Today</option>
-            <option value="tomorrow">🌅 Tomorrow</option>
-          </select>
+        <div class="quick-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:8px;">
+          <input type="date" id="quickDate" aria-label="Target Date" style="padding:10px 8px;font-size:14px;" />
           <select id="quickBucket">
             <option value="work">💼 Work</option>
             <option value="personal">🏡 Personal</option>
@@ -771,7 +768,7 @@
             <option value="90">90 min</option>
           </select>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addManualTask()">Add Task</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addManualTask()">+ Add Task</button>
       </div>
 
       <!-- Top 3 Section -->
@@ -794,10 +791,10 @@
       </div>
       <div id="personalList" class="task-list"></div>
 
-      <!-- Scheduled for Tomorrow Section -->
+      <!-- Tomorrow Queue Section -->
       <div class="section-label">
-        <h2>🌅 Scheduled for Tomorrow (<span id="tomorrowCount">0</span>)</h2>
-        <button id="moveAllTodayBtn" class="btn btn-chip" style="display:none;" onclick="promoteAllTomorrowToToday()">↑ Move All to Today</button>
+        <h2>🗓 Upcoming & Tomorrow (<span id="tomorrowCount">0</span>)</h2>
+        <button class="btn btn-chip" onclick="promoteAllTomorrow()">Move All to Today</button>
       </div>
       <div id="tomorrowList" class="task-list"></div>
     </section>
@@ -916,11 +913,8 @@
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
       <div class="form-group">
-        <label>Day</label>
-        <select id="editTaskDay">
-          <option value="today">Today</option>
-          <option value="tomorrow">Tomorrow</option>
-        </select>
+        <label>Date</label>
+        <input type="date" id="editTaskDate" style="padding:10px 8px;font-size:14px;" />
       </div>
       <div class="form-group">
         <label>Bucket</label>
@@ -1147,42 +1141,28 @@
     return `${y}-${m}-${day}`;
   }
 
-  function getStoredApiKey() {
-    if (window.__geminiKey && window.__geminiKey.trim()) return window.__geminiKey.trim();
-    try {
-      const s = sessionStorage.getItem(API_KEY_STORAGE);
-      if (s && s.trim()) { window.__geminiKey = s.trim(); return window.__geminiKey; }
-    } catch (e) {}
-    try {
-      const l = localStorage.getItem(API_KEY_STORAGE);
-      if (l && l.trim()) { window.__geminiKey = l.trim(); return window.__geminiKey; }
-    } catch (e) {}
-    return (state && state.apiKey ? state.apiKey.trim() : '');
+  function getTomorrowDateKey() {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return getLocalDateKey(d);
   }
 
-  function liveSaveKey(val) {
-    const clean = (val || '').trim();
-    window.__geminiKey = clean;
-    if (state) state.apiKey = clean;
-    try { sessionStorage.setItem(API_KEY_STORAGE, clean); } catch (e) {}
-    try { localStorage.setItem(API_KEY_STORAGE, clean); } catch (e) {}
-    saveState();
-    updateKeyIndicators();
+  function formatFriendlyDate(dateKey) {
+    const todayKey = getLocalDateKey();
+    const tmrwKey = getTomorrowDateKey();
+    if (!dateKey || dateKey <= todayKey) return 'Today';
+    if (dateKey === tmrwKey) return 'Tomorrow';
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
-  function updateKeyIndicators() {
-    const key = getStoredApiKey();
-    const badge = document.getElementById('keySavedBadge');
-    const dot = document.getElementById('headerKeyDot');
-    const inlineBox = document.getElementById('inlineKeyBox');
-    if (key) {
-      const masked = key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : 'Saved';
-      if (badge) { badge.style.color = '#059669'; badge.textContent = `✓ Key active (${masked})`; }
-      if (dot) dot.textContent = '🟢';
-      if (inlineBox) inlineBox.classList.remove('visible');
-    } else {
-      if (badge) { badge.style.color = '#64748b'; badge.textContent = 'No key saved yet (offline splitter still works).'; }
-      if (dot) dot.textContent = 'Key';
+  function syncQuickDateDefault() {
+    const qd = document.getElementById('quickDate');
+    const todayKey = getLocalDateKey();
+    if (qd) {
+      qd.min = todayKey;
+      if (!qd.value || qd.value < todayKey) qd.value = todayKey;
     }
   }
 
@@ -1243,31 +1223,24 @@
     const today = getLocalDateKey();
     if (state.lastActiveDate && state.lastActiveDate !== today) {
       const prevDate = state.lastActiveDate;
-      const doneTasks = state.tasks.filter(t => t.done && (t.scheduledFor || 'today') === 'today');
+      const doneTasks = state.tasks.filter(t => t.done);
+      const top3Done = doneTasks.filter(t => t.top3).length;
       state.history[prevDate] = {
         completed: doneTasks.length,
-        top3Hit: doneTasks.filter(t => t.top3).length,
+        top3Hit: top3Done,
         focusMins: state.todayFocusMins || 0,
         completedTitles: doneTasks.map(t => t.title)
       };
-
-      // Promote "tomorrow" tasks into Today cleanly, and roll over unfinished Today tasks with ↻
-      let top3Promoted = 0;
       state.tasks = state.tasks
         .filter(t => !t.done)
         .map(t => {
-          if (t.scheduledFor === 'tomorrow') {
-            let keepTop3 = Boolean(t.top3);
-            if (keepTop3 && top3Promoted >= 3) keepTop3 = false;
-            if (keepTop3) top3Promoted++;
-            return { ...t, scheduledFor: 'today', top3: keepTop3, rolledOver: false };
+          const targetDate = t.dueDate || (t.day === 'tomorrow' ? today : prevDate);
+          if (targetDate > today) {
+            return { ...t, dueDate: targetDate, day: 'tomorrow', rolledOver: false };
           }
-          let keepTop3 = Boolean(t.top3);
-          if (keepTop3 && top3Promoted >= 3) keepTop3 = false;
-          if (keepTop3) top3Promoted++;
-          return { ...t, scheduledFor: 'today', top3: keepTop3, rolledOver: true };
+          const wasScheduledForToday = targetDate === today || t.day === 'tomorrow';
+          return { ...t, dueDate: today, day: 'today', rolledOver: !wasScheduledForToday };
         });
-
       state.todayFocusMins = 0;
       state.schedule = [];
       state.lastActiveDate = today;
@@ -1352,22 +1325,28 @@
   }
 
   function addTasksFromItems(items) {
-    let top3Current = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
+    const todayKey = getLocalDateKey();
+    const tmrwKey = getTomorrowDateKey();
+    let top3Current = state.tasks.filter(t => t.top3 && !t.done && (t.dueDate || todayKey) <= todayKey).length;
     items.forEach(item => {
       const title = (item.title || '').trim();
       if (!title) return;
+      let dueDate = item.dueDate || (item.day === 'tomorrow' ? tmrwKey : todayKey);
+      if (dueDate < todayKey) dueDate = todayKey;
+      const isFuture = dueDate > todayKey;
       const bucket = item.bucket === 'personal' ? 'personal' : 'work';
-      const scheduledFor = item.scheduledFor === 'tomorrow' ? 'tomorrow' : 'today';
       const rawMins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
-      const mins = snapDuration(rawMins);
-      let isTop3 = scheduledFor === 'today' && Boolean(item.top3);
+      const validDurs = [2, 15, 25, 45, 60, 90];
+      const mins = validDurs.reduce((prev, curr) => Math.abs(curr - rawMins) < Math.abs(prev - rawMins) ? curr : prev);
+      let isTop3 = !isFuture && Boolean(item.top3);
       if (isTop3 && top3Current >= 3) isTop3 = false;
       if (isTop3) top3Current++;
       state.tasks.push({
         id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         title,
+        dueDate,
+        day: isFuture ? 'tomorrow' : 'today',
         bucket,
-        scheduledFor,
         mins,
         top3: isTop3,
         done: false,
@@ -1376,6 +1355,22 @@
     });
     saveState();
     renderAll();
+  }
+
+  function promoteAllTomorrow() {
+    const todayKey = getLocalDateKey();
+    let moved = 0;
+    state.tasks.forEach(t => {
+      if ((t.dueDate || todayKey) > todayKey || t.day === 'tomorrow') {
+        t.dueDate = todayKey;
+        t.day = 'today';
+        moved++;
+      }
+    });
+    if (!moved) return;
+    saveState();
+    renderAll();
+    setStatus(`Moved ${moved} upcoming task(s) into Today.`);
   }
 
   function splitOffline() {
@@ -1522,21 +1517,15 @@
     const input = document.getElementById('quickTitle');
     const title = input.value.trim();
     if (!title) return;
-    const scheduledFor = document.getElementById('quickDay').value === 'tomorrow' ? 'tomorrow' : 'today';
+    const todayKey = getLocalDateKey();
+    const dueDate = document.getElementById('quickDate')?.value || todayKey;
+    const isFuture = dueDate > todayKey;
     const bucket = document.getElementById('quickBucket').value;
     const mins = Number(document.getElementById('quickMins').value) || 25;
-    const top3Count = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
-    addTasksFromItems([{
-      title,
-      bucket,
-      scheduledFor,
-      mins,
-      top3: scheduledFor === 'today' && bucket === 'work' && top3Count < 3
-    }]);
+    const top3Count = state.tasks.filter(t => t.top3 && !t.done && (t.dueDate || todayKey) <= todayKey).length;
+    addTasksFromItems([{ title, dueDate, day: isFuture ? 'tomorrow' : 'today', bucket, mins, top3: !isFuture && bucket === 'work' && top3Count < 3 }]);
     input.value = '';
-    if (scheduledFor === 'tomorrow') {
-      showToast('Added to Tomorrow’s list');
-    }
+  }
   }
 
   function moveTaskToToday(id) {
@@ -1572,20 +1561,19 @@
   function toggleTop3(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
-    if (t.scheduledFor === 'tomorrow') {
-      t.scheduledFor = 'today';
-    }
+    const todayKey = getLocalDateKey();
     if (t.top3) {
       t.top3 = false;
     } else {
-      const count = state.tasks.filter(x => (x.scheduledFor || 'today') === 'today' && x.top3 && !x.done).length;
+      const count = state.tasks.filter(x => x.top3 && !x.done && (x.dueDate || todayKey) <= todayKey).length;
       if (count >= 3) {
-        showToast('Rule of 3 allows up to 3 active priorities today. Unstar one first.');
+        alert('Rule of 3 allows up to 3 active priorities. Tap ★ on one to unpin first.');
         return;
       }
+      t.dueDate = todayKey;
+      t.day = 'today';
       t.top3 = true;
     }
-    syncTodayHistory();
     saveState();
     renderAll();
   }
@@ -1611,12 +1599,13 @@
   function openEditModal(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
+    const todayKey = getLocalDateKey();
     document.getElementById('editTaskId').value = t.id;
     document.getElementById('editTaskTitle').value = t.title;
-    document.getElementById('editTaskDay').value = t.scheduledFor === 'tomorrow' ? 'tomorrow' : 'today';
+    document.getElementById('editTaskDate').value = t.dueDate || (t.day === 'tomorrow' ? getTomorrowDateKey() : todayKey);
     document.getElementById('editTaskBucket').value = t.bucket;
-    document.getElementById('editTaskMins').value = String(snapDuration(t.mins || 25));
-    document.getElementById('editTaskTop3').checked = Boolean(t.top3 && (t.scheduledFor || 'today') === 'today');
+    document.getElementById('editTaskMins').value = String(t.mins || 25);
+    document.getElementById('editTaskTop3').checked = Boolean(t.top3);
     document.getElementById('editModal').classList.add('open');
   }
 
@@ -1630,24 +1619,27 @@
     if (!t) return;
     const newTitle = document.getElementById('editTaskTitle').value.trim();
     if (!newTitle) return;
-    const newDay = document.getElementById('editTaskDay').value === 'tomorrow' ? 'tomorrow' : 'today';
-    const wantTop3 = newDay === 'today' && document.getElementById('editTaskTop3').checked;
+    const todayKey = getLocalDateKey();
+    const pickedDate = document.getElementById('editTaskDate').value || todayKey;
+    const newDate = pickedDate < todayKey ? todayKey : pickedDate;
+    const isFuture = newDate > todayKey;
+    const wantTop3 = !isFuture && document.getElementById('editTaskTop3').checked;
     if (wantTop3 && !t.top3) {
-      const count = state.tasks.filter(x => (x.scheduledFor || 'today') === 'today' && x.top3 && !x.done && x.id !== id).length;
+      const count = state.tasks.filter(x => x.top3 && !x.done && (x.dueDate || todayKey) <= todayKey && x.id !== id).length;
       if (count >= 3) {
-        showToast('You already have 3 Top Priorities today. Unstar one first.');
+        alert('You already have 3 Top Priorities. Unstar one first.');
         return;
       }
     }
     t.title = newTitle;
-    t.scheduledFor = newDay;
+    t.dueDate = newDate;
+    t.day = isFuture ? 'tomorrow' : 'today';
     t.bucket = document.getElementById('editTaskBucket').value;
-    t.mins = snapDuration(document.getElementById('editTaskMins').value);
+    t.mins = Number(document.getElementById('editTaskMins').value) || 25;
     t.top3 = wantTop3;
     if (timerState.taskId === id) {
       document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     }
-    syncTodayHistory();
     saveState();
     closeEditModal();
     renderAll();
@@ -1660,10 +1652,12 @@
   }
 
   function renderTaskRow(t) {
-    const isTmrw = t.scheduledFor === 'tomorrow';
+    const todayKey = getLocalDateKey();
+    const isFuture = (t.dueDate && t.dueDate > todayKey) || t.day === 'tomorrow';
     const twoMinTag = t.mins <= 2 ? `<span class="tag tag-2m">⚡ 2m</span>` : '';
     const rollTag = t.rolledOver ? `<span class="tag tag-roll">↻ Rolled</span>` : '';
-    const tmrwTag = isTmrw ? `<span class="tag tag-tmrw">🌅 Tomorrow</span>` : '';
+    const dateLabel = formatFriendlyDate(t.dueDate || (t.day === 'tomorrow' ? getTomorrowDateKey() : todayKey));
+    const tmrTag = isFuture ? `<span class="tag" style="background:#e0e7ff;color:#3730a3;">📅 ${escapeHtml(dateLabel)}</span>` : '';
     const bucketTag = t.bucket === 'work'
       ? `<span class="tag tag-work">Work</span>`
       : `<span class="tag tag-pers">Personal</span>`;
@@ -1697,41 +1691,39 @@
   }
 
   function renderTasks() {
+    const todayKey = getLocalDateKey();
     const only2Min = document.getElementById('filter2Min').checked;
     const filtered = state.tasks.filter(t => !only2Min || t.mins <= 2);
+    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
+    const todayTasks = filtered.filter(t => !isUpcoming(t));
+    const tomorrowTasks = filtered
+      .filter(t => isUpcoming(t))
+      .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
+    const top3 = todayTasks.filter(t => t.top3);
+    const work = todayTasks.filter(t => !t.top3 && t.bucket === 'work');
+    const pers = todayTasks.filter(t => !t.top3 && t.bucket === 'personal');
 
-    const todayFiltered = filtered.filter(t => (t.scheduledFor || 'today') === 'today');
-    const tomorrowFiltered = filtered.filter(t => t.scheduledFor === 'tomorrow');
-
-    const top3 = todayFiltered.filter(t => t.top3);
-    const work = todayFiltered.filter(t => !t.top3 && t.bucket === 'work');
-    const pers = todayFiltered.filter(t => !t.top3 && t.bucket === 'personal');
-
-    const activeTop3Count = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.top3 && !t.done).length;
-    const doneTodayCount = state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && t.done).length;
-    const totalTomorrowCount = state.tasks.filter(t => t.scheduledFor === 'tomorrow').length;
+    const activeTop3Count = state.tasks.filter(t => t.top3 && !t.done && !isUpcoming(t)).length;
+    const doneTodayCount = state.tasks.filter(t => t.done && !isUpcoming(t)).length;
 
     document.getElementById('top3Count').textContent = activeTop3Count;
+    document.getElementById('tomorrowCount').textContent = tomorrowTasks.length;
     document.getElementById('heroTop3').textContent = `${activeTop3Count} / 3`;
     document.getElementById('heroDone').textContent = doneTodayCount;
     document.getElementById('heroFocus').textContent = `${state.todayFocusMins || 0}m`;
-    document.getElementById('tomorrowCount').textContent = totalTomorrowCount;
-
-    const moveAllBtn = document.getElementById('moveAllTodayBtn');
-    if (moveAllBtn) moveAllBtn.style.display = totalTomorrowCount > 0 ? 'inline-flex' : 'none';
 
     document.getElementById('top3List').innerHTML = top3.length
       ? top3.map(renderTaskRow).join('')
       : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Tap <strong>☆ Top 3</strong> on up to 3 needle-moving tasks.</div>';
     document.getElementById('workList').innerHTML = work.length
       ? work.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks for today.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No queued work tasks.</div>';
     document.getElementById('personalList').innerHTML = pers.length
       ? pers.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands for today.</div>';
-    document.getElementById('tomorrowList').innerHTML = tomorrowFiltered.length
-      ? tomorrowFiltered.map(renderTaskRow).join('')
-      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No tasks queued for tomorrow yet. Pick <strong>🌅 Tomorrow</strong> in Quick Add or say <em>"tomorrow"</em> in Brain Dump.</div>';
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">No personal or evening errands yet.</div>';
+    document.getElementById('tomorrowList').innerHTML = tomorrowTasks.length
+      ? tomorrowTasks.map(renderTaskRow).join('')
+      : '<div class="card" style="font-size:13px;color:var(--text-secondary);text-align:center;">Pick a future date in <strong>Quick Add</strong> or say "tomorrow" in Brain Dump to schedule ahead.</div>';
   }
 
   function copyWorkMarkdown() {
@@ -1939,6 +1931,7 @@
 
   function generateSchedule() {
     const now = new Date();
+    const todayKey = getLocalDateKey(now);
     const currentMins = now.getHours() * 60 + now.getMinutes();
     const roundedNow = Math.ceil(currentMins / 5) * 5;
 
@@ -1953,20 +1946,26 @@
       { start: pStart, end: pEnd, title: '🏡 Personal & Evening Window', type: 'fixed' }
     ];
 
-    const todayPending = [
-      ...state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done && t.top3),
-      ...state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done && !t.top3 && t.bucket === 'work'),
-      ...state.tasks.filter(t => (t.scheduledFor || 'today') === 'today' && !t.done && !t.top3 && t.bucket === 'personal')
+    const isUpcoming = (t) => (t.dueDate && t.dueDate > todayKey) || (!t.dueDate && t.day === 'tomorrow');
+    const pending = [
+      ...state.tasks.filter(t => !t.done && !isUpcoming(t) && t.top3),
+      ...state.tasks.filter(t => !t.done && !isUpcoming(t) && !t.top3 && t.bucket === 'work'),
+      ...state.tasks.filter(t => !t.done && !isUpcoming(t) && !t.top3 && t.bucket === 'personal'),
+      ...state.tasks.filter(t => !t.done && isUpcoming(t))
     ];
-
-    const tomorrowQueued = state.tasks.filter(t => t.scheduledFor === 'tomorrow' && !t.done);
 
     let workCursor = Math.max(wStart, roundedNow);
     let persCursor = Math.max(pStart, roundedNow);
     const generated = [];
 
-    todayPending.forEach(t => {
+    pending.forEach(t => {
       const dur = t.mins || 25;
+      if (isUpcoming(t)) {
+        const startStr = t.bucket === 'work' ? fmtMins(wStart) : fmtMins(pStart);
+        const dayLbl = formatFriendlyDate(t.dueDate || getTomorrowDateKey());
+        generated.push({ start: null, end: null, title: `📅 ${dayLbl} ${startStr}: ${t.title}`, type: 'deferred' });
+        return;
+      }
       if (t.bucket === 'work' || t.top3) {
         if (workCursor + dur <= wEnd) {
           generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
@@ -1982,11 +1981,6 @@
           generated.push({ start: null, end: null, title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`, type: 'deferred' });
         }
       }
-    });
-
-    tomorrowQueued.forEach(t => {
-      const anchor = t.bucket === 'personal' ? fmtMins(pStart) : fmtMins(wStart);
-      generated.push({ start: null, end: null, title: `🌅 Tomorrow ${anchor}: ${t.title} (${t.mins}m)`, type: 'deferred' });
     });
 
     state.schedule = [...blocks, ...generated].sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
@@ -2390,6 +2384,7 @@
       weekday: 'short', day: 'numeric', month: 'short'
     });
     updateKeyIndicators();
+    syncQuickDateDefault();
     syncScheduleInputs();
     renderTasks();
     updateTimerDisplay();
