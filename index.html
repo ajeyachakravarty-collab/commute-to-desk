@@ -38,12 +38,7 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
     /* Unlocked native document scrolling for mobile & desktop */
     html {
@@ -686,8 +681,8 @@
       </div>
     </div>
     <div class="header-pills">
-      <button id="installAppBtn" class="pill-btn pill-install" onclick="triggerInstall()">📲 Install</button>
-      <button class="pill-btn" onclick="openSettings()">⚙ <span id="headerKeyDot">Key</span></button>
+      <button type="button" id="installAppBtn" class="pill-btn pill-install" onclick="triggerInstall()">📲 Install</button>
+      <button type="button" class="pill-btn" onclick="openSettings()">⚙ <span id="headerKeyDot">Key</span></button>
     </div>
   </div>
 
@@ -709,10 +704,10 @@
 
   <!-- Top Text Navigation Bar -->
   <nav class="top-nav">
-    <button class="nav-tab active" data-tab="today" onclick="switchTab('today')">Today</button>
-    <button class="nav-tab" data-tab="focus" onclick="switchTab('focus')">Focus</button>
-    <button class="nav-tab" data-tab="schedule" onclick="switchTab('schedule')">Plan</button>
-    <button class="nav-tab" data-tab="analytics" onclick="switchTab('analytics')">Stats</button>
+    <button type="button" class="nav-tab active" data-tab="today" onclick="switchTab('today')">Today</button>
+    <button type="button" class="nav-tab" data-tab="focus" onclick="switchTab('focus')">Focus</button>
+    <button type="button" class="nav-tab" data-tab="schedule" onclick="switchTab('schedule')">Plan</button>
+    <button type="button" class="nav-tab" data-tab="analytics" onclick="switchTab('analytics')">Stats</button>
   </nav>
 </header>
 
@@ -817,9 +812,10 @@
           <button type="button" class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
           <button type="button" class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:12px;">
           <input type="number" id="customFocusMins" min="1" max="300" placeholder="Custom mins (e.g. 40)" onkeydown="if(event.key==='Enter')applyCustomFocusTime()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#fff;height:40px;min-height:40px;padding:8px 12px;border-radius:11px;font-size:16px;" />
-          <button type="button" class="p-chip" style="padding:0 16px;height:40px;background:rgba(59,130,246,0.28);border-color:#60a5fa;color:#fff;" onclick="applyCustomFocusTime()">Set Time</button>
+          <button type="button" class="p-chip" style="padding:0 12px;height:40px;background:rgba(59,130,246,0.28);border-color:#60a5fa;color:#fff;" onclick="applyCustomFocusTime()">Set Time</button>
+          <button type="button" class="p-chip" style="padding:0 12px;height:40px;background:rgba(16,185,129,0.28);border-color:#34d399;color:#fff;" onclick="logManualFocusNow()">+ Log</button>
         </div>
         <div class="focus-ctrls">
           <button type="button" id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
@@ -1053,7 +1049,7 @@
   </div>
 </div>
 
-<!-- Install Instructions Bottom Sheet (Fallback when browser prompt isn't auto-fired) -->
+<!-- Install Instructions Bottom Sheet -->
 <div id="installModal" class="sheet-backdrop" onclick="if(event.target===this)closeInstallModal()">
   <div class="sheet-card">
     <div class="sheet-grabber"></div>
@@ -1090,7 +1086,7 @@
 
 <script>
   /**
-   * Renders a crisp rounded-square PNG icon data URL with a C2D monogram.
+   * Generates a rounded-square PNG data URL icon with a C2D monogram and emerald status dot.
    * @param {number} size
    * @returns {string}
    */
@@ -1140,7 +1136,7 @@
     return c.toDataURL('image/png');
   }
 
-  // Dynamic PWA Manifest & Service Worker Setup
+  // Dynamic PWA Manifest & Service Worker Registration
   (function initPWA() {
     try {
       const icon64 = renderAppIconDataURL(64);
@@ -1152,6 +1148,8 @@
     if (!location.protocol.startsWith('http')) return;
 
     const baseDir = location.href.replace(/[^/]*$/, '');
+    const i192 = renderAppIconDataURL(192);
+    const i512 = renderAppIconDataURL(512);
     const manifest = {
       id: baseDir,
       name: 'Commute-to-Desk · Daily Productivity OS',
@@ -1163,16 +1161,12 @@
       orientation: 'portrait-primary',
       background_color: '#0b1120',
       theme_color: '#0b1120',
-      icons: (() => {
-        const i192 = renderAppIconDataURL(192);
-        const i512 = renderAppIconDataURL(512);
-        return [
-          { src: i192, sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: i192, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: i512, sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: i512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-        ];
-      })()
+      icons: [
+        { src: i192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: i192, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: i512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: i512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+      ]
     };
     const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
     document.getElementById('dynamic-manifest').href = URL.createObjectURL(mBlob);
@@ -1400,6 +1394,7 @@
           nextTasks.push({
             ...t,
             done: false,
+            focusCredited: 0,
             day: upcoming ? 'tomorrow' : 'today',
             dueDate: futureDue,
             rolledOver: false
@@ -1536,6 +1531,7 @@
         recurring,
         top3: isTop3,
         done: false,
+        focusCredited: 0,
         rolledOver: false
       });
     });
@@ -1748,7 +1744,11 @@
     syncQuickDateInput();
   }
 
-  function recordTaskCompletionInHistory(task, wasCompleted) {
+  /**
+   * Synchronizes task completion into durable daily history and updates Deep Focus minutes
+   * without double-counting tasks already credited via the Focus countdown timer.
+   */
+  function recordTaskCompletionInHistory(task, wasCompleted, skipFocusCredit = false) {
     const today = getLocalDateKey();
     if (!state.history[today]) {
       state.history[today] = { completed: 0, top3Hit: 0, focusMins: state.todayFocusMins || 0, completedTitles: [], top3Titles: [], completedItems: [] };
@@ -1764,10 +1764,19 @@
       if (!entry.completedItems.some(x => x.title === task.title)) {
         entry.completedItems.push({ title: task.title, bucket: task.bucket || 'work', mins: task.mins || 25 });
       }
+      if (!skipFocusCredit && !task.focusCredited) {
+        const credit = Number(task.mins) || 25;
+        state.todayFocusMins = (state.todayFocusMins || 0) + credit;
+        task.focusCredited = credit;
+      }
     } else {
       entry.completedTitles = entry.completedTitles.filter(t => t !== task.title);
       entry.top3Titles = entry.top3Titles.filter(t => t !== task.title);
       entry.completedItems = entry.completedItems.filter(x => x.title !== task.title);
+      if (!skipFocusCredit && task.focusCredited) {
+        state.todayFocusMins = Math.max(0, (state.todayFocusMins || 0) - Number(task.focusCredited));
+        task.focusCredited = 0;
+      }
     }
     const activeDone = state.tasks.filter(x => x.done && !isTaskUpcoming(x));
     entry.completed = Math.max(activeDone.length, entry.completedTitles.length);
@@ -1835,11 +1844,14 @@
     `).join('');
   }
 
-  function copyPastTaskToToday(dateKey, idx) {
+  function copyPastTaskToToday(dateKey, idxOrTitle) {
     const groups = getPreviousDaysCompleted();
     const chosen = groups.find(g => g.dateKey === dateKey);
-    const item = chosen && chosen.items[idx];
-    if (!item) return;
+    if (!chosen) return;
+    const item = typeof idxOrTitle === 'number'
+      ? chosen.items[idxOrTitle]
+      : chosen.items.find(x => x.title === idxOrTitle) || { title: String(idxOrTitle), bucket: 'work', mins: 25 };
+    if (!item || !item.title) return;
     addTasksFromItems([{
       title: item.title,
       day: 'today',
@@ -1885,7 +1897,7 @@
   function deleteTask(id) {
     const target = state.tasks.find(x => x.id === id);
     if (target && target.done) {
-      recordTaskCompletionInHistory(target, true);
+      recordTaskCompletionInHistory(target, true, true);
     }
     state.tasks = state.tasks.filter(x => x.id !== id);
     if (timerState.taskId === id) {
@@ -1897,7 +1909,7 @@
   }
 
   function clearCompleted() {
-    state.tasks.filter(x => x.done && x.recurring !== 'daily').forEach(t => recordTaskCompletionInHistory(t, true));
+    state.tasks.filter(x => x.done && x.recurring !== 'daily').forEach(t => recordTaskCompletionInHistory(t, true, true));
     const dailyKept = state.tasks.filter(x => x.done && x.recurring === 'daily').length;
     state.tasks = state.tasks.filter(x => !x.done || x.recurring === 'daily');
     saveState();
@@ -1954,26 +1966,38 @@
         return;
       }
     }
-    if (t.done && t.title !== newTitle) {
+    const newMins = Number(document.getElementById('editTaskMins').value) || 25;
+    if (t.done) {
       recordTaskCompletionInHistory(t, false);
       t.title = newTitle;
+      t.mins = newMins;
+      t.bucket = document.getElementById('editTaskBucket').value;
+      t.top3 = wantTop3;
       recordTaskCompletionInHistory(t, true);
     } else {
       t.title = newTitle;
+      t.mins = newMins;
+      t.bucket = document.getElementById('editTaskBucket').value;
+      t.top3 = wantTop3;
     }
     t.day = newDay;
     t.dueDate = newDueDate;
-    t.bucket = document.getElementById('editTaskBucket').value;
-    t.mins = Number(document.getElementById('editTaskMins').value) || 25;
     t.recurring = wantDaily ? 'daily' : 'none';
-    t.top3 = wantTop3;
     if (timerState.taskId === id) {
       document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
+      if (!timerState.running) {
+        timerState.presetMins = newMins;
+        timerState.remainingSec = newMins * 60;
+        document.querySelectorAll('.p-chip').forEach(b => {
+          b.classList.toggle('active', [25, 5, 90].includes(newMins) && b.textContent.startsWith(newMins + 'm'));
+        });
+      }
     }
     enforceTop3Cap();
     closeEditModal();
     if (state.schedule.length) generateSchedule();
-    else { saveState(); renderAll(); }
+    saveState();
+    renderAll();
   }
 
   function deleteFromEditModal() {
@@ -2009,11 +2033,11 @@
           </div>
         </div>
         <div class="task-bar">
-          <button class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
-          <button class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>
-          <button class="t-btn" title="Duplicate for Next Day" onclick="duplicateTaskForNextDay('${t.id}')">🌅 +1d</button>
-          <button class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
-          <button class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
+          <button type="button" class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
+          <button type="button" class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>
+          <button type="button" class="t-btn" title="Duplicate for Next Day" onclick="duplicateTaskForNextDay('${t.id}')">🌅 +1d</button>
+          <button type="button" class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
+          <button type="button" class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
         </div>
       </div>`;
   }
@@ -2139,6 +2163,25 @@
     inp.value = '';
   }
 
+  function logManualFocusNow() {
+    const inp = document.getElementById('customFocusMins');
+    const val = parseInt(inp?.value, 10);
+    if (!val || val < 1 || val > 300) {
+      showToast('Enter 1–300 mins first to log focus time.');
+      return;
+    }
+    state.todayFocusMins = (state.todayFocusMins || 0) + val;
+    const today = getLocalDateKey();
+    if (!state.history[today]) {
+      state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [], top3Titles: [], completedItems: [] };
+    }
+    state.history[today].focusMins = state.todayFocusMins;
+    saveState();
+    renderAll();
+    inp.value = '';
+    showToast(`Logged +${val}m deep focus (Total today: ${state.todayFocusMins}m).`);
+  }
+
   function updateTimerDisplay() {
     const m = String(Math.floor(timerState.remainingSec / 60)).padStart(2, '0');
     const s = String(timerState.remainingSec % 60).padStart(2, '0');
@@ -2200,12 +2243,13 @@
       const pinned = state.tasks.find(x => x.id === timerState.taskId);
       if (pinned) {
         if (!pinned.done) pinned.done = true;
-        recordTaskCompletionInHistory(pinned, true);
+        pinned.focusCredited = (pinned.focusCredited || 0) + timerState.presetMins;
+        recordTaskCompletionInHistory(pinned, true, true);
         document.getElementById('timerActiveTask').textContent = `✓ Completed: ${pinned.title}`;
       }
     }
     const today = getLocalDateKey();
-    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [], top3Titles: [] };
+    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [], top3Titles: [], completedItems: [] };
     state.history[today].focusMins = state.todayFocusMins;
     saveState();
     resetTimer();
@@ -2544,7 +2588,7 @@
     const todayKey = getLocalDateKey();
     const canCopyToToday = analyticsRange === 'week' && b.dateKey && b.dateKey < todayKey && b.titles && b.titles.length > 0;
     const tasksHtml = b.titles && b.titles.length
-      ? `<ul style="margin-top:6px;padding-left:18px;color:#334155;display:flex;flex-direction:column;gap:4px;">${b.titles.map((t, ti) => `<li style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>${escapeHtml(t)}</span>${canCopyToToday ? `<button type="button" class="btn-chip" style="min-height:24px;padding:0 8px;font-size:11px;flex-shrink:0;" onclick="copyPastTaskToToday('${b.dateKey}', ${ti})">+ Today</button>` : ''}</li>`).join('')}</ul>`
+      ? `<ul style="margin-top:6px;padding-left:18px;color:#334155;display:flex;flex-direction:column;gap:4px;">${b.titles.map((t) => `<li style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>${escapeHtml(t)}</span>${canCopyToToday ? `<button type="button" class="btn-chip" style="min-height:24px;padding:0 8px;font-size:11px;flex-shrink:0;" onclick="copyPastTaskToToday('${b.dateKey}', ${JSON.stringify(t).replace(/"/g, '&quot;')})">+ Today</button>` : ''}</li>`).join('')}</ul>`
       : b.completed > 0
         ? `<div style="margin-top:4px;color:#334155;font-size:12px;">${b.completed} task(s) completed in this period.</div>`
         : `<div style="margin-top:4px;color:var(--text-muted);font-size:12px;">No tasks completed in this period.</div>`;
@@ -2845,6 +2889,14 @@
         updateTimerDisplay();
         if (left <= 0) completeTimerSession();
       }
+      renderAll();
+    }
+  });
+
+  // Sync live updates across multiple open tabs/windows
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY || e.key === API_KEY_STORAGE) {
+      loadState();
       renderAll();
     }
   });
