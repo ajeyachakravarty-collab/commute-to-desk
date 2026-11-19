@@ -38,7 +38,12 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     /* Unlocked native document scrolling for mobile & desktop */
     html {
@@ -72,6 +77,7 @@
       z-index: 40;
       box-shadow: 0 6px 20px rgba(11, 17, 32, 0.22);
     }
+
     .header-top {
       max-width: 1120px;
       margin: 0 auto;
@@ -80,17 +86,47 @@
       justify-content: space-between;
       gap: 10px;
     }
-    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
     .app-logo {
-      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      flex-shrink: 0;
       background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-      display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
-    .brand-text h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
-    .brand-text p { font-size: 11px; color: #94a3b8; font-weight: 500; }
 
-    .header-pills { display: flex; align-items: center; gap: 8px; }
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .header-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .pill-btn {
       background: rgba(255, 255, 255, 0.1);
       color: #f8fafc;
@@ -106,7 +142,12 @@
       gap: 5px;
       transition: transform 0.1s, background 0.15s;
     }
-    .pill-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.18); }
+
+    .pill-btn:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.18);
+    }
+
     .pill-install {
       background: #2563eb;
       border-color: #60a5fa;
@@ -120,6 +161,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
+
     .metric-chip {
       background: rgba(255, 255, 255, 0.07);
       border: 1px solid rgba(255, 255, 255, 0.09);
@@ -128,8 +170,20 @@
       display: flex;
       flex-direction: column;
     }
-    .metric-chip .m-val { font-size: 15px; font-weight: 800; color: #ffffff; }
-    .metric-chip .m-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; font-weight: 600; }
+
+    .metric-chip .m-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .metric-chip .m-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+      font-weight: 600;
+    }
 
     /* Top Text Tab Bar (Mobile & Desktop) */
     .top-nav {
@@ -141,7 +195,11 @@
       overflow-x: auto;
       scrollbar-width: none;
     }
-    .top-nav::-webkit-scrollbar { display: none; }
+
+    .top-nav::-webkit-scrollbar {
+      display: none;
+    }
+
     .nav-tab {
       background: transparent;
       border: none;
@@ -157,6 +215,7 @@
       min-height: 44px;
       transition: color 0.15s, border-color 0.15s;
     }
+
     .nav-tab.active {
       color: #ffffff;
       border-bottom-color: #3b82f6;
@@ -168,8 +227,16 @@
       margin: 14px auto;
       padding: 0 14px;
     }
-    .view { display: none; animation: fadeIn 0.18s ease-out; }
-    .view.active { display: block; }
+
+    .view {
+      display: none;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -196,6 +263,7 @@
       margin: 16px 2px 8px;
       gap: 8px;
     }
+
     .section-label h2 {
       font-size: 13px;
       font-weight: 800;
@@ -206,6 +274,7 @@
       align-items: center;
       gap: 6px;
     }
+
     .card {
       background: var(--bg-surface);
       border: 1px solid rgba(226, 232, 240, 0.85);
@@ -214,6 +283,7 @@
       box-shadow: var(--shadow-md);
       margin-bottom: 14px;
     }
+
     .card-header {
       display: flex;
       align-items: center;
@@ -221,6 +291,7 @@
       gap: 8px;
       margin-bottom: 12px;
     }
+
     .card-title {
       font-size: 16px;
       font-weight: 800;
@@ -247,22 +318,42 @@
       gap: 7px;
       transition: transform 0.08s, box-shadow 0.15s;
     }
-    .btn:active { transform: scale(0.96); }
-    .btn:disabled { opacity: 0.6; pointer-events: none; }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
     .btn-primary {
       background: var(--primary-grad);
       color: #fff;
       border: none;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
+
     .btn-ai {
       background: var(--ai-grad);
       color: #fff;
       border: none;
       box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
     }
-    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: #fecaca; }
-    .btn-success { background: var(--emerald-bg); color: #065f46; border-color: #a7f3d0; }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .btn-success {
+      background: var(--emerald-bg);
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
     .btn-chip {
       min-height: 32px;
       padding: 0 11px;
@@ -273,6 +364,10 @@
       color: #334155;
       font-weight: 700;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
     }
 
     textarea, input[type="text"], input[type="password"], input[type="time"], input[type="number"], input[type="date"], select {
@@ -287,6 +382,7 @@
       min-height: 46px;
       transition: border-color 0.15s, background 0.15s;
     }
+
     textarea:focus, input:focus, select:focus {
       outline: none;
       background: #ffffff;
@@ -307,20 +403,24 @@
       box-shadow: 0 6px 16px rgba(239, 68, 68, 0.26);
       margin-bottom: 10px;
     }
+
     .voice-trigger.recording {
       animation: pulseRing 1.2s infinite;
       background: #991b1b;
     }
+
     @keyframes pulseRing {
       0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
       50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
     }
+
     .dual-actions {
       display: grid;
       grid-template-columns: 1fr 1.15fr;
       gap: 9px;
       margin-top: 10px;
     }
+
     .inline-key-box {
       display: none;
       margin-top: 10px;
@@ -329,8 +429,17 @@
       border: 1px solid #bfdbfe;
       border-radius: 14px;
     }
-    .inline-key-box.visible { display: block; }
-    .status-msg { font-size: 12px; margin-top: 8px; color: var(--text-secondary); font-weight: 500; }
+
+    .inline-key-box.visible {
+      display: block;
+    }
+
+    .status-msg {
+      font-size: 12px;
+      margin-top: 8px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
 
     /* Quick Add Bar */
     .quick-row {
@@ -339,13 +448,19 @@
       gap: 8px;
       margin-top: 8px;
     }
+
     .quick-row input[type="date"], .quick-row select {
       padding: 10px 8px;
       font-size: 14px;
     }
 
     /* Native App Task Cards */
-    .task-list { display: flex; flex-direction: column; gap: 10px; }
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .task-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
@@ -356,25 +471,32 @@
       flex-direction: column;
       gap: 10px;
     }
+
     .task-card.top3 {
       border: 1.5px solid #fcd34d;
       background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
     }
+
     .task-card.tomorrow-card {
       border: 1.5px dashed #c7d2fe;
       background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
     }
+
     .task-card.done {
       opacity: 0.58;
       background: #f8fafc;
     }
-    .task-card.done .task-title { text-decoration: line-through; }
+
+    .task-card.done .task-title {
+      text-decoration: line-through;
+    }
 
     .task-main {
       display: flex;
       align-items: flex-start;
       gap: 12px;
     }
+
     .check-circle {
       width: 26px;
       height: 26px;
@@ -390,12 +512,18 @@
       color: transparent;
       transition: all 0.15s;
     }
+
     .task-card.done .check-circle {
       background: var(--emerald);
       border-color: var(--emerald);
       color: #fff;
     }
-    .task-body { flex: 1; min-width: 0; }
+
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+
     .task-title {
       font-size: 15px;
       font-weight: 700;
@@ -403,6 +531,7 @@
       line-height: 1.35;
       word-break: break-word;
     }
+
     .task-tags {
       display: flex;
       flex-wrap: wrap;
@@ -410,12 +539,14 @@
       gap: 6px;
       margin-top: 6px;
     }
+
     .tag {
       padding: 3px 9px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 700;
     }
+
     .tag-work { background: #dbeafe; color: #1e40af; }
     .tag-pers { background: #fef3c7; color: #92400e; }
     .tag-time { background: #f1f5f9; color: #475569; }
@@ -431,6 +562,7 @@
       padding-top: 9px;
       border-top: 1px solid #f1f5f9;
     }
+
     .t-btn {
       height: 38px;
       border-radius: 10px;
@@ -445,7 +577,12 @@
       gap: 4px;
       cursor: pointer;
     }
-    .t-btn:active { transform: scale(0.95); background: #e2e8f0; }
+
+    .t-btn:active {
+      transform: scale(0.95);
+      background: #e2e8f0;
+    }
+
     .t-btn.star-on { background: #fef3c7; color: #b45309; }
     .t-btn.move-today { background: #dbeafe; color: #1d4ed8; }
     .t-btn.del-btn { background: #fef2f2; color: #dc2626; }
@@ -460,9 +597,10 @@
       box-shadow: 0 12px 28px rgba(11, 17, 32, 0.25);
       margin-bottom: 14px;
     }
+
     .focus-pin {
       display: inline-block;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       padding: 5px 12px;
       border-radius: 999px;
       font-size: 12px;
@@ -473,6 +611,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .timer-ring {
       width: 196px;
       height: 196px;
@@ -483,29 +622,38 @@
       display: grid;
       place-items: center;
     }
+
     .timer-digits {
       font-size: 46px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       letter-spacing: 1px;
     }
+
     .preset-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-bottom: 12px;
     }
+
     .p-chip {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
       color: #cbd5e1;
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       height: 38px;
       border-radius: 11px;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
     }
-    .p-chip.active { background: #2563eb; color: #fff; border-color: #60a5fa; }
+
+    .p-chip.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #60a5fa;
+    }
+
     .focus-ctrls {
       display: grid;
       grid-template-columns: 1.4fr 1fr 1fr;
@@ -524,6 +672,7 @@
       gap: 3px;
       cursor: pointer;
     }
+
     .timeline-card.fixed { background: #f8fafc; border-left: 4px solid #64748b; }
     .timeline-card.work { border-left: 4px solid #2563eb; }
     .timeline-card.pers { border-left: 4px solid #f59e0b; }
@@ -537,14 +686,26 @@
       gap: 10px;
       margin-bottom: 16px;
     }
+
     .kpi-tile {
       background: #f8fafc;
       border: 1px solid var(--border);
       border-radius: 15px;
       padding: 14px;
     }
-    .kpi-num { font-size: 26px; font-weight: 800; color: var(--primary); }
-    .kpi-name { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+
+    .kpi-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .kpi-name {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
     .bar-chart {
       display: flex;
       align-items: flex-end;
@@ -553,6 +714,7 @@
       padding: 16px 4px 4px;
       border-bottom: 1px solid var(--border);
     }
+
     .bar-col {
       flex: 1;
       display: flex;
@@ -566,10 +728,12 @@
       border-radius: 10px;
       transition: background 0.15s;
     }
+
     .bar-col.selected {
       background: #eff6ff;
       outline: 1.5px solid #93c5fd;
     }
+
     .bar-fill {
       width: 100%;
       max-width: 32px;
@@ -577,7 +741,12 @@
       border-radius: 8px 8px 0 0;
       min-height: 6px;
     }
-    .bar-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+
+    .bar-lbl {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
 
     /* Bottom Sheets */
     .sheet-backdrop {
@@ -589,7 +758,11 @@
       justify-content: center;
       z-index: 60;
     }
-    .sheet-backdrop.open { display: flex; }
+
+    .sheet-backdrop.open {
+      display: flex;
+    }
+
     .sheet-card {
       background: #fff;
       border-radius: 24px 24px 0 0;
@@ -601,16 +774,31 @@
       padding: 14px 18px calc(22px + var(--safe-bottom));
       box-shadow: 0 -12px 32px rgba(11, 17, 32, 0.25);
     }
+
     @media (min-width: 640px) {
       .sheet-backdrop { align-items: center; padding: 16px; }
       .sheet-card { border-radius: 20px; padding: 22px; }
     }
+
     .sheet-grabber {
-      width: 42px; height: 5px; border-radius: 999px;
-      background: #cbd5e1; margin: 0 auto 14px;
+      width: 42px;
+      height: 5px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      margin: 0 auto 14px;
     }
-    .form-group { margin-bottom: 13px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155; }
+
+    .form-group {
+      margin-bottom: 13px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      color: #334155;
+    }
 
     /* Floating Coach Pill */
     .bot-fab {
@@ -629,6 +817,7 @@
       cursor: pointer;
       z-index: 44;
     }
+
     .bot-panel {
       position: fixed;
       left: 12px;
@@ -645,7 +834,11 @@
       overflow: hidden;
       z-index: 55;
     }
-    .bot-panel.open { display: flex; }
+
+    .bot-panel.open {
+      display: flex;
+    }
+
     .bot-head {
       background: var(--bg-header);
       color: #fff;
@@ -656,6 +849,7 @@
       font-size: 13px;
       font-weight: 700;
     }
+
     .bot-msgs {
       padding: 12px;
       max-height: 240px;
@@ -667,15 +861,33 @@
       font-size: 14px;
       background: #f8fafc;
     }
+
     .bot-msg {
       padding: 10px 13px;
       border-radius: 14px;
       max-width: 88%;
       line-height: 1.4;
     }
-    .bot-msg.ai { background: #fff; border: 1px solid var(--border); align-self: flex-start; }
-    .bot-msg.user { background: var(--primary); color: #fff; align-self: flex-end; }
-    .bot-input-row { display: flex; gap: 6px; padding: 10px; border-top: 1px solid var(--border); background: #fff; }
+
+    .bot-msg.ai {
+      background: #fff;
+      border: 1px solid var(--border);
+      align-self: flex-start;
+    }
+
+    .bot-msg.user {
+      background: var(--primary);
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    .bot-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+    }
   </style>
 </head>
 <body>
@@ -727,20 +939,20 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">🎙 60-Sec Brain Dump</div>
-          <button class="btn btn-chip" onclick="loadSampleDump()">Sample</button>
+          <button type="button" class="btn btn-chip" onclick="loadSampleDump()">Sample</button>
         </div>
-        <button id="micBtn" class="btn voice-trigger" onclick="toggleVoice()">🎤 Tap to Speak</button>
+        <button type="button" id="micBtn" class="btn voice-trigger" onclick="toggleVoice()">🎤 Tap to Speak</button>
         <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs, review Jira ticket, buy groceries on evening walk..."></textarea>
         <div class="dual-actions">
-          <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
-          <button id="aiPolishBtn" class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
+          <button type="button" class="btn" onclick="splitOffline()">⚡ Smart Split</button>
+          <button type="button" id="aiPolishBtn" class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
         </div>
 
         <div id="inlineKeyBox" class="inline-key-box">
           <div style="font-size:12px;font-weight:700;color:#1e3a8a;">Enter Gemini API Key (AIza...)</div>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
             <input type="password" id="inlineKeyInput" placeholder="AIzaSy..." oninput="liveSaveKey(this.value)" />
-            <button class="btn btn-primary" onclick="saveAndRunAi()">Save & Run AI Polish</button>
+            <button type="button" class="btn btn-primary" onclick="saveAndRunAi()">Save & Run AI Polish</button>
           </div>
         </div>
         <div id="dumpStatus" class="status-msg"></div>
@@ -749,9 +961,12 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">➕ Quick Add</div>
-          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:#475569;">
-            <input type="checkbox" id="filter2Min" style="width:18px;height:18px;" onchange="renderTasks()" /> ≤2m Wins
-          </label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="btn-chip" onclick="openPrevDayModal()">📋 Copy Past</button>
+            <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:700;color:#475569;">
+              <input type="checkbox" id="filter2Min" style="width:17px;height:17px;" onchange="renderTasks()" /> ≤2m
+            </label>
+          </div>
         </div>
         <input type="text" id="quickTitle" placeholder="Add a single action item..." onkeydown="if(event.key==='Enter')addManualTask()" />
         <div class="quick-row">
@@ -769,20 +984,20 @@
             <option value="90">90 min</option>
           </select>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addManualTask()">+ Add Task</button>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addManualTask()">+ Add Task</button>
       </div>
 
       <!-- Top 3 Section -->
       <div class="section-label">
         <h2>★ Rule of 3 · Must-Win (<span id="top3Count">0</span>/3)</h2>
-        <button class="btn btn-chip" onclick="copyWorkMarkdown()">📋 Copy MD</button>
+        <button type="button" class="btn btn-chip" onclick="copyWorkMarkdown()">📋 Copy MD</button>
       </div>
       <div id="top3List" class="task-list"></div>
 
       <!-- Work Queue Section -->
       <div class="section-label">
         <h2>💼 Work Queue</h2>
-        <button class="btn btn-chip" onclick="clearCompleted()">Clear Done</button>
+        <button type="button" class="btn btn-chip" onclick="clearCompleted()">Clear Done</button>
       </div>
       <div id="workList" class="task-list"></div>
 
@@ -795,7 +1010,7 @@
       <!-- Upcoming & Tomorrow Queue Section -->
       <div class="section-label">
         <h2>🗓 Upcoming & Tomorrow (<span id="tomorrowCount">0</span>)</h2>
-        <button class="btn btn-chip" onclick="promoteAllTomorrow()">Move All to Today</button>
+        <button type="button" class="btn btn-chip" onclick="promoteAllTomorrow()">Move All to Today</button>
       </div>
       <div id="tomorrowList" class="task-list"></div>
     </section>
@@ -808,18 +1023,18 @@
           <div id="timerDisplay" class="timer-digits">25:00</div>
         </div>
         <div class="preset-row">
-          <button class="p-chip active" onclick="setTimerPreset(25, this)">25m Focus</button>
-          <button class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
-          <button class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
+          <button type="button" class="p-chip active" onclick="setTimerPreset(25, this)">25m Focus</button>
+          <button type="button" class="p-chip" onclick="setTimerPreset(5, this)">5m Break</button>
+          <button type="button" class="p-chip" onclick="setTimerPreset(90, this)">90m Sprint</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px;">
           <input type="number" id="customFocusMins" min="1" max="300" placeholder="Custom mins (1–300)" onkeydown="if(event.key==='Enter')applyCustomFocusTime()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#fff;height:40px;min-height:40px;padding:8px 12px;border-radius:11px;font-size:16px;" />
-          <button class="p-chip" style="padding:0 16px;height:40px;background:rgba(59,130,246,0.28);border-color:#60a5fa;color:#fff;" onclick="applyCustomFocusTime()">Set Time</button>
+          <button type="button" class="p-chip" style="padding:0 16px;height:40px;background:rgba(59,130,246,0.28);border-color:#60a5fa;color:#fff;" onclick="applyCustomFocusTime()">Set Time</button>
         </div>
         <div class="focus-ctrls">
-          <button id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
-          <button class="btn" onclick="resetTimer()">↺ Reset</button>
-          <button class="btn btn-success" onclick="completeTimerSession()">✓ Done</button>
+          <button type="button" id="timerStartBtn" class="btn btn-primary" onclick="toggleTimer()">▶ Start</button>
+          <button type="button" class="btn" onclick="resetTimer()">↺ Reset</button>
+          <button type="button" class="btn btn-success" onclick="completeTimerSession()">✓ Done</button>
         </div>
       </div>
 
@@ -834,8 +1049,8 @@
           <li><strong>Timeblocking (Cal Newport):</strong> Auto-slots priorities around gym, work, and walk anchors.</li>
         </ul>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
-          <button class="btn" onclick="simulateNextDayRollover()">↻ Rollover</button>
-          <button class="btn btn-success" onclick="shutdownRitual()">🌙 Shutdown</button>
+          <button type="button" class="btn" onclick="simulateNextDayRollover()">↻ Rollover</button>
+          <button type="button" class="btn btn-success" onclick="shutdownRitual()">🌙 Shutdown</button>
         </div>
       </div>
     </section>
@@ -873,9 +1088,9 @@
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1.1fr 0.95fr 0.95fr;gap:7px;margin-bottom:14px;">
-        <button class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Plan</button>
-        <button class="btn" onclick="openNewBlockModal()">➕ Block</button>
-        <button class="btn btn-success" onclick="exportICS()">📲 .ICS</button>
+        <button type="button" class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Plan</button>
+        <button type="button" class="btn" onclick="openNewBlockModal()">➕ Block</button>
+        <button type="button" class="btn btn-success" onclick="exportICS()">📲 .ICS</button>
       </div>
       <div id="scheduleList"></div>
     </div>
@@ -887,9 +1102,9 @@
       <div class="card-header">
         <div class="card-title">📊 Progress Dashboard</div>
         <div style="display:flex;gap:5px;">
-          <button class="btn btn-chip" id="range-week" onclick="setAnalyticsRange('week')">Week</button>
-          <button class="btn btn-chip" id="range-month" onclick="setAnalyticsRange('month')">Month</button>
-          <button class="btn btn-chip" id="range-year" onclick="setAnalyticsRange('year')">Year</button>
+          <button type="button" class="btn btn-chip" id="range-week" onclick="setAnalyticsRange('week')">Week</button>
+          <button type="button" class="btn btn-chip" id="range-month" onclick="setAnalyticsRange('month')">Month</button>
+          <button type="button" class="btn btn-chip" id="range-year" onclick="setAnalyticsRange('year')">Year</button>
         </div>
       </div>
       <div class="kpi-grid" id="kpiGrid"></div>
@@ -906,7 +1121,7 @@
     <div class="sheet-grabber"></div>
     <div class="card-header">
       <div class="card-title">✎ Edit Task</div>
-      <button class="btn btn-chip" onclick="closeEditModal()">✕</button>
+      <button type="button" class="btn btn-chip" onclick="closeEditModal()">✕</button>
     </div>
     <input type="hidden" id="editTaskId" />
     <div class="form-group">
@@ -944,9 +1159,28 @@
       </label>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:14px;">
-      <button class="btn btn-danger" onclick="deleteFromEditModal()">🗑 Delete</button>
-      <button class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
+      <button type="button" class="btn btn-danger" onclick="deleteFromEditModal()">🗑 Delete</button>
+      <button type="button" class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
     </div>
+  </div>
+</div>
+
+<!-- Copy Completed Task from Previous Day Bottom Sheet -->
+<div id="prevDayModal" class="sheet-backdrop" onclick="if(event.target===this)closePrevDayModal()">
+  <div class="sheet-card">
+    <div class="sheet-grabber"></div>
+    <div class="card-header">
+      <div class="card-title">📋 Copy Completed Task to Today</div>
+      <button type="button" class="btn btn-chip" onclick="closePrevDayModal()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+      Select any completed task from a previous day to add a fresh copy to Today's list:
+    </p>
+    <div class="form-group">
+      <label>Previous Day</label>
+      <select id="prevDaySelect" onchange="renderPrevDayTasks()"></select>
+    </div>
+    <div id="prevDayTaskList" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -956,7 +1190,7 @@
     <div class="sheet-grabber"></div>
     <div class="card-header">
       <div class="card-title" id="blockModalTitle">✎ Edit Timeblock</div>
-      <button class="btn btn-chip" onclick="closeBlockModal()">✕</button>
+      <button type="button" class="btn btn-chip" onclick="closeBlockModal()">✕</button>
     </div>
     <input type="hidden" id="editBlockIdx" />
     <div class="form-group">
@@ -989,8 +1223,8 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:14px;">
-      <button class="btn btn-danger" id="deleteBlockBtn" onclick="deleteBlockFromModal()">🗑 Remove</button>
-      <button class="btn btn-primary" onclick="saveBlockEdit()">Save Block</button>
+      <button type="button" class="btn btn-danger" id="deleteBlockBtn" onclick="deleteBlockFromModal()">🗑 Remove</button>
+      <button type="button" class="btn btn-primary" onclick="saveBlockEdit()">Save Block</button>
     </div>
   </div>
 </div>
@@ -1001,7 +1235,7 @@
     <div class="sheet-grabber"></div>
     <div class="card-header">
       <div class="card-title">⚙ Settings & Gemini Key</div>
-      <button class="btn btn-chip" onclick="closeSettings()">✕</button>
+      <button type="button" class="btn btn-chip" onclick="closeSettings()">✕</button>
     </div>
     <div class="form-group">
       <label>Google AI Studio API Key (Saved on device)</label>
@@ -1018,8 +1252,8 @@
       </select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-      <button class="btn" onclick="testApiKey()">🔌 Test Key</button>
-      <button class="btn btn-primary" onclick="saveSettingsAndClose()">Save & Close</button>
+      <button type="button" class="btn" onclick="testApiKey()">🔌 Test Key</button>
+      <button type="button" class="btn btn-primary" onclick="saveSettingsAndClose()">Save & Close</button>
     </div>
   </div>
 </div>
@@ -1030,7 +1264,7 @@
     <div class="sheet-grabber"></div>
     <div class="card-header">
       <div class="card-title">📲 Install Commute2Desk App</div>
-      <button class="btn btn-chip" onclick="closeInstallModal()">✕</button>
+      <button type="button" class="btn btn-chip" onclick="closeInstallModal()">✕</button>
     </div>
     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
       Install this app to your home screen / desktop with a custom <strong>C2D</strong> icon and full-screen offline support:
@@ -1039,23 +1273,23 @@
       <div><strong>Android (Galaxy S26 Chrome / Samsung Internet):</strong> Tap browser menu <strong>⋮</strong> (or <strong>☰</strong>) → <strong>Add to home screen</strong> → <strong>Install</strong>.</div>
       <div style="margin-top:8px;"><strong>Desktop (Chrome / Edge):</strong> Click the <strong>Install icon (⊕)</strong> on the right side of the address bar → <strong>Install</strong>.</div>
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="closeInstallModal()">Got It</button>
+    <button type="button" class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="closeInstallModal()">Got It</button>
   </div>
 </div>
 
 <!-- Coach Bot -->
-<button class="bot-fab" onclick="toggleBot()">💬 Coach</button>
+<button type="button" class="bot-fab" onclick="toggleBot()">💬 Coach</button>
 <div id="botPanel" class="bot-panel">
   <div class="bot-head">
     <span>🤖 Data Coach · Workspace Q&A</span>
-    <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 6px;" onclick="toggleBot()">✕</button>
+    <button type="button" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 6px;" onclick="toggleBot()">✕</button>
   </div>
   <div id="botMsgs" class="bot-msgs">
     <div class="bot-msg ai">Ask me about your Top 3 priorities, pending Today or Tomorrow tasks, focus minutes, or rollover items!</div>
   </div>
   <div class="bot-input-row">
     <input type="text" id="botInput" placeholder="Ask about your tasks..." onkeydown="if(event.key==='Enter')sendBotQuery()" />
-    <button class="btn btn-primary" onclick="sendBotQuery()">Ask</button>
+    <button type="button" class="btn btn-primary" onclick="sendBotQuery()">Ask</button>
   </div>
 </div>
 
@@ -1064,94 +1298,114 @@
 
 <script>
   let toastTimer = null;
+
+  /**
+   * Displays a non-blocking bottom toast banner for status updates.
+   * @param {string} msg
+   */
   function showToast(msg) {
     const el = document.getElementById('appToast');
     if (!el) return;
-    el.textContent = msg;
+    el.textContent = String(msg || '');
     el.style.display = 'block';
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3200);
+    toastTimer = setTimeout(() => {
+      el.style.display = 'none';
+    }, 3200);
   }
 
-  // High-res PNG icon generator for Android WebAPK, Desktop PWA, Favicon & Apple Touch Icon
+  /**
+   * Generates a crisp rounded-square C2D PNG data URL at any requested pixel dimension.
+   * @param {number} size
+   * @returns {string}
+   */
   function renderAppIconDataURL(size) {
-    const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
-    const ctx = c.getContext('2d');
-    const pad = Math.round(size * 0.06);
-    const r = Math.round(size * 0.22);
-    const w = size - pad * 2;
-    const h = size - pad * 2;
+    try {
+      const c = document.createElement('canvas');
+      c.width = size;
+      c.height = size;
+      const ctx = c.getContext('2d');
+      if (!ctx) return '';
+      const pad = Math.round(size * 0.06);
+      const r = Math.round(size * 0.22);
+      const w = size - pad * 2;
+      const h = size - pad * 2;
 
-    const g = ctx.createLinearGradient(0, 0, size, size);
-    g.addColorStop(0, '#1d4ed8');
-    g.addColorStop(0.55, '#4f46e5');
-    g.addColorStop(1, '#7c3aed');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(pad + r, pad);
-    ctx.lineTo(pad + w - r, pad);
-    ctx.quadraticCurveTo(pad + w, pad, pad + w, pad + r);
-    ctx.lineTo(pad + w, pad + h - r);
-    ctx.quadraticCurveTo(pad + w, pad + h, pad + w - r, pad + h);
-    ctx.lineTo(pad + r, pad + h);
-    ctx.quadraticCurveTo(pad, pad + h, pad, pad + h - r);
-    ctx.lineTo(pad, pad + r);
-    ctx.quadraticCurveTo(pad, pad, pad + r, pad);
-    ctx.closePath();
-    ctx.fill();
+      const g = ctx.createLinearGradient(0, 0, size, size);
+      g.addColorStop(0, '#1d4ed8');
+      g.addColorStop(0.55, '#4f46e5');
+      g.addColorStop(1, '#7c3aed');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(pad + r, pad);
+      ctx.lineTo(pad + w - r, pad);
+      ctx.quadraticCurveTo(pad + w, pad, pad + w, pad + r);
+      ctx.lineTo(pad + w, pad + h - r);
+      ctx.quadraticCurveTo(pad + w, pad + h, pad + w - r, pad + h);
+      ctx.lineTo(pad + r, pad + h);
+      ctx.quadraticCurveTo(pad, pad + h, pad, pad + h - r);
+      ctx.lineTo(pad, pad + r);
+      ctx.quadraticCurveTo(pad, pad, pad + r, pad);
+      ctx.closePath();
+      ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.lineWidth = Math.max(2, Math.round(size * 0.015));
-    ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = Math.max(2, Math.round(size * 0.015));
+      ctx.stroke();
 
-    ctx.fillStyle = '#10b981';
-    ctx.beginPath();
-    ctx.arc(size * 0.76, size * 0.26, size * 0.11, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(size * 0.76, size * 0.26, size * 0.11, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `800 ${Math.round(size * 0.31)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('C2D', size / 2, size * 0.54);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `800 ${Math.round(size * 0.31)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('C2D', size / 2, size * 0.54);
 
-    return c.toDataURL('image/png');
+      return c.toDataURL('image/png');
+    } catch (e) {
+      return '';
+    }
   }
 
-  // Dynamic PWA Manifest + Safe Same-Origin Service Worker Setup
+  // Dynamic PWA Manifest, Icons & Same-Origin Service Worker Setup
   (function initPWA() {
     try {
       const icon64 = renderAppIconDataURL(64);
       const icon180 = renderAppIconDataURL(180);
-      document.getElementById('app-favicon').href = icon64;
-      document.getElementById('apple-touch-icon').href = icon180;
+      if (icon64) document.getElementById('app-favicon').href = icon64;
+      if (icon180) document.getElementById('apple-touch-icon').href = icon180;
     } catch (e) {}
 
     if (!location.protocol.startsWith('http')) return;
 
-    const baseDir = location.href.replace(/[^/]*$/, '');
-    const manifest = {
-      id: baseDir,
-      name: 'Commute-to-Desk · Daily Productivity OS',
-      short_name: 'Commute2Desk',
-      description: 'Voice brain-dump, Rule of 3 priorities, Pomodoro timer, and auto-timeblocker.',
-      start_url: location.href,
-      scope: baseDir,
-      display: 'standalone',
-      orientation: 'portrait-primary',
-      background_color: '#0b1120',
-      theme_color: '#0b1120',
-      icons: [
-        { src: renderAppIconDataURL(192), sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: renderAppIconDataURL(192), sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-        { src: renderAppIconDataURL(512), sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: renderAppIconDataURL(512), sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-      ]
-    };
-    const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-    document.getElementById('dynamic-manifest').href = URL.createObjectURL(mBlob);
+    try {
+      const baseDir = location.href.replace(/[^/]*$/, '');
+      const icon192 = renderAppIconDataURL(192);
+      const icon512 = renderAppIconDataURL(512);
+      const manifest = {
+        id: baseDir,
+        name: 'Commute-to-Desk · Daily Productivity OS',
+        short_name: 'Commute2Desk',
+        description: 'Voice brain-dump, Rule of 3 priorities, Pomodoro timer, and auto-timeblocker.',
+        start_url: location.href,
+        scope: baseDir,
+        display: 'standalone',
+        orientation: 'portrait-primary',
+        background_color: '#0b1120',
+        theme_color: '#0b1120',
+        icons: [
+          { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      };
+      const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      document.getElementById('dynamic-manifest').href = URL.createObjectURL(mBlob);
+    } catch (e) {}
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -1166,13 +1420,16 @@
 
   async function triggerInstall() {
     if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
+      try {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+      } catch (e) {}
       deferredInstallPrompt = null;
     } else {
       document.getElementById('installModal').classList.add('open');
     }
   }
+
   function closeInstallModal() {
     document.getElementById('installModal').classList.remove('open');
   }
@@ -1181,6 +1438,11 @@
   const API_KEY_STORAGE = 'c2d_gemini_api_key';
   window.__geminiKey = '';
 
+  /**
+   * Formats a Date instance into a local YYYY-MM-DD key.
+   * @param {Date} [d]
+   * @returns {string}
+   */
   function getLocalDateKey(d = new Date()) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1188,26 +1450,42 @@
     return `${y}-${m}-${day}`;
   }
 
+  /**
+   * Returns tomorrow's local YYYY-MM-DD key.
+   * @returns {string}
+   */
   function getTomorrowDateKey() {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     return getLocalDateKey(d);
   }
 
+  /**
+   * Determines whether a task belongs to a future date after today.
+   * @param {Object} t
+   * @returns {boolean}
+   */
   function isTaskUpcoming(t) {
+    if (!t) return false;
     const today = getLocalDateKey();
     if (t.dueDate && t.dueDate > today) return true;
     if (!t.dueDate && t.day === 'tomorrow') return true;
     return false;
   }
 
+  /**
+   * Formats a human-readable badge for a future dueDate.
+   * @param {string} dueDate
+   * @returns {string}
+   */
   function formatDueBadge(dueDate) {
     const today = getLocalDateKey();
     const tmr = getTomorrowDateKey();
     if (!dueDate || dueDate <= today) return '';
     if (dueDate === tmr) return '🌅 Tomorrow';
-    const [y, m, d] = dueDate.split('-').map(Number);
-    const dt = new Date(y, m - 1, d);
+    const parts = dueDate.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return `📅 ${dueDate}`;
+    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
     return '📅 ' + dt.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
@@ -1219,19 +1497,33 @@
     if (!qd.value || qd.value < today) qd.value = today;
   }
 
+  /**
+   * Three-tier Gemini API key retrieval: memory -> sessionStorage -> localStorage -> state.
+   * @returns {string}
+   */
   function getStoredApiKey() {
     if (window.__geminiKey && window.__geminiKey.trim()) return window.__geminiKey.trim();
     try {
       const s = sessionStorage.getItem(API_KEY_STORAGE);
-      if (s && s.trim()) { window.__geminiKey = s.trim(); return window.__geminiKey; }
+      if (s && s.trim()) {
+        window.__geminiKey = s.trim();
+        return window.__geminiKey;
+      }
     } catch (e) {}
     try {
       const l = localStorage.getItem(API_KEY_STORAGE);
-      if (l && l.trim()) { window.__geminiKey = l.trim(); return window.__geminiKey; }
+      if (l && l.trim()) {
+        window.__geminiKey = l.trim();
+        return window.__geminiKey;
+      }
     } catch (e) {}
     return (state && state.apiKey ? state.apiKey.trim() : '');
   }
 
+  /**
+   * Persists API key across window.__geminiKey, sessionStorage, localStorage, and state.
+   * @param {string} val
+   */
   function liveSaveKey(val) {
     const clean = (val || '').trim();
     window.__geminiKey = clean;
@@ -1249,18 +1541,28 @@
     const inlineBox = document.getElementById('inlineKeyBox');
     if (key) {
       const masked = key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : 'Saved';
-      if (badge) { badge.style.color = '#059669'; badge.textContent = `✓ Key active (${masked})`; }
+      if (badge) {
+        badge.style.color = '#059669';
+        badge.textContent = `✓ Key active (${masked})`;
+      }
       if (dot) dot.textContent = '🟢';
       if (inlineBox) inlineBox.classList.remove('visible');
     } else {
-      if (badge) { badge.style.color = '#64748b'; badge.textContent = 'No key saved yet (offline splitter still works).'; }
+      if (badge) {
+        badge.style.color = '#64748b';
+        badge.textContent = 'No key saved yet (offline splitter still works).';
+      }
       if (dot) dot.textContent = 'Key';
     }
   }
 
   function escapeHtml(str) {
     return String(str || '').replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
     }[c]));
   }
 
@@ -1278,7 +1580,12 @@
     todayFocusMins: 0
   };
 
+  /**
+   * Normalizes dueDate and day fields on all tasks to stay consistent with today's date.
+   * @returns {boolean}
+   */
   function normalizeTasks() {
+    if (!Array.isArray(state.tasks)) state.tasks = [];
     const today = getLocalDateKey();
     const tmr = getTomorrowDateKey();
     let changed = false;
@@ -1297,6 +1604,10 @@
     return changed;
   }
 
+  /**
+   * Enforces the Ivy Lee Rule of 3 cap (at most 3 today tasks pinned to top3).
+   * @returns {boolean}
+   */
   function enforceTop3Cap() {
     let seen = 0;
     let changed = normalizeTasks();
@@ -1323,7 +1634,13 @@
       const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        state = { ...state, ...parsed };
+        state = {
+          ...state,
+          ...parsed,
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+          schedule: Array.isArray(parsed.schedule) ? parsed.schedule : [],
+          history: parsed.history && typeof parsed.history === 'object' ? parsed.history : {}
+        };
       }
     } catch (e) {}
     const k = getStoredApiKey();
@@ -1337,6 +1654,10 @@
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   }
 
+  /**
+   * Archives previous day's stats, promotes tasks whose dueDate has arrived, and rolls
+   * unfinished today tasks forward with a rolledOver marker.
+   */
   function checkDayRollover() {
     const today = getLocalDateKey();
     if (state.lastActiveDate && state.lastActiveDate !== today) {
@@ -1345,11 +1666,18 @@
       const top3Done = doneTasks.filter(t => t.top3).length;
       const prevHist = state.history[prevDate] || {};
       const mergedTitles = [...new Set([...(prevHist.completedTitles || []), ...doneTasks.map(t => t.title)])];
+      const prevDetails = Array.isArray(prevHist.completedItems) ? [...prevHist.completedItems] : [];
+      doneTasks.forEach(dt => {
+        if (!prevDetails.some(x => x.title === dt.title)) {
+          prevDetails.push({ title: dt.title, bucket: dt.bucket || 'work', mins: dt.mins || 25 });
+        }
+      });
       state.history[prevDate] = {
         completed: Math.max(doneTasks.length, mergedTitles.length, Number(prevHist.completed) || 0),
         top3Hit: Math.max(top3Done, Number(prevHist.top3Hit) || 0),
         focusMins: Math.max(state.todayFocusMins || 0, Number(prevHist.focusMins) || 0),
-        completedTitles: mergedTitles
+        completedTitles: mergedTitles,
+        completedItems: prevDetails
       };
       state.tasks = state.tasks
         .filter(t => !t.done)
@@ -1374,11 +1702,13 @@
     state.lastActiveDate = '2000-01-01';
     checkDayRollover();
     renderAll();
-    setStatus('Simulated rollover: unfinished tasks carried forward with ↻ badge.');
+    setStatus('Simulated rollover: due tasks promoted, unfinished tasks carried forward with ↻ badge.');
+    showToast('Simulated next-day rollover');
   }
 
   function setStatus(msg, isErr = false) {
     const el = document.getElementById('dumpStatus');
+    if (!el) return;
     el.style.color = isErr ? '#dc2626' : '#475569';
     el.textContent = msg;
   }
@@ -1391,6 +1721,7 @@
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
       setStatus('Speech input unavailable in this view. Type or paste below.', true);
+      showToast('Speech input unavailable in this browser.');
       return;
     }
     const btn = document.getElementById('micBtn');
@@ -1430,30 +1761,42 @@
       btn.textContent = '🎤 Tap to Speak';
       setStatus('Voice captured. Tap Smart Split or AI Polish.');
     };
-    try { recognition.start(); } catch (err) { setStatus('Mic already active.', true); }
+    try {
+      recognition.start();
+    } catch (err) {
+      setStatus('Mic already active.', true);
+    }
   }
 
   function loadSampleDump() {
     document.getElementById('dumpInput').value =
-      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), buy groceries during my 8 PM walk, water the balcony lucky bamboo, and practice guitar barre chords.';
+      'Check RDP VM logs before standup, review Jira ticket KAN-104 and merge SVN branch, reply to manager email (2 mins), buy groceries during my 8 PM walk, water the balcony lucky bamboo, and prepare demo slides tomorrow.';
     setStatus('Sample brain dump loaded.');
   }
 
+  function snapDuration(rawMins, title) {
+    const fallback = /\b2\s*min/i.test(title) ? 2 : 25;
+    const n = Number(rawMins) || fallback;
+    const validDurs = [2, 15, 25, 45, 60, 90];
+    return validDurs.reduce((prev, curr) => Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev);
+  }
+
   function addTasksFromItems(items) {
+    if (!Array.isArray(items)) return;
     const today = getLocalDateKey();
     const tmr = getTomorrowDateKey();
     let top3Current = state.tasks.filter(t => t.top3 && !isTaskUpcoming(t)).length;
+
     items.forEach(item => {
-      const title = (item.title || '').trim();
+      if (!item) return;
+      const title = String(item.title || '').trim();
       if (!title) return;
       let dueDate = item.dueDate || (item.day === 'tomorrow' ? tmr : today);
-      if (dueDate < today) dueDate = today;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || dueDate < today) dueDate = today;
       const upcoming = dueDate > today;
       const day = upcoming ? 'tomorrow' : 'today';
       const bucket = item.bucket === 'personal' ? 'personal' : 'work';
-      const rawMins = Number(item.mins) || (/\b2\s*min/i.test(title) ? 2 : 25);
-      const validDurs = [2, 15, 25, 45, 60, 90];
-      const mins = validDurs.reduce((prev, curr) => Math.abs(curr - rawMins) < Math.abs(prev - rawMins) ? curr : prev);
+      const mins = snapDuration(item.mins, title);
       let isTop3 = !upcoming && Boolean(item.top3);
       if (isTop3 && top3Current >= 3) isTop3 = false;
       if (isTop3) top3Current++;
@@ -1469,6 +1812,8 @@
         rolledOver: false
       });
     });
+
+    enforceTop3Cap();
     saveState();
     renderAll();
   }
@@ -1478,6 +1823,7 @@
     if (!t) return;
     t.dueDate = getLocalDateKey();
     t.day = 'today';
+    enforceTop3Cap();
     saveState();
     renderAll();
     showToast('Moved to Today.');
@@ -1497,14 +1843,20 @@
       showToast('No upcoming tasks to move.');
       return;
     }
+    enforceTop3Cap();
     saveState();
     renderAll();
     setStatus(`Moved ${moved} upcoming task(s) into Today.`);
+    showToast(`Moved ${moved} task(s) to Today.`);
   }
 
   function splitOffline() {
     const raw = document.getElementById('dumpInput').value.trim();
-    if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
+    if (!raw) {
+      setStatus('Enter or speak a brain dump first.', true);
+      showToast('Enter or speak a brain dump first.');
+      return;
+    }
     const parts = raw
       .split(/[\n.;]+|,\s*(?:and\s+|also\s+)?|\b(?:and also|also|then)\b/i)
       .map(s => s.replace(/^[-*•\d.)\s]+/, '').trim())
@@ -1518,7 +1870,7 @@
       const isTomorrow = /\btomorrow\b/i.test(p);
       const cleanTitle = p.replace(/\b(?:for\s+|on\s+)?tomorrow\b/gi, '').replace(/\s{2,}/g, ' ').trim() || p;
       const isPers = personalRx.test(cleanTitle);
-      const mins = /\b2\s*min/i.test(cleanTitle) ? 2 : (isPers ? 20 : 30);
+      const mins = /\b2\s*min/i.test(cleanTitle) ? 2 : (isPers ? 15 : 25);
       let top3 = false;
       if (!isTomorrow && !isPers && (currentTop3 + workAdded) < 3) {
         top3 = true;
@@ -1537,6 +1889,7 @@
     addTasksFromItems(items);
     document.getElementById('dumpInput').value = '';
     setStatus(`Split ${items.length} tasks into Today & Upcoming.`);
+    showToast(`Added ${items.length} split task(s).`);
   }
 
   function saveAndRunAi() {
@@ -1567,6 +1920,7 @@
       if (res.ok) {
         badge.style.color = '#059669';
         badge.textContent = `✓ Verified! Connected to ${model}.`;
+        showToast('Gemini API key verified.');
       } else {
         badge.style.color = '#dc2626';
         badge.textContent = `✗ Error: ${data?.error?.message || res.status}`;
@@ -1579,7 +1933,11 @@
 
   async function runAiPolish() {
     const raw = document.getElementById('dumpInput').value.trim();
-    if (!raw) { setStatus('Enter or speak a brain dump first.', true); return; }
+    if (!raw) {
+      setStatus('Enter or speak a brain dump first.', true);
+      showToast('Enter or speak a brain dump first.');
+      return;
+    }
 
     const apiKey = getStoredApiKey();
     if (!apiKey) {
@@ -1590,12 +1948,20 @@
     }
 
     const aiBtn = document.getElementById('aiPolishBtn');
-    if (aiBtn) { aiBtn.disabled = true; aiBtn.textContent = '⏳ Polishing...'; }
+    if (aiBtn) {
+      aiBtn.disabled = true;
+      aiBtn.textContent = '⏳ Polishing...';
+    }
     setStatus('✨ Polishing with Gemini AI...');
 
     const todayKey = getLocalDateKey();
     const tmrwKey = getTomorrowDateKey();
-    const modelsToTry = [state.model || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
+    const modelsToTry = [
+      state.model || 'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-4-hydrogen',
+      'gemini-3.1-flash-lite'
+    ];
     const prompt = [
       `Today is ${todayKey}. Tomorrow is ${tmrwKey}.`,
       'Extract actionable tasks from this brain dump and return ONLY valid JSON:',
@@ -1635,6 +2001,7 @@
             addTasksFromItems(normalized);
             document.getElementById('dumpInput').value = '';
             setStatus(`✨ AI Polish (${model}) organized ${normalized.length} tasks!`);
+            showToast(`Polished ${normalized.length} task(s) via Gemini.`);
             return;
           }
         } catch (err) {
@@ -1642,8 +2009,12 @@
         }
       }
       setStatus(`AI Polish error: ${lastErr}. Check API key in Settings.`, true);
+      showToast('AI Polish failed. Check API key in Settings.');
     } finally {
-      if (aiBtn) { aiBtn.disabled = false; aiBtn.textContent = '✨ AI Polish'; }
+      if (aiBtn) {
+        aiBtn.disabled = false;
+        aiBtn.textContent = '✨ AI Polish';
+      }
     }
   }
 
@@ -1658,26 +2029,46 @@
     const bucket = document.getElementById('quickBucket').value;
     const mins = Number(document.getElementById('quickMins').value) || 25;
     const top3Count = state.tasks.filter(t => t.top3 && !isTaskUpcoming(t)).length;
-    addTasksFromItems([{ title, day: upcoming ? 'tomorrow' : 'today', dueDate, bucket, mins, top3: !upcoming && bucket === 'work' && top3Count < 3 }]);
+    addTasksFromItems([{
+      title,
+      day: upcoming ? 'tomorrow' : 'today',
+      dueDate,
+      bucket,
+      mins,
+      top3: !upcoming && bucket === 'work' && top3Count < 3
+    }]);
     input.value = '';
     syncQuickDateInput();
+    showToast('Task added.');
   }
 
   function recordTaskCompletionInHistory(task, wasCompleted) {
     const today = getLocalDateKey();
     if (!state.history[today]) {
-      state.history[today] = { completed: 0, top3Hit: 0, focusMins: state.todayFocusMins || 0, completedTitles: [], top3Titles: [] };
+      state.history[today] = {
+        completed: 0,
+        top3Hit: 0,
+        focusMins: state.todayFocusMins || 0,
+        completedTitles: [],
+        top3Titles: [],
+        completedItems: []
+      };
     }
     const entry = state.history[today];
     if (!Array.isArray(entry.completedTitles)) entry.completedTitles = [];
     if (!Array.isArray(entry.top3Titles)) entry.top3Titles = [];
+    if (!Array.isArray(entry.completedItems)) entry.completedItems = [];
 
     if (wasCompleted) {
       if (!entry.completedTitles.includes(task.title)) entry.completedTitles.push(task.title);
       if (task.top3 && !entry.top3Titles.includes(task.title)) entry.top3Titles.push(task.title);
+      if (!entry.completedItems.some(x => x.title === task.title)) {
+        entry.completedItems.push({ title: task.title, bucket: task.bucket || 'work', mins: task.mins || 25 });
+      }
     } else {
       entry.completedTitles = entry.completedTitles.filter(t => t !== task.title);
       entry.top3Titles = entry.top3Titles.filter(t => t !== task.title);
+      entry.completedItems = entry.completedItems.filter(x => x.title !== task.title);
     }
     const activeDone = state.tasks.filter(x => x.done && !isTaskUpcoming(x));
     entry.completed = Math.max(activeDone.length, entry.completedTitles.length);
@@ -1685,15 +2076,86 @@
     entry.focusMins = state.todayFocusMins || 0;
   }
 
+  function getPreviousDaysCompleted() {
+    const today = getLocalDateKey();
+    const dates = Object.keys(state.history || {})
+      .filter(d => d < today)
+      .sort((a, b) => b.localeCompare(a));
+    return dates.map(dateKey => {
+      const h = state.history[dateKey] || {};
+      const titles = Array.isArray(h.completedTitles) ? h.completedTitles : [];
+      const items = Array.isArray(h.completedItems) && h.completedItems.length
+        ? h.completedItems
+        : titles.map(title => ({ title, bucket: 'work', mins: 25 }));
+      const parts = dateKey.split('-').map(Number);
+      const dt = parts.length === 3 ? new Date(parts[0], parts[1] - 1, parts[2]) : new Date(dateKey);
+      const label = dt.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+      return { dateKey, label, items };
+    }).filter(g => g.items.length > 0);
+  }
+
+  function openPrevDayModal(preferredDate = null) {
+    const groups = getPreviousDaysCompleted();
+    const sel = document.getElementById('prevDaySelect');
+    const list = document.getElementById('prevDayTaskList');
+    if (!groups.length) {
+      sel.innerHTML = '<option value="">No previous completed tasks yet</option>';
+      list.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:12px;text-align:center;">Completed tasks from past days will appear here automatically so you can copy them to Today anytime.</div>';
+    } else {
+      sel.innerHTML = groups.map(g => `<option value="${g.dateKey}">${escapeHtml(g.label)} (${g.items.length})</option>`).join('');
+      if (preferredDate && groups.some(g => g.dateKey === preferredDate)) {
+        sel.value = preferredDate;
+      }
+      renderPrevDayTasks();
+    }
+    document.getElementById('prevDayModal').classList.add('open');
+  }
+
+  function closePrevDayModal() {
+    document.getElementById('prevDayModal').classList.remove('open');
+  }
+
+  function renderPrevDayTasks() {
+    const sel = document.getElementById('prevDaySelect');
+    const list = document.getElementById('prevDayTaskList');
+    const groups = getPreviousDaysCompleted();
+    const chosen = groups.find(g => g.dateKey === sel.value) || groups[0];
+    if (!chosen) {
+      list.innerHTML = '';
+      return;
+    }
+    list.innerHTML = chosen.items.map((item, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f8fafc;border:1px solid var(--border);border-radius:13px;padding:10px 12px;">
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:14px;font-weight:700;color:var(--text-main);word-break:break-word;">${escapeHtml(item.title)}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${item.bucket === 'personal' ? '🏡 Personal' : '💼 Work'} · ⏱ ${item.mins || 25}m</div>
+        </div>
+        <button type="button" class="btn btn-primary" style="min-height:36px;padding:0 12px;font-size:12px;flex-shrink:0;" onclick="copyPastTaskToToday('${chosen.dateKey}', ${i})">+ Copy</button>
+      </div>
+    `).join('');
+  }
+
+  function copyPastTaskToToday(dateKey, idx) {
+    const groups = getPreviousDaysCompleted();
+    const chosen = groups.find(g => g.dateKey === dateKey);
+    const item = chosen && chosen.items[idx];
+    if (!item) return;
+    addTasksFromItems([{
+      title: item.title,
+      day: 'today',
+      dueDate: getLocalDateKey(),
+      bucket: item.bucket || 'work',
+      mins: item.mins || 25,
+      top3: false
+    }]);
+    showToast(`Copied "${item.title}" to Today!`);
+    setStatus(`Copied "${item.title}" from ${chosen.label} to Today.`);
+  }
+
   function toggleTaskDone(id) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
     t.done = !t.done;
-    const today = getLocalDateKey();
-    if (t.done && isTaskUpcoming(t)) {
-      t.dueDate = today;
-      t.day = 'today';
-    }
     recordTaskCompletionInHistory(t, t.done);
     saveState();
     renderAll();
@@ -1732,6 +2194,7 @@
     }
     saveState();
     renderAll();
+    showToast('Task deleted.');
   }
 
   function clearCompleted() {
@@ -1739,6 +2202,7 @@
     state.tasks = state.tasks.filter(x => !x.done);
     saveState();
     renderAll();
+    showToast('Cleared completed tasks.');
   }
 
   function openEditModal(id) {
@@ -1779,7 +2243,13 @@
         return;
       }
     }
-    t.title = newTitle;
+    if (t.done && t.title !== newTitle) {
+      recordTaskCompletionInHistory(t, false);
+      t.title = newTitle;
+      recordTaskCompletionInHistory(t, true);
+    } else {
+      t.title = newTitle;
+    }
     t.day = newDay;
     t.dueDate = newDueDate;
     t.bucket = document.getElementById('editTaskBucket').value;
@@ -1792,6 +2262,7 @@
     saveState();
     closeEditModal();
     renderAll();
+    showToast('Task updated.');
   }
 
   function deleteFromEditModal() {
@@ -1811,8 +2282,8 @@
       : `<span class="tag tag-pers">Personal</span>`;
 
     const secondBtn = upcoming
-      ? `<button class="t-btn move-today" onclick="moveTaskToToday('${t.id}')">↑ Today</button>`
-      : `<button class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>`;
+      ? `<button type="button" class="t-btn move-today" onclick="moveTaskToToday('${t.id}')">↑ Today</button>`
+      : `<button type="button" class="t-btn ${t.top3 ? 'star-on' : ''}" onclick="toggleTop3('${t.id}')">${t.top3 ? '★ Top 3' : '☆ Top 3'}</button>`;
 
     return `
       <div class="task-card ${t.top3 ? 'top3' : ''} ${upcoming ? 'tomorrow-card' : ''} ${t.done ? 'done' : ''}">
@@ -1830,10 +2301,10 @@
           </div>
         </div>
         <div class="task-bar">
-          <button class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
+          <button type="button" class="t-btn" onclick="pinTaskToTimer('${t.id}', true)">▶ Focus</button>
           ${secondBtn}
-          <button class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
-          <button class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
+          <button type="button" class="t-btn" onclick="openEditModal('${t.id}')">✎ Edit</button>
+          <button type="button" class="t-btn del-btn" onclick="deleteTask('${t.id}')">🗑 Del</button>
         </div>
       </div>`;
   }
@@ -1881,14 +2352,21 @@
     const lines = state.tasks
       .filter(t => (t.bucket === 'work' || t.top3) && !isTaskUpcoming(t))
       .map(t => `- [${t.done ? 'x' : ' '}] ${t.top3 ? '★ ' : ''}${t.title} (${t.mins}m)`);
-    if (!lines.length) { showToast('No work tasks for today to copy.'); return; }
+    if (!lines.length) {
+      showToast('No work tasks for today to copy.');
+      return;
+    }
     const md = lines.join('\n');
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(md).then(() => setStatus('Copied Markdown checklist!')).catch(() => fallbackCopy(md));
+      navigator.clipboard.writeText(md).then(() => {
+        setStatus('Copied Markdown checklist!');
+        showToast('Copied Markdown checklist.');
+      }).catch(() => fallbackCopy(md));
     } else {
       fallbackCopy(md);
     }
   }
+
   function fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -1896,16 +2374,25 @@
     ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); setStatus('Copied Markdown checklist!'); }
-    catch (e) { setStatus('Could not auto-copy on this browser.', true); }
+    try {
+      document.execCommand('copy');
+      setStatus('Copied Markdown checklist!');
+      showToast('Copied Markdown checklist.');
+    } catch (e) {
+      setStatus('Could not auto-copy on this browser.', true);
+    }
     document.body.removeChild(ta);
   }
 
   function shutdownRitual() {
-    const done = state.tasks.filter(t => t.done && !isTaskUpcoming(t)).length;
+    const todayK = getLocalDateKey();
+    const histTodayCount = (state.history[todayK] && Array.isArray(state.history[todayK].completedTitles))
+      ? state.history[todayK].completedTitles.length
+      : 0;
+    const done = Math.max(state.tasks.filter(t => t.done && !isTaskUpcoming(t)).length, histTodayCount);
     const rem = state.tasks.filter(t => !t.done && !isTaskUpcoming(t)).length;
     const up = state.tasks.filter(t => !t.done && isTaskUpcoming(t)).length;
-    showToast(`Shutdown: ${done} done, ${rem} rolling over, ${up} upcoming.`);
+    showToast(`Shutdown: ${done} done · ${state.todayFocusMins || 0}m focus · ${rem} roll over · ${up} upcoming`);
   }
 
   let timerState = {
@@ -1924,7 +2411,7 @@
     timerState.taskId = id;
     document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     if (!timerState.running) {
-      const mins = [25, 5, 90].includes(t.mins) ? t.mins : (t.mins || 25);
+      const mins = snapDuration(t.mins, t.title);
       timerState.presetMins = mins;
       timerState.remainingSec = mins * 60;
       document.querySelectorAll('.p-chip').forEach(b => {
@@ -1955,6 +2442,7 @@
     }
     setTimerPreset(val, null);
     inp.value = '';
+    showToast(`Timer set to ${val}m.`);
   }
 
   function updateTimerDisplay() {
@@ -1966,7 +2454,9 @@
 
   function playChime() {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -2028,7 +2518,9 @@
       }
     }
     const today = getLocalDateKey();
-    if (!state.history[today]) state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [], top3Titles: [] };
+    if (!state.history[today]) {
+      state.history[today] = { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [], top3Titles: [], completedItems: [] };
+    }
     state.history[today].focusMins = state.todayFocusMins;
     saveState();
     resetTimer();
@@ -2038,8 +2530,9 @@
   }
 
   function fmtMins(totalMins) {
-    const h = Math.floor(totalMins / 60);
-    const m = totalMins % 60;
+    const clamped = Math.max(0, Math.min(1439, Number(totalMins) || 0));
+    const h = Math.floor(clamped / 60);
+    const m = clamped % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
@@ -2097,9 +2590,9 @@
     const pEnd = Math.max(pStart + 15, parseTimeToMins(state.personalEnd, 1320));
 
     const blocks = [
-      { start: 450, end: 540, title: '🏋️ Morning Gym & Mobility', type: 'fixed' },
-      { start: wStart, end: wEnd, title: '💼 Core Work Window', type: 'fixed' },
-      { start: pStart, end: pEnd, title: '🏡 Personal & Evening Window', type: 'fixed' }
+      { start: 450, end: 540, title: '🏋️ Morning Gym & Mobility', type: 'fixed', dueDate: getLocalDateKey() },
+      { start: wStart, end: wEnd, title: '💼 Core Work Window', type: 'fixed', dueDate: getLocalDateKey() },
+      { start: pStart, end: pEnd, title: '🏡 Personal & Evening Window', type: 'fixed', dueDate: getLocalDateKey() }
     ];
 
     const pending = [
@@ -2118,22 +2611,55 @@
       if (isTaskUpcoming(t)) {
         const startStr = t.bucket === 'work' ? fmtMins(wStart) : fmtMins(pStart);
         const badge = formatDueBadge(t.dueDate || getTomorrowDateKey());
-        generated.push({ start: null, end: null, title: `${badge} ${startStr}: ${t.title}`, type: 'deferred', dueDate: t.dueDate || getTomorrowDateKey(), dur });
+        generated.push({
+          start: null,
+          end: null,
+          title: `${badge} ${startStr}: ${t.title}`,
+          type: 'deferred',
+          dueDate: t.dueDate || getTomorrowDateKey(),
+          dur
+        });
         return;
       }
       if (t.bucket === 'work' || t.top3) {
         if (workCursor + dur <= wEnd) {
-          generated.push({ start: workCursor, end: workCursor + dur, title: (t.top3 ? '★ ' : '') + t.title, type: 'work' });
+          generated.push({
+            start: workCursor,
+            end: workCursor + dur,
+            title: (t.top3 ? '★ ' : '') + t.title,
+            type: 'work',
+            dueDate: getLocalDateKey()
+          });
           workCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, title: `↻ Tomorrow ${fmtMins(wStart)}: ${t.title}`, type: 'deferred', dueDate: getTomorrowDateKey(), dur });
+          generated.push({
+            start: null,
+            end: null,
+            title: `↻ Tomorrow ${fmtMins(wStart)}: ${t.title}`,
+            type: 'deferred',
+            dueDate: getTomorrowDateKey(),
+            dur
+          });
         }
       } else {
         if (persCursor + dur <= pEnd) {
-          generated.push({ start: persCursor, end: persCursor + dur, title: t.title, type: 'pers' });
+          generated.push({
+            start: persCursor,
+            end: persCursor + dur,
+            title: t.title,
+            type: 'pers',
+            dueDate: getLocalDateKey()
+          });
           persCursor += dur + 5;
         } else {
-          generated.push({ start: null, end: null, title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`, type: 'deferred', dueDate: getTomorrowDateKey(), dur });
+          generated.push({
+            start: null,
+            end: null,
+            title: `↻ Tomorrow ${fmtMins(pStart)}: ${t.title}`,
+            type: 'deferred',
+            dueDate: getTomorrowDateKey(),
+            dur
+          });
         }
       }
     });
@@ -2141,6 +2667,7 @@
     state.schedule = [...blocks, ...generated].sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
     saveState();
     renderSchedule();
+    showToast('Timeblocks generated.');
   }
 
   function renderSchedule() {
@@ -2150,7 +2677,7 @@
       return;
     }
     el.innerHTML = state.schedule.map((b, idx) => `
-      <div class="timeline-card ${b.type}" style="cursor:pointer;" onclick="openEditBlockModal(${idx})">
+      <div class="timeline-card ${b.type}" onclick="openEditBlockModal(${idx})">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
           <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : `${formatDueBadge(b.dueDate || getTomorrowDateKey())}${b.customStart !== undefined ? ' · ' + fmtMins(b.customStart) + ' – ' + fmtMins(Math.min(1435, b.customStart + (b.dur || 25))) : ''}`}</div>
           <button type="button" class="btn-chip" style="min-height:26px;padding:0 9px;font-size:11px;" onclick="event.stopPropagation();openEditBlockModal(${idx})">✎ Edit</button>
@@ -2175,8 +2702,11 @@
     document.getElementById('blockModalTitle').textContent = '✎ Edit Timeblock';
     document.getElementById('editBlockIdx').value = String(idx);
     document.getElementById('editBlockTitle').value = b.title || '';
-    document.getElementById('editBlockStart').value = b.start !== null ? fmtMins(b.start) : (b.customStart !== undefined ? fmtMins(b.customStart) : (state.workStart || '11:30'));
-    document.getElementById('editBlockEnd').value = b.end !== null ? fmtMins(b.end) : fmtMins(Math.min(1435, parseTimeToMins(document.getElementById('editBlockStart').value, 690) + (b.dur || 30)));
+    const defaultStart = b.start !== null ? fmtMins(b.start) : (b.customStart !== undefined ? fmtMins(b.customStart) : (state.workStart || '11:30'));
+    document.getElementById('editBlockStart').value = defaultStart;
+    document.getElementById('editBlockEnd').value = b.end !== null
+      ? fmtMins(b.end)
+      : fmtMins(Math.min(1435, parseTimeToMins(defaultStart, 690) + (b.dur || 30)));
     document.getElementById('editBlockType').value = b.type || 'work';
     toggleBlockDateRow();
     document.getElementById('deleteBlockBtn').style.display = 'inline-flex';
@@ -2275,7 +2805,6 @@
     const todayStamp = todayKey.replace(/-/g, '');
     const events = [];
 
-    // 1. Today's active timed blocks
     state.schedule
       .filter(b => b.start !== null && b.type !== 'fixed')
       .forEach(b => {
@@ -2287,7 +2816,6 @@
         });
       });
 
-    // 2. Upcoming/deferred blocks slotted on their target future date
     const futureCursors = {};
     const wStart = parseTimeToMins(state.workStart, 690);
     const pStart = parseTimeToMins(state.personalStart, 1200);
@@ -2311,7 +2839,7 @@
       });
 
     if (!events.length) {
-      alert('No task timeblocks available to export yet. Add tasks and tap ⚡ Auto-Plan first.');
+      showToast('No task timeblocks available to export yet.');
       return;
     }
 
@@ -2362,8 +2890,10 @@
     const box = document.getElementById('barDetailBox');
     const b = analyticsBuckets[idx];
     if (!box || !b) return;
+    const todayKey = getLocalDateKey();
+    const canCopyToToday = analyticsRange === 'week' && b.dateKey && b.dateKey < todayKey && b.titles && b.titles.length > 0;
     const tasksHtml = b.titles && b.titles.length
-      ? `<ul style="margin-top:6px;padding-left:18px;color:#334155;display:flex;flex-direction:column;gap:3px;">${b.titles.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
+      ? `<ul style="margin-top:6px;padding-left:18px;color:#334155;display:flex;flex-direction:column;gap:4px;">${b.titles.map((t, ti) => `<li style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>${escapeHtml(t)}</span>${canCopyToToday ? `<button type="button" class="btn-chip" style="min-height:24px;padding:0 8px;font-size:11px;flex-shrink:0;" onclick="copyPastTaskToToday('${b.dateKey}', ${ti})">+ Today</button>` : ''}</li>`).join('')}</ul>`
       : b.completed > 0
         ? `<div style="margin-top:4px;color:#334155;font-size:12px;">${b.completed} task(s) completed in this period.</div>`
         : `<div style="margin-top:4px;color:var(--text-muted);font-size:12px;">No tasks completed in this period.</div>`;
@@ -2383,7 +2913,6 @@
     const totalToday = state.tasks.filter(t => !isTaskUpcoming(t)).length;
     const focusToday = state.todayFocusMins || 0;
 
-    // Build real date-keyed lookup combining saved history + live today state
     const dailyMap = {};
     Object.entries(state.history || {}).forEach(([k, v]) => {
       const titles = Array.isArray(v.completedTitles) ? v.completedTitles : [];
@@ -2418,6 +2947,7 @@
         const entry = dailyMap[k] || { completed: 0, top3Hit: 0, focusMins: 0, completedTitles: [] };
         const fullLabel = (i === 0 ? 'Today · ' : '') + d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
         analyticsBuckets.push({
+          dateKey: k,
           shortLabel: i === 0 ? 'Today' : dayNames[d.getDay()],
           fullLabel,
           completed: entry.completed,
@@ -2518,17 +3048,21 @@
     updateKeyIndicators();
     document.getElementById('settingsModal').classList.add('open');
   }
+
   function closeSettings() {
     document.getElementById('settingsModal').classList.remove('open');
   }
+
   function saveModelPref(m) {
     state.model = m;
     saveState();
   }
+
   function saveSettingsAndClose() {
     liveSaveKey(document.getElementById('settingsKeyInput').value);
     closeSettings();
     setStatus('Settings saved.');
+    showToast('Settings saved.');
   }
 
   function switchTab(tab) {
@@ -2567,7 +3101,11 @@
     const top3 = state.tasks.filter(t => t.top3 && !t.done && !isTaskUpcoming(t)).map(t => t.title);
     const workPending = state.tasks.filter(t => !t.done && t.bucket === 'work');
     const persPending = state.tasks.filter(t => !t.done && t.bucket === 'personal');
-    const done = state.tasks.filter(t => t.done && !isTaskUpcoming(t)).length;
+    const todayK = getLocalDateKey();
+    const histTodayCount = (state.history[todayK] && Array.isArray(state.history[todayK].completedTitles))
+      ? state.history[todayK].completedTitles.length
+      : 0;
+    const done = Math.max(state.tasks.filter(t => t.done && !isTaskUpcoming(t)).length, histTodayCount);
     const rolled = state.tasks.filter(t => t.rolledOver && !t.done).length;
 
     const apiKey = getStoredApiKey();
@@ -2594,23 +3132,36 @@
         schedule: state.schedule.map(s => `${s.start !== null ? fmtMins(s.start) + '-' + fmtMins(s.end) : 'Upcoming'}: ${s.title}`)
       });
 
-      try {
-        const model = state.model || 'gemini-3.5-flash-lite';
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `You are a concise productivity coach. Answer strictly from this live user workspace data in 1-3 short sentences.\nData: ${contextSnapshot}\nQuestion: ${q}` }] }]
-          })
-        });
-        const data = await res.json();
-        const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (res.ok && aiText) {
-          thinking.textContent = aiText.trim();
-          box.scrollTop = box.scrollHeight;
-          return;
-        }
-      } catch (e) {}
+      const botModels = [
+        ...new Set([
+          state.model || 'gemini-3.5-flash-lite',
+          'gemini-3.8-flash',
+          'gemini-4-hydrogen',
+          'gemini-3.1-flash-lite'
+        ])
+      ];
+      for (const model of botModels) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: `You are a concise productivity coach. Answer strictly from this live user workspace data in 1-3 short sentences.\nData: ${contextSnapshot}\nQuestion: ${q}`
+                }]
+              }]
+            })
+          });
+          const data = await res.json();
+          const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (res.ok && aiText) {
+            thinking.textContent = aiText.trim();
+            box.scrollTop = box.scrollHeight;
+            return;
+          }
+        } catch (e) {}
+      }
       thinking.remove();
     }
 
