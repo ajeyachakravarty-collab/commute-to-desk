@@ -275,7 +275,7 @@
       cursor: pointer;
     }
 
-    textarea, input[type="text"], input[type="password"], input[type="time"], input[type="date"], input[type="number"], select {
+    textarea, input[type="text"], input[type="password"], input[type="time"], input[type="number"], input[type="date"], select {
       width: 100%;
       border: 1.5px solid #e2e8f0;
       border-radius: 14px;
@@ -335,12 +335,12 @@
     /* Quick Add Bar */
     .quick-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1.15fr 0.95fr 0.9fr;
       gap: 8px;
       margin-top: 8px;
     }
-    .quick-row select {
-      padding: 10px 10px;
+    .quick-row input[type="date"], .quick-row select {
+      padding: 10px 8px;
       font-size: 14px;
     }
 
@@ -522,6 +522,7 @@
       display: flex;
       flex-direction: column;
       gap: 3px;
+      cursor: pointer;
     }
     .timeline-card.fixed { background: #f8fafc; border-left: 4px solid #64748b; }
     .timeline-card.work { border-left: 4px solid #2563eb; }
@@ -529,7 +530,7 @@
     .timeline-card.deferred { background: #fef2f2; border-left: 4px solid #ef4444; }
     .t-slot { font-size: 12px; font-weight: 800; color: var(--primary); }
 
-    /* Analytics & Interactive Drill-Down */
+    /* Analytics */
     .kpi-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -729,7 +730,7 @@
           <button class="btn btn-chip" onclick="loadSampleDump()">Sample</button>
         </div>
         <button id="micBtn" class="btn voice-trigger" onclick="toggleVoice()">🎤 Tap to Speak</button>
-        <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs today, review Jira ticket tomorrow morning, buy groceries on evening walk..."></textarea>
+        <textarea id="dumpInput" rows="3" placeholder="Speak or type freely: Check RDP VM logs today, review Jira ticket tomorrow, buy groceries on evening walk..."></textarea>
         <div class="dual-actions">
           <button class="btn" onclick="splitOffline()">⚡ Smart Split</button>
           <button id="aiPolishBtn" class="btn btn-ai" onclick="runAiPolish()">✨ AI Polish</button>
@@ -753,8 +754,8 @@
           </label>
         </div>
         <input type="text" id="quickTitle" placeholder="Add a single action item..." onkeydown="if(event.key==='Enter')addManualTask()" />
-        <div class="quick-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:8px;">
-          <input type="date" id="quickDate" aria-label="Target Date" style="padding:10px 8px;font-size:14px;" />
+        <div class="quick-row">
+          <input type="date" id="quickDate" aria-label="Task Date" />
           <select id="quickBucket">
             <option value="work">💼 Work</option>
             <option value="personal">🏡 Personal</option>
@@ -871,9 +872,10 @@
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div style="display:grid;grid-template-columns:1.15fr 0.9fr 0.95fr;gap:7px;margin-bottom:14px;">
         <button class="btn btn-primary" onclick="generateSchedule()">⚡ Auto-Plan</button>
-        <button class="btn btn-success" onclick="exportICS()">📲 Export .ICS</button>
+        <button class="btn" onclick="openNewBlockModal()">+ Block</button>
+        <button class="btn btn-success" onclick="exportICS()">📲 .ICS</button>
       </div>
       <div id="scheduleList"></div>
     </div>
@@ -898,7 +900,7 @@
   </section>
 </main>
 
-<!-- Edit Bottom Sheet -->
+<!-- Edit Task Bottom Sheet -->
 <div id="editModal" class="sheet-backdrop" onclick="if(event.target===this)closeEditModal()">
   <div class="sheet-card">
     <div class="sheet-grabber"></div>
@@ -911,21 +913,21 @@
       <label>Task Title</label>
       <input type="text" id="editTaskTitle" />
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+    <div style="display:grid;grid-template-columns:1.15fr 0.95fr 0.9fr;gap:8px;">
       <div class="form-group">
         <label>Date</label>
         <input type="date" id="editTaskDate" style="padding:10px 8px;font-size:14px;" />
       </div>
       <div class="form-group">
         <label>Bucket</label>
-        <select id="editTaskBucket">
+        <select id="editTaskBucket" style="padding:10px 8px;font-size:14px;">
           <option value="work">Work</option>
           <option value="personal">Personal</option>
         </select>
       </div>
       <div class="form-group">
         <label>Duration</label>
-        <select id="editTaskMins">
+        <select id="editTaskMins" style="padding:10px 8px;font-size:14px;">
           <option value="2">2 mins</option>
           <option value="15">15 mins</option>
           <option value="25">25 mins</option>
@@ -948,7 +950,50 @@
   </div>
 </div>
 
-<!-- Settings & Install Guide Bottom Sheet -->
+<!-- Edit Timeblock Bottom Sheet -->
+<div id="blockModal" class="sheet-backdrop" onclick="if(event.target===this)closeBlockModal()">
+  <div class="sheet-card">
+    <div class="sheet-grabber"></div>
+    <div class="card-header">
+      <div class="card-title" id="blockModalTitle">✎ Edit Timeblock</div>
+      <button class="btn btn-chip" onclick="closeBlockModal()">✕</button>
+    </div>
+    <input type="hidden" id="editBlockIdx" />
+    <div class="form-group">
+      <label>Block Title</label>
+      <input type="text" id="editBlockTitle" placeholder="e.g. Deep Engineering Sprint" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label>Start Time</label>
+        <input type="time" id="editBlockStart" />
+      </div>
+      <div class="form-group">
+        <label>End Time</label>
+        <input type="time" id="editBlockEnd" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Block Type</label>
+      <select id="editBlockType" onchange="toggleBlockFutureDateField()">
+        <option value="work">💼 Work Block</option>
+        <option value="pers">🏡 Personal / Errand Block</option>
+        <option value="fixed">⚓ Fixed Anchor / Routine</option>
+        <option value="deferred">🌅 Tomorrow / Deferred</option>
+      </select>
+    </div>
+    <div class="form-group" id="blockFutureDateGroup" style="display:none;">
+      <label>Target Future Date (for .ICS & Schedule)</label>
+      <input type="date" id="editBlockFutureDate" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:14px;">
+      <button class="btn btn-danger" id="deleteBlockBtn" onclick="deleteBlockFromModal()">🗑 Remove</button>
+      <button class="btn btn-primary" onclick="saveBlockEdit()">Save Block</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings & Gemini Key Bottom Sheet -->
 <div id="settingsModal" class="sheet-backdrop" onclick="if(event.target===this)closeSettings()">
   <div class="sheet-card">
     <div class="sheet-grabber"></div>
@@ -1703,10 +1748,10 @@
     t.bucket = document.getElementById('editTaskBucket').value;
     t.mins = Number(document.getElementById('editTaskMins').value) || 25;
     t.top3 = wantTop3;
-    enforceTop3Cap();
     if (timerState.taskId === id) {
       document.getElementById('timerActiveTask').textContent = `Focus: ${t.title}`;
     }
+    enforceTop3Cap();
     saveState();
     closeEditModal();
     renderAll();
@@ -2111,14 +2156,117 @@
   function renderSchedule() {
     const el = document.getElementById('scheduleList');
     if (!state.schedule.length) {
-      el.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">Tap <strong>⚡ Auto-Plan</strong> to slot your tasks around your daily routine.</div>';
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">Tap <strong>⚡ Auto-Plan</strong> to slot your tasks around your daily routine, or tap <strong>+ Block</strong> to add one manually.</div>';
       return;
     }
-    el.innerHTML = state.schedule.map(b => `
-      <div class="timeline-card ${b.type}">
-        <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : escapeHtml(b.badgeLabel || 'Upcoming')}</div>
+    el.innerHTML = state.schedule.map((b, idx) => `
+      <div class="timeline-card ${b.type}" onclick="openEditBlockModal(${idx})">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div class="t-slot">${b.start !== null ? `${fmtMins(b.start)} – ${fmtMins(b.end)}` : escapeHtml(b.badgeLabel || 'Upcoming')}</div>
+          <button type="button" class="btn-chip" style="min-height:26px;padding:0 9px;font-size:11px;" onclick="event.stopPropagation();openEditBlockModal(${idx})">✎ Edit</button>
+        </div>
         <div style="font-size:14px;font-weight:700;">${escapeHtml(b.title)}</div>
       </div>`).join('');
+  }
+
+  function toggleBlockFutureDateField() {
+    const type = document.getElementById('editBlockType').value;
+    const grp = document.getElementById('blockFutureDateGroup');
+    if (grp) grp.style.display = type === 'deferred' ? 'block' : 'none';
+  }
+
+  function openEditBlockModal(idx) {
+    const b = state.schedule[idx];
+    if (!b) return;
+    const tmrw = getTomorrowDateKey();
+    document.getElementById('blockModalTitle').textContent = '✎ Edit Timeblock';
+    document.getElementById('editBlockIdx').value = String(idx);
+    document.getElementById('editBlockTitle').value = b.title || '';
+    const startVal = b.start !== null ? b.start : (typeof b.futureStart === 'number' ? b.futureStart : parseTimeToMins(state.workStart, 690));
+    const endVal = b.end !== null ? b.end : (typeof b.futureEnd === 'number' ? b.futureEnd : Math.min(1435, startVal + 30));
+    document.getElementById('editBlockStart').value = fmtMins(startVal);
+    document.getElementById('editBlockEnd').value = fmtMins(endVal);
+    document.getElementById('editBlockType').value = b.type || 'work';
+    const fDate = document.getElementById('editBlockFutureDate');
+    fDate.min = tmrw;
+    fDate.value = b.futureDate || tmrw;
+    toggleBlockFutureDateField();
+    document.getElementById('deleteBlockBtn').style.display = 'inline-flex';
+    document.getElementById('blockModal').classList.add('open');
+  }
+
+  function openNewBlockModal() {
+    const now = new Date();
+    const tmrw = getTomorrowDateKey();
+    const startMins = Math.min(1380, Math.ceil((now.getHours() * 60 + now.getMinutes()) / 5) * 5);
+    document.getElementById('blockModalTitle').textContent = '➕ Add Custom Timeblock';
+    document.getElementById('editBlockIdx').value = '-1';
+    document.getElementById('editBlockTitle').value = '';
+    document.getElementById('editBlockStart').value = fmtMins(startMins);
+    document.getElementById('editBlockEnd').value = fmtMins(Math.min(1435, startMins + 30));
+    document.getElementById('editBlockType').value = 'work';
+    const fDate = document.getElementById('editBlockFutureDate');
+    fDate.min = tmrw;
+    fDate.value = tmrw;
+    toggleBlockFutureDateField();
+    document.getElementById('deleteBlockBtn').style.display = 'none';
+    document.getElementById('blockModal').classList.add('open');
+  }
+
+  function closeBlockModal() {
+    document.getElementById('blockModal').classList.remove('open');
+  }
+
+  function saveBlockEdit() {
+    const idx = parseInt(document.getElementById('editBlockIdx').value, 10);
+    const title = document.getElementById('editBlockTitle').value.trim();
+    if (!title) {
+      showToast('Enter a title for this timeblock.');
+      return;
+    }
+    const type = document.getElementById('editBlockType').value;
+    const rawStart = parseTimeToMins(document.getElementById('editBlockStart').value, 690);
+    let rawEnd = parseTimeToMins(document.getElementById('editBlockEnd').value, rawStart + 30);
+    if (rawEnd <= rawStart) rawEnd = Math.min(1435, rawStart + 15);
+
+    let updated;
+    if (type === 'deferred') {
+      const fDate = document.getElementById('editBlockFutureDate').value || getTomorrowDateKey();
+      updated = {
+        start: null,
+        end: null,
+        futureDate: fDate,
+        futureStart: rawStart,
+        futureEnd: rawEnd,
+        badgeLabel: formatFriendlyDate(fDate),
+        title,
+        type
+      };
+    } else {
+      updated = { start: rawStart, end: rawEnd, title, type };
+    }
+
+    if (idx >= 0 && idx < state.schedule.length) {
+      state.schedule[idx] = updated;
+    } else {
+      state.schedule.push(updated);
+    }
+    state.schedule.sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
+    saveState();
+    closeBlockModal();
+    renderSchedule();
+    showToast(idx >= 0 ? 'Timeblock updated.' : 'Custom timeblock added.');
+  }
+
+  function deleteBlockFromModal() {
+    const idx = parseInt(document.getElementById('editBlockIdx').value, 10);
+    if (idx >= 0 && idx < state.schedule.length) {
+      state.schedule.splice(idx, 1);
+      saveState();
+      renderSchedule();
+      showToast('Timeblock removed.');
+    }
+    closeBlockModal();
   }
 
   function escapeICS(str) {
