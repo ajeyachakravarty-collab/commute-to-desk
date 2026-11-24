@@ -1,2043 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Commute-to-Desk · Daily Productivity OS</title>
-  <meta name="description" content="Mobile-first Daily Productivity PWA with Ivy Lee Rule of 3, Smart Brain Dump, Focus Timer, Timeblocking, and Analytics.">
-  <meta name="theme-color" content="#0b1120">
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
-              dark: '#0b1120'
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Google Fonts & FontAwesome Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #0b1120;
-      color: #f8fafc;
-      min-height: 100dvh;
-      height: auto;
-      overflow-y: auto;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0b1120;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
-
-    .glass-card {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .glow-green {
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
-    }
-
-    /* Circular Progress SVG animation */
-    .timer-ring-circle {
-      transition: stroke-dashoffset 0.3s linear;
-      transform: rotate(-90deg);
-      transform-origin: 50% 50%;
-    }
-
-    /* Pulsing recording animation */
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.1); opacity: 0.4; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .recording-pulse {
-      animation: pulse-ring 1.5s infinite ease-in-out;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Commute-to-Desk · Daily Productivity OS</title>
+<meta name="theme-color" content="#0b1120">
+<link rel="icon" id="fav" href="data:,">
+<link rel="apple-touch-icon" id="touch" href="data:,">
+<link rel="manifest" id="mf">
+<style>
+:root{--bg:#0b1120;--card:#131c33;--line:#25304d;--tx:#e8edf7;--mut:#8a97b5;--star:#f5b83d;--ok:#34d3a0;--ind:#6366f1}
+*{box-sizing:border-box}
+html{height:auto;min-height:100%;overflow-y:auto;overflow-x:clip;-webkit-overflow-scrolling:touch}
+body{margin:0;min-height:100dvh;overflow-y:visible;overflow-x:clip;background:var(--bg);color:var(--tx);font:15px/1.4 "Segoe UI",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:16px inherit;font-family:inherit;color:var(--tx);background:#0e1629;border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0;width:100%}
+header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#0b1120,#172554);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 14px}
+.top{display:flex;align-items:center;gap:10px;padding:10px 0 6px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:grid;place-items:center;font-weight:800;font-size:13px;color:#06101f;letter-spacing:.5px}
+.ttl{flex:1;min-width:0}.ttl b{display:block;font-size:16px}.ttl small{color:var(--mut)}
+.pill{border:1px solid #3b4a78;background:#101a36;border-radius:99px;padding:6px 11px;font-size:13px;white-space:nowrap}
+.hero{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0 8px}
+.hero div{background:#0d1530;border:1px solid var(--line);border-radius:12px;padding:7px 8px;text-align:center}
+.hero b{display:block;font-size:19px}.hero small{color:var(--mut);font-size:12px}
+nav{display:flex;border-top:1px solid var(--line)}
+nav button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:11px 0;color:var(--mut);font-weight:600}
+nav button.on{color:#fff;border-color:var(--star)}
+main{max-width:1100px;margin:0 auto;padding:14px;display:grid;gap:14px;align-items:start}
+.view{display:none;gap:14px}
+body[data-tab=today] #v-today,body[data-tab=focus] #v-focus,body[data-tab=plan] #v-plan,body[data-tab=stats] #v-stats{display:grid}
+@media(min-width:860px){
+ main{grid-template-columns:1.25fr 1fr}
+ body[data-tab=today] #v-focus,body[data-tab=focus] #v-today{display:grid}
+ #v-today{grid-column:1;grid-row:1}#v-focus{grid-column:2;grid-row:1}
+ #v-plan,#v-stats{grid-column:1/-1}
+ nav [data-t=focus]{display:none}
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.card h2{margin:0 0 10px;font-size:15px}
+.r3{border-color:#6b5420;background:linear-gradient(180deg,#1b1a2a,var(--card))}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.row>*{flex:1 1 120px}
+.btn{border:1px solid var(--line);background:#18233f;border-radius:10px;padding:9px 12px;font-weight:600}
+.btn.pri{background:var(--star);color:#1b1305;border-color:var(--star)}
+.btn.on{background:#26346a;border-color:var(--ind)}
+.btn.bad{color:#ff8b8b}
+.task{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#0f1832;margin-top:8px}
+.task.done .tt b{text-decoration:line-through;color:var(--mut)}
+.chk{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid #4a5a8c;background:none;color:#06101f;font-weight:800;padding:0}
+.done .chk{background:var(--ok);border-color:var(--ok)}
+.tt{flex:1;min-width:0}.tt b{display:block;overflow-wrap:anywhere}.tt small{color:var(--mut)}
+.acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.acts button{background:#18233f;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
+.acts .st{color:var(--star)}
+.empty{color:var(--mut);padding:8px 2px}
+.sub{color:var(--mut);font-size:13px;margin:12px 0 0}
+#appToast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,30px);background:#f5b83d;color:#1b1305;padding:10px 16px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
+#appToast.show{opacity:1;transform:translate(-50%,0)}
+#bg{position:fixed;inset:0;background:#000a;z-index:60;display:none;align-items:flex-end;justify-content:center}
+#bg.show{display:flex}
+#sheet{background:var(--card);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88dvh;overflow-y:auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+#sheet h3{margin:0 0 10px}
+label.f{display:block;margin-top:10px;color:var(--mut);font-size:13px}
+label.c{display:flex;gap:8px;align-items:center;margin-top:10px}label.c input{width:auto}
+</style>
 </head>
-<body class="flex flex-col min-h-screen text-slate-100">
-
-  <!-- STICKY DARK APP BAR -->
-  <header class="sticky top-0 z-40 bg-[#0b1120]/95 backdrop-blur-md border-b border-slate-800 shadow-md">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      
-      <!-- Logo & Brand -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center font-black text-slate-950 text-lg shadow-lg tracking-wider">
-          C2D
-        </div>
-        <div>
-          <h1 class="text-base font-bold text-white leading-tight flex items-center gap-2">
-            Commute-to-Desk
-            <span class="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PWA</span>
-          </h1>
-          <p class="text-xs text-slate-400">Daily Productivity OS</p>
-        </div>
-      </div>
-
-      <!-- Live Hero Status Metrics -->
-      <div class="flex items-center gap-2 sm:gap-4 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800">
-        <div class="text-center px-1">
-          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Rule of 3</div>
-          <div id="hero-rule-of-3" class="text-xs font-bold text-emerald-400">0/3</div>
-        </div>
-        <div class="h-6 w-px bg-slate-800"></div>
-        <div class="text-center px-1">
-          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Done Today</div>
-          <div id="hero-done-today" class="text-xs font-bold text-teal-300">0</div>
-        </div>
-        <div class="h-6 w-px bg-slate-800"></div>
-        <div class="text-center px-1">
-          <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Deep Focus</div>
-          <div id="hero-deep-focus" class="text-xs font-bold text-indigo-400">0m</div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-2">
-        <button id="pwa-install-btn" class="hidden text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-download"></i>
-          <span>Install</span>
-        </button>
-        <button onclick="openSettingsModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all border border-slate-700" title="Settings">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Top Text Navigation Tabs -->
-    <nav class="max-w-6xl mx-auto px-4 mt-1 flex border-t border-slate-800/60 overflow-x-auto no-scrollbar">
-      <button onclick="switchTab('today')" id="tab-btn-today" class="nav-tab active-tab flex-1 min-w-[80px] py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-emerald-400 text-emerald-400 transition-all flex items-center justify-center gap-2">
-        <i class="fa-solid fa-list-check"></i> Today
-      </button>
-      <button onclick="switchTab('focus')" id="tab-btn-focus" class="nav-tab flex-1 min-w-[80px] py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2">
-        <i class="fa-solid fa-stopwatch"></i> Focus
-      </button>
-      <button onclick="switchTab('plan')" id="tab-btn-plan" class="nav-tab flex-1 min-w-[80px] py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2">
-        <i class="fa-regular fa-calendar-alt"></i> Plan
-      </button>
-      <button onclick="switchTab('stats')" id="tab-btn-stats" class="nav-tab flex-1 min-w-[80px] py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2">
-        <i class="fa-solid fa-chart-line"></i> Stats
-      </button>
-    </nav>
-  </header>
-
-  <!-- MAIN CONTAINER (Desktop side-by-side layout option >=860px via grid when applicable) -->
-  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 space-y-6">
-
-    <!-- VOICE & TEXT BRAIN DUMP SECTION (Always Accessible at top of Today view) -->
-    <section id="brain-dump-section" class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-brain"></i>
-          </div>
-          <h2 class="text-sm sm:text-base font-bold text-white">60-Second Brain Dump</h2>
-        </div>
-        <span class="text-[11px] text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700">Voice or Text</span>
-      </div>
-
-      <div class="space-y-3">
-        <div class="relative">
-          <textarea id="brain-dump-input" rows="2" class="w-full bg-slate-900/90 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 resize-none outline-none transition-all" placeholder="Type or speak tasks... (e.g. 'Submit report tomorrow 45m #work', 'Buy milk 10m #personal')"></textarea>
-          
-          <button id="voice-dump-btn" onclick="toggleVoiceRecording()" class="absolute right-3 bottom-3 w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 border border-slate-700 flex items-center justify-center transition-all" title="Speech to Text (en-IN)">
-            <i class="fa-solid fa-microphone" id="voice-icon"></i>
-          </button>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div id="voice-status" class="text-xs text-amber-400 font-medium hidden flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-400 recording-pulse"></span>
-            Listening (en-IN)... Speak now.
-          </div>
-
-          <div class="flex items-center gap-2 ml-auto">
-            <button onclick="processBrainDumpAI()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-md">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              <span>AI Polish (Gemini)</span>
-            </button>
-            <button onclick="processBrainDumpSmartSplit()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-md">
-              <i class="fa-solid fa-bolt"></i>
-              <span>Smart Split</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 1: TODAY VIEW -->
-    <div id="view-today" class="tab-view space-y-6">
-      
-      <!-- Quick Add Toolbar -->
-      <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Quick Add Task</h3>
-          <div class="flex items-center gap-2">
-            <button onclick="copyMarkdownChecklist()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 transition-all flex items-center gap-1.5" title="Copy tasks as Markdown">
-              <i class="fa-regular fa-copy"></i>
-              <span class="hidden sm:inline">Copy MD</span>
-            </button>
-            <button onclick="openPastTasksModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 transition-all flex items-center gap-1.5" title="View & Copy Past Completed Tasks">
-              <i class="fa-solid fa-clock-rotate-left"></i>
-              <span>📋 Copy Past</span>
-            </button>
-          </div>
-        </div>
-
-        <form id="quick-add-form" onsubmit="handleQuickAdd(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <input type="text" id="task-title-input" placeholder="Task name..." required class="sm:col-span-5 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-100 outline-none">
-          
-          <select id="task-bucket-input" class="sm:col-span-2 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-slate-100 outline-none">
-            <option value="Work">💼 Work</option>
-            <option value="Personal">🏡 Personal</option>
-          </select>
-
-          <select id="task-duration-input" class="sm:col-span-2 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-slate-100 outline-none">
-            <option value="2">2m</option>
-            <option value="5">5m</option>
-            <option value="15" selected>15m</option>
-            <option value="25">25m</option>
-            <option value="45">45m</option>
-            <option value="60">60m</option>
-            <option value="90">90m</option>
-          </select>
-
-          <input type="date" id="task-date-input" class="sm:col-span-3 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-slate-100 outline-none">
-
-          <div class="sm:col-span-12 flex items-center justify-between pt-1">
-            <div class="flex items-center gap-4 text-xs text-slate-400">
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" id="task-daily-input" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500">
-                <span>🔁 Daily</span>
-              </label>
-            </div>
-            <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition-all flex items-center gap-1.5 shadow-lg">
-              <i class="fa-solid fa-plus"></i> Add Task
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Quick Wins Filter Badge Toggle & Section -->
-      <div class="flex items-center justify-between">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Ivy Lee Top 3 & Priorities</h3>
-        <button onclick="toggleQuickWinsFilter()" id="quick-wins-btn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-all flex items-center gap-1.5">
-          <i class="fa-solid fa-bolt text-amber-400"></i>
-          <span id="quick-wins-text">Show ≤2m Quick Wins</span>
-        </button>
-      </div>
-
-      <!-- IVY LEE RULE OF 3 SLOT BOXES (Capped strictly at 3) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Slot 1 -->
-        <div id="ivy-slot-0" class="glass-card rounded-2xl p-4 border-2 border-dashed border-emerald-500/40 relative min-h-[120px] flex flex-col justify-between">
-          <div class="text-[10px] uppercase font-bold tracking-wider text-emerald-400 mb-1 flex items-center justify-between">
-            <span>Ivy Lee Priority #1</span>
-            <i class="fa-solid fa-star text-amber-400"></i>
-          </div>
-          <div id="ivy-slot-0-content" class="text-slate-400 text-xs italic py-2">
-            No priority assigned. Pin a task or select below.
-          </div>
-        </div>
-
-        <!-- Slot 2 -->
-        <div id="ivy-slot-1" class="glass-card rounded-2xl p-4 border-2 border-dashed border-emerald-500/40 relative min-h-[120px] flex flex-col justify-between">
-          <div class="text-[10px] uppercase font-bold tracking-wider text-emerald-400 mb-1 flex items-center justify-between">
-            <span>Ivy Lee Priority #2</span>
-            <i class="fa-solid fa-star text-amber-400"></i>
-          </div>
-          <div id="ivy-slot-1-content" class="text-slate-400 text-xs italic py-2">
-            No priority assigned. Pin a task or select below.
-          </div>
-        </div>
-
-        <!-- Slot 3 -->
-        <div id="ivy-slot-2" class="glass-card rounded-2xl p-4 border-2 border-dashed border-emerald-500/40 relative min-h-[120px] flex flex-col justify-between">
-          <div class="text-[10px] uppercase font-bold tracking-wider text-emerald-400 mb-1 flex items-center justify-between">
-            <span>Ivy Lee Priority #3</span>
-            <i class="fa-solid fa-star text-amber-400"></i>
-          </div>
-          <div id="ivy-slot-2-content" class="text-slate-400 text-xs italic py-2">
-            No priority assigned. Pin a task or select below.
-          </div>
-        </div>
-      </div>
-
-      <!-- BUCKET LISTS: WORK & PERSONAL (Side-by-side on desktop >=860px) -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- WORK BUCKET -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-base">💼</span>
-              <h3 class="text-sm font-bold text-white">Work Bucket</h3>
-            </div>
-            <span id="work-count" class="text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">0 tasks</span>
-          </div>
-
-          <div id="work-tasks-container" class="space-y-2 min-h-[100px]">
-            <!-- Dynamic Work Tasks -->
-          </div>
-        </div>
-
-        <!-- PERSONAL BUCKET -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-base">🏡</span>
-              <h3 class="text-sm font-bold text-white">Personal Bucket</h3>
-            </div>
-            <span id="personal-count" class="text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">0 tasks</span>
-          </div>
-
-          <div id="personal-tasks-container" class="space-y-2 min-h-[100px]">
-            <!-- Dynamic Personal Tasks -->
-          </div>
-        </div>
-      </div>
-
-      <!-- COMPLETED TODAY SECTION -->
-      <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-400"></i>
-            <h3 class="text-sm font-bold text-white">Completed Today</h3>
-          </div>
-          <span id="completed-count-badge" class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">0</span>
-        </div>
-        <div id="completed-tasks-container" class="space-y-2 min-h-[40px]">
-          <!-- Completed tasks list -->
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: FOCUS TIMER VIEW -->
-    <div id="view-focus" class="tab-view hidden space-y-6">
-      <div class="glass-card rounded-3xl p-6 md:p-8 max-w-xl mx-auto shadow-2xl text-center space-y-6">
-        
-        <div>
-          <span id="timer-active-task-badge" class="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-2">
-            Select a task or custom timer
-          </span>
-          <h2 id="timer-task-title" class="text-lg sm:text-xl font-bold text-white">Deep Focus Session</h2>
-        </div>
-
-        <!-- Circular Wall-Clock Progress Display -->
-        <div class="relative w-64 h-64 mx-auto flex items-center justify-center">
-          <svg class="w-full h-full" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="44" stroke="#1e293b" stroke-width="8" fill="none" />
-            <circle id="timer-ring" class="timer-ring-circle" cx="50" cy="50" r="44" stroke="#22c55e" stroke-width="8" fill="none" stroke-dasharray="276.46" stroke-dashoffset="0" stroke-linecap="round" />
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span id="timer-display" class="text-4xl sm:text-5xl font-black text-white tracking-tight font-mono">25:00</span>
-            <span id="timer-phase" class="text-xs uppercase font-bold text-slate-400 tracking-wider mt-2">Focus Phase</span>
-          </div>
-        </div>
-
-        <!-- Preset Buttons -->
-        <div class="flex flex-wrap items-center justify-center gap-2">
-          <button onclick="setTimerPreset(25, 'Focus')" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-all">25m Pomodoro</button>
-          <button onclick="setTimerPreset(5, 'Break')" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-all">5m Break</button>
-          <button onclick="setTimerPreset(90, 'Sprint')" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-all">90m Sprint</button>
-        </div>
-
-        <!-- Custom Duration & Manual Log -->
-        <div class="flex items-center justify-center gap-2 pt-2 border-t border-slate-800/80">
-          <input type="number" id="custom-minutes-input" min="1" max="180" placeholder="Mins" class="w-20 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-center text-white outline-none">
-          <button onclick="setCustomTimer()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-xl border border-slate-700 transition-all">
-            Set Timer
-          </button>
-          <button onclick="logFocusManually()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white rounded-xl transition-all shadow-md flex items-center gap-1">
-            <i class="fa-solid fa-plus"></i> Log Focus
-          </button>
-        </div>
-
-        <!-- Controls -->
-        <div class="flex items-center justify-center gap-4 pt-2">
-          <button id="timer-toggle-btn" onclick="toggleTimer()" class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xl flex items-center justify-center shadow-lg transition-transform active:scale-95">
-            <i class="fa-solid fa-play" id="timer-play-icon"></i>
-          </button>
-          <button onclick="resetTimer()" class="w-12 h-12 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center border border-slate-700 transition-all">
-            <i class="fa-solid fa-rotate-left"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: PLAN / AUTO-TIMEBLOCKER VIEW -->
-    <div id="view-plan" class="tab-view hidden space-y-6">
-      
-      <!-- Timeblock Header & Windows Config -->
-      <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-regular fa-calendar-check text-emerald-400"></i>
-              Auto-Timeblocker Schedule
-            </h2>
-            <p class="text-xs text-slate-400">Map today's priorities into optimal time slots.</p>
-          </div>
-          
-          <div class="flex items-center gap-2">
-            <button onclick="openCustomBlockModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl border border-slate-700 transition-all flex items-center gap-1.5">
-              <i class="fa-solid fa-plus"></i> + Block
-            </button>
-            <button onclick="exportICalendar()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5">
-              <i class="fa-solid fa-file-export"></i> Export .ICS
-            </button>
-          </div>
-        </div>
-
-        <!-- Window Config controls -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-            <label class="block text-slate-400 mb-1 font-medium">💼 Work Start</label>
-            <input type="time" id="work-start-time" value="09:00" onchange="generateTimeblocks()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white outline-none">
-          </div>
-          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-            <label class="block text-slate-400 mb-1 font-medium">💼 Work End</label>
-            <input type="time" id="work-end-time" value="17:00" onchange="generateTimeblocks()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white outline-none">
-          </div>
-          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-            <label class="block text-slate-400 mb-1 font-medium">🏡 Personal Start</label>
-            <input type="time" id="personal-start-time" value="17:30" onchange="generateTimeblocks()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white outline-none">
-          </div>
-          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-            <label class="block text-slate-400 mb-1 font-medium">🏡 Personal End</label>
-            <input type="time" id="personal-end-time" value="21:00" onchange="generateTimeblocks()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white outline-none">
-          </div>
-        </div>
-      </div>
-
-      <!-- Generated Schedule List -->
-      <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Timeline & Schedule</h3>
-        <div id="timeblocks-timeline" class="space-y-2.5">
-          <!-- Dynamic Timeblocks -->
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: STATS & ANALYTICS VIEW -->
-    <div id="view-stats" class="tab-view hidden space-y-6">
-      
-      <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-emerald-400"></i>
-              Productivity Analytics
-            </h2>
-            <p class="text-xs text-slate-400">Zero-baseline rolling historical performance metrics.</p>
-          </div>
-
-          <!-- Time Range Selector -->
-          <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-            <button onclick="setStatsRange('week')" id="range-btn-week" class="px-3 py-1 rounded-lg text-xs font-semibold text-emerald-400 bg-slate-800 transition-all">Week</button>
-            <button onclick="setStatsRange('month')" id="range-btn-month" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Month</button>
-            <button onclick="setStatsRange('year')" id="range-btn-year" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Year</button>
-          </div>
-        </div>
-
-        <!-- Key Metrics Cards Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-            <div class="text-[10px] uppercase font-semibold text-slate-400">Tasks Completed</div>
-            <div id="stats-total-tasks" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1">0</div>
-          </div>
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-            <div class="text-[10px] uppercase font-semibold text-slate-400">Deep Focus Mins</div>
-            <div id="stats-total-focus" class="text-xl sm:text-2xl font-bold text-indigo-400 mt-1">0m</div>
-          </div>
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-            <div class="text-[10px] uppercase font-semibold text-slate-400">Ivy Lee 3/3 Days</div>
-            <div id="stats-rule3-hits" class="text-xl sm:text-2xl font-bold text-amber-400 mt-1">0</div>
-          </div>
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-            <div class="text-[10px] uppercase font-semibold text-slate-400">Daily Completion Rate</div>
-            <div id="stats-completion-rate" class="text-xl sm:text-2xl font-bold text-teal-300 mt-1">0%</div>
-          </div>
-        </div>
-
-        <!-- Historical List Breakdown with Drill-Down Tap -->
-        <div class="space-y-3 pt-2">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Daily Performance Logs (Tap to Inspect)</h3>
-          <div id="stats-daily-logs" class="space-y-2">
-            <!-- Dynamic daily breakdown cards -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- FLOATING AI COACH Q&A BUTTON & WIDGET -->
-  <div class="fixed bottom-5 right-5 z-40">
-    <button onclick="toggleCoachWidget()" class="w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Ask Productivity Coach">
-      <i class="fa-solid fa-comments text-xl"></i>
-    </button>
+<body data-tab="today">
+<header>
+ <div class="wrap">
+  <div class="top">
+   <div class="logo">C2D</div>
+   <div class="ttl"><b>Commute-to-Desk</b><small id="dateLine"></small></div>
+   <button class="pill" id="installBtn" data-a="install">⬇ Install</button>
+   <button class="pill" id="keyBtn" data-a="key">⚙ Key <span id="keyDot"></span></button>
   </div>
-
-  <!-- COACH MODAL / DRAWER -->
-  <div id="coach-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-lg rounded-3xl p-5 shadow-2xl space-y-4 flex flex-col max-h-[85vh]">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">💬</div>
-          <div>
-            <h3 class="text-sm font-bold text-white">Productivity Coach</h3>
-            <p class="text-[11px] text-slate-400">AI Advice on Work-Life Balance & Execution</p>
-          </div>
-        </div>
-        <button onclick="toggleCoachWidget()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
-      </div>
-
-      <div id="coach-messages" class="flex-1 overflow-y-auto space-y-3 p-1 no-scrollbar text-xs">
-        <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 text-slate-300">
-          👋 Hi! I'm your Commute-to-Desk Coach. Ask me how to streamline your day, handle overload, or optimize your Ivy Lee priorities!
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
-        <input type="text" id="coach-input" placeholder="Ask coach anything..." onkeypress="if(event.key==='Enter') sendCoachMessage()" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-emerald-500">
-        <button onclick="sendCoachMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all">
-          Send
-        </button>
-      </div>
-    </div>
+  <div class="hero">
+   <div><b id="hR3">0 / 3</b><small>Rule of 3</small></div>
+   <div><b id="hDone">0</b><small>Done Today</small></div>
+   <div><b id="hFocus">0m</b><small>Deep Focus</small></div>
   </div>
+ </div>
+ <nav class="wrap" id="tabs">
+  <button data-t="today" class="on">Today</button><button data-t="focus">Focus</button><button data-t="plan">Plan</button><button data-t="stats">Stats</button>
+ </nav>
+</header>
 
-  <!-- PAST TASKS COPY MODAL -->
-  <div id="past-tasks-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-lg rounded-3xl p-5 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i>
-          Completed Past Tasks History
-        </h3>
-        <button onclick="closePastTasksModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
-      </div>
-
-      <div id="past-tasks-list" class="flex-1 overflow-y-auto space-y-2 no-scrollbar text-xs">
-        <!-- Dynamic list of past completed tasks -->
-      </div>
-    </div>
+<main>
+ <section class="view" id="v-today">
+  <div class="card">
+   <h2>➕ Quick Add</h2>
+   <input id="qTitle" placeholder="What needs doing?" enterkeyhint="done" autocomplete="off">
+   <div class="row">
+    <input type="date" id="quickDate">
+    <select id="qBucket"><option value="work">💼 Work</option><option value="personal">🏡 Personal</option></select>
+    <select id="qMins"><option>2</option><option>15</option><option selected>25</option><option>45</option><option>60</option><option>90</option></select>
+   </div>
+   <label class="c"><input type="checkbox" id="qRep"> 🔁 Repeat Every Day</label>
+   <div class="row">
+    <button class="btn pri" data-a="add">Add task</button>
+    <button class="btn" data-a="past">📋 Copy Past</button>
+    <button class="btn" id="qwBtn" data-a="quick">≤2m</button>
+   </div>
   </div>
-
-  <!-- INSPECT DAY MODAL -->
-  <div id="inspect-day-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-lg rounded-3xl p-5 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div>
-          <h3 id="inspect-date-title" class="text-sm font-bold text-white">Day Inspection</h3>
-          <p id="inspect-date-subtitle" class="text-[11px] text-slate-400">Task breakdown for this date</p>
-        </div>
-        <button onclick="closeInspectModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
-      </div>
-
-      <div id="inspect-tasks-container" class="flex-1 overflow-y-auto space-y-2 no-scrollbar text-xs">
-        <!-- Dynamic tasks for inspected date -->
-      </div>
-    </div>
+  <div class="card r3"><h2>★ Rule of 3 · Must-Win</h2><div id="top3"></div></div>
+  <div class="card"><h2>💼 Work</h2><div id="work"></div><h2 style="margin-top:16px">🏡 Personal</h2><div id="pers"></div></div>
+  <div class="card"><h2>🗓 Upcoming &amp; Tomorrow</h2><div id="up"></div></div>
+  <div class="card"><h2>✓ Done Today</h2><div id="doneL"></div>
+   <div class="row"><button class="btn" data-a="clear">Clear Done</button><button class="btn" data-a="md">Copy MD</button><button class="btn" data-a="roll">↻ Rollover</button></div>
   </div>
-
-  <!-- CUSTOM TIMEBLOCK CREATION MODAL -->
-  <div id="custom-block-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-md rounded-3xl p-5 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold text-white">Create Custom Timeblock</h3>
-        <button onclick="closeCustomBlockModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
-      </div>
-
-      <form onsubmit="handleCreateCustomBlock(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block text-slate-400 mb-1">Block Title</label>
-          <input type="text" id="block-title-input" placeholder="e.g. Executive Planning" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-slate-400 mb-1">Start Time</label>
-            <input type="time" id="block-start-input" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none">
-          </div>
-          <div>
-            <label class="block text-slate-400 mb-1">End Time</label>
-            <input type="time" id="block-end-input" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-slate-400 mb-1">Bucket Category</label>
-          <select id="block-bucket-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none">
-            <option value="Work">💼 Work</option>
-            <option value="Personal">🏡 Personal</option>
-          </select>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="closeCustomBlockModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl">Save Block</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL (Gemini Key Verification) -->
-  <div id="settings-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-md rounded-3xl p-5 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-gear text-emerald-400"></i>
-          Settings & Gemini API
-        </h3>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block text-slate-300 font-semibold mb-1">Google Gemini API Key</label>
-          <input type="password" id="gemini-key-input" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500">
-          <p class="text-[10px] text-slate-400 mt-1">Used for AI Brain Dump polishing and Coaching assistant using <code class="text-emerald-400">x-goog-api-key</code>.</p>
-        </div>
-
-        <div id="key-test-status" class="text-xs hidden p-2.5 rounded-xl"></div>
-
-        <div class="flex items-center gap-2 pt-2">
-          <button onclick="testGeminiKey()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2 rounded-xl border border-slate-700 transition-all">
-            Test Key
-          </button>
-          <button onclick="saveSettings()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-xl transition-all shadow-md">
-            Save Settings
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PWA INSTALL PROMPT MODAL -->
-  <div id="pwa-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center space-y-4">
-      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 text-2xl font-black mx-auto shadow-xl">
-        C2D
-      </div>
-      <div>
-        <h3 class="text-base font-bold text-white">Install Commute-to-Desk</h3>
-        <p class="text-xs text-slate-400 mt-1">Add to your home screen for instant daily productivity access.</p>
-      </div>
-      <div class="flex gap-2">
-        <button onclick="closePWAInstallModal()" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Later</button>
-        <button id="pwa-confirm-install" class="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-lg">Install Now</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT APPLICATION CORE -->
-  <script>
-    /* ==========================================================================
-       1. GLOBAL STATE & CONSTANTS
-       ========================================================================== */
-    const STORAGE_KEY = 'c2d_productivity_os_db_v2';
-    const GEMINI_KEY_STORAGE = 'c2d_gemini_api_key';
-
-    // Gemini models to try in fallback order
-    const GEMINI_MODELS = [
-      'gemini-3.5-flash-lite',
-      'gemini-3.8-flash',
-      'gemini-4-hydrogen',
-      'gemini-3.1-flash-lite'
-    ];
-
-    let state = {
-      tasks: [],          // { id, title, bucket, duration, date, completed, completedDate, isIvyLee, isDaily, rolledOver }
-      focusMinutes: 0,    // Today's total logged focus minutes
-      history: {},        // { 'YYYY-MM-DD': { focusMinutes: X, rule3Hit: bool } }
-      customBlocks: [],   // Custom timeblocks added in Plan tab
-      activeTab: 'today',
-      showOnlyQuickWins: false,
-      lastRolloverDate: ''
-    };
-
-    // Timer State
-    let timerInterval = null;
-    let timerSecondsLeft = 25 * 60;
-    let timerTotalSeconds = 25 * 60;
-    let isTimerRunning = false;
-    let currentTimerTask = null;
-
-    // Speech Recognition
-    let recognition = null;
-    let isRecording = false;
-    let deferredPwaPrompt = null;
-
-    /* ==========================================================================
-       2. INITIALIZATION & LIFECYCLE
-       ========================================================================== */
-    window.onload = function() {
-      loadState();
-      setupDynamicPWAAssets();
-      setupSpeechRecognition();
-      checkMidnightRollover();
-      initializeDefaultDate();
-      renderApp();
-      setupPWAInstall();
-    };
-
-    function loadState() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          state = { ...state, ...parsed };
-        }
-      } catch (e) {
-        console.error('Failed to load state from localStorage:', e);
-      }
-
-      // Load saved Gemini API Key into Settings field
-      const savedKey = localStorage.getItem(GEMINI_KEY_STORAGE);
-      if (savedKey) {
-        document.getElementById('gemini-key-input').value = savedKey;
-      }
-    }
-
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.error('Failed to save state to localStorage:', e);
-      }
-    }
-
-    function getTodayString() {
-      const d = new Date();
-      return d.toISOString().split('T')[0];
-    }
-
-    function initializeDefaultDate() {
-      document.getElementById('task-date-input').value = getTodayString();
-    }
-
-    /* ==========================================================================
-       3. MIDNIGHT ROLLOVER & RECURRENCE ENGINE
-       ========================================================================== */
-    function checkMidnightRollover() {
-      const todayStr = getTodayString();
-      if (!state.lastRolloverDate) {
-        state.lastRolloverDate = todayStr;
-        saveState();
-        return;
-      }
-
-      if (state.lastRolloverDate !== todayStr) {
-        // Roll over uncompleted tasks to Today
-        state.tasks.forEach(task => {
-          if (!task.completed) {
-            if (task.date < todayStr) {
-              task.date = todayStr;
-              task.rolledOver = true;
-            }
-          }
-        });
-
-        // Renew Daily Recurring Tasks for Today
-        const dailyTasks = state.tasks.filter(t => t.isDaily);
-        dailyTasks.forEach(t => {
-          const existsForToday = state.tasks.some(x => x.title === t.title && x.date === todayStr && !x.completed);
-          if (!existsForToday) {
-            state.tasks.push({
-              id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-              title: t.title,
-              bucket: t.bucket,
-              duration: t.duration,
-              date: todayStr,
-              completed: false,
-              completedDate: null,
-              isIvyLee: false,
-              isDaily: true,
-              rolledOver: false
-            });
-          }
-        });
-
-        state.lastRolloverDate = todayStr;
-        saveState();
-      }
-    }
-
-    /* ==========================================================================
-       4. PWA DYNAMIC MANIFEST & INLINE ICON GENERATION
-       ========================================================================== */
-    function setupDynamicPWAAssets() {
-      // Generate inline PNG icons using HTML5 Canvas
-      const icon192 = generateIconDataURL(192);
-      const icon512 = generateIconDataURL(512);
-
-      // Create PWA Manifest dynamically
-      const manifest = {
-        name: "Commute-to-Desk · Daily Productivity OS",
-        short_name: "C2D OS",
-        start_url: "./",
-        display: "standalone",
-        background_color: "#0b1120",
-        theme_color: "#0b1120",
-        icons: [
-          { src: icon192, sizes: "192x192", type: "image/png" },
-          { src: icon512, sizes: "512x512", type: "image/png" }
-        ]
-      };
-
-      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-      const manifestURL = URL.createObjectURL(manifestBlob);
-      
-      const manifestLink = document.createElement('link');
-      manifestLink.rel = 'manifest';
-      manifestLink.href = manifestURL;
-      document.head.appendChild(manifestLink);
-
-      // Apple touch icon
-      const appleIcon = document.createElement('link');
-      appleIcon.rel = 'apple-touch-icon';
-      appleIcon.href = icon192;
-      document.head.appendChild(appleIcon);
-    }
-
-    function generateIconDataURL(size) {
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-
-      // Dark background with gradient
-      const grad = ctx.createLinearGradient(0, 0, size, size);
-      grad.addColorStop(0, '#0b1120');
-      grad.addColorStop(1, '#1e293b');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, size, size);
-
-      // Monogram background badge
-      const badgeSize = size * 0.7;
-      const offset = (size - badgeSize) / 2;
-      const badgeGrad = ctx.createLinearGradient(offset, offset, offset + badgeSize, offset + badgeSize);
-      badgeGrad.addColorStop(0, '#4ade80');
-      badgeGrad.addColorStop(1, '#0d9488');
-      
-      ctx.fillStyle = badgeGrad;
-      ctx.beginPath();
-      ctx.roundRect(offset, offset, badgeSize, badgeSize, size * 0.15);
-      ctx.fill();
-
-      // C2D Text
-      ctx.fillStyle = '#0b1120';
-      ctx.font = `black ${size * 0.28}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('C2D', size / 2, size / 2);
-
-      return canvas.toDataURL('image/png');
-    }
-
-    function setupPWAInstall() {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPwaPrompt = e;
-        const installBtn = document.getElementById('pwa-install-btn');
-        if (installBtn) {
-          installBtn.classList.remove('hidden');
-          installBtn.onclick = () => {
-            document.getElementById('pwa-modal').classList.remove('hidden');
-          };
-        }
-      });
-
-      document.getElementById('pwa-confirm-install').onclick = async () => {
-        if (deferredPwaPrompt) {
-          deferredPwaPrompt.prompt();
-          const { outcome } = await deferredPwaPrompt.userChoice;
-          if (outcome === 'accepted') {
-            console.log('User accepted PWA install');
-          }
-          deferredPwaPrompt = null;
-          closePWAInstallModal();
-        }
-      };
-    }
-
-    function closePWAInstallModal() {
-      document.getElementById('pwa-modal').classList.add('hidden');
-    }
-
-    /* ==========================================================================
-       5. SPEECH RECOGNITION (en-IN) & SMART BRAIN DUMP ENGINE
-       ========================================================================== */
-    function setupSpeechRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.lang = 'en-IN';
-
-        recognition.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-          document.getElementById('brain-dump-input').value = transcript;
-        };
-
-        recognition.onend = () => {
-          isRecording = false;
-          updateVoiceUI();
-        };
-
-        recognition.onerror = (e) => {
-          console.error('Speech recognition error:', e);
-          isRecording = false;
-          updateVoiceUI();
-        };
-      }
-    }
-
-    function toggleVoiceRecording() {
-      if (!recognition) {
-        alert('Web Speech API is not supported in this browser.');
-        return;
-      }
-      if (isRecording) {
-        recognition.stop();
-        isRecording = false;
-      } else {
-        recognition.start();
-        isRecording = true;
-      }
-      updateVoiceUI();
-    }
-
-    function updateVoiceUI() {
-      const icon = document.getElementById('voice-icon');
-      const status = document.getElementById('voice-status');
-      if (isRecording) {
-        icon.className = 'fa-solid fa-stop text-red-400';
-        status.classList.remove('hidden');
-      } else {
-        icon.className = 'fa-solid fa-microphone';
-        status.classList.add('hidden');
-      }
-    }
-
-    // Smart Split (Offline Keyword & Date Parsing)
-    function processBrainDumpSmartSplit() {
-      const inputEl = document.getElementById('brain-dump-input');
-      const rawText = inputEl.value.trim();
-      if (!rawText) return;
-
-      const lines = rawText.split(/\n|,|;|\band\b/gi).map(s => s.trim()).filter(Boolean);
-      let addedCount = 0;
-
-      lines.forEach(line => {
-        if (!line) return;
-        
-        let bucket = 'Work';
-        if (line.toLowerCase().includes('#personal') || line.toLowerCase().includes('home') || line.toLowerCase().includes('personal') || line.toLowerCase().includes('buy')) {
-          bucket = 'Personal';
-        }
-
-        let duration = 15;
-        const durMatch = line.match(/(\d+)\s*(m|min|mins|minutes)/i);
-        if (durMatch) {
-          duration = parseInt(durMatch[1], 10);
-        }
-
-        let taskDate = getTodayString();
-        if (line.toLowerCase().includes('tomorrow')) {
-          const tom = new Date();
-          tom.setDate(tom.getDate() + 1);
-          taskDate = tom.toISOString().split('T')[0];
-        }
-
-        // Clean text
-        let cleanTitle = line
-          .replace(/#work|#personal/gi, '')
-          .replace(/(\d+)\s*(m|min|mins|minutes)/gi, '')
-          .replace(/tomorrow/gi, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        if (cleanTitle) {
-          state.tasks.push({
-            id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-            title: cleanTitle,
-            bucket: bucket,
-            duration: duration,
-            date: taskDate,
-            completed: false,
-            completedDate: null,
-            isIvyLee: false,
-            isDaily: false,
-            rolledOver: false
-          });
-          addedCount++;
-        }
-      });
-
-      inputEl.value = '';
-      saveState();
-      renderApp();
-    }
-
-    // AI Polish via Gemini API
-    async function processBrainDumpAI() {
-      const inputEl = document.getElementById('brain-dump-input');
-      const rawText = inputEl.value.trim();
-      if (!rawText) return;
-
-      const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || document.getElementById('gemini-key-input').value.trim();
-      if (!apiKey) {
-        openSettingsModal();
-        alert('Please enter and save your Gemini API Key first.');
-        return;
-      }
-
-      const prompt = `Parse the following text into a JSON array of actionable task objects.
-Format: [{"title": "Task name", "bucket": "Work" | "Personal", "duration": number_in_minutes, "date": "YYYY-MM-DD"}]
-Today's Date: ${getTodayString()}
-
-Text to parse: "${rawText}"`;
-
-      const resultText = await callGeminiAPI(prompt, apiKey);
-      if (!resultText) {
-        alert('AI Polish failed. Falling back to Smart Split.');
-        processBrainDumpSmartSplit();
-        return;
-      }
-
-      try {
-        const jsonMatch = resultText.match(/\[.*\]/s);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          parsed.forEach(item => {
-            state.tasks.push({
-              id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-              title: item.title || 'Untitled AI Task',
-              bucket: item.bucket || 'Work',
-              duration: item.duration || 15,
-              date: item.date || getTodayString(),
-              completed: false,
-              completedDate: null,
-              isIvyLee: false,
-              isDaily: false,
-              rolledOver: false
-            });
-          });
-          inputEl.value = '';
-          saveState();
-          renderApp();
-        } else {
-          throw new Error('Could not parse JSON array from AI output.');
-        }
-      } catch (e) {
-        console.error('AI response parse error:', e);
-        processBrainDumpSmartSplit();
-      }
-    }
-
-    /* ==========================================================================
-       6. GEMINI API CALLER WITH MULTI-MODEL FALLBACK (x-goog-api-key)
-       ========================================================================== */
-    async function callGeminiAPI(promptText, apiKey) {
-      for (const model of GEMINI_MODELS) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptText }] }]
-            })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-              return data.candidates[0].content.parts[0].text;
-            }
-          }
-        } catch (err) {
-          console.warn(`Gemini Model ${model} failed, trying fallback...`, err);
-        }
-      }
-      return null;
-    }
-
-    async function testGeminiKey() {
-      const keyInput = document.getElementById('gemini-key-input').value.trim();
-      const statusEl = document.getElementById('key-test-status');
-      statusEl.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'bg-emerald-500/20', 'text-emerald-400');
-      statusEl.innerText = 'Testing Key with Gemini models...';
-      statusEl.classList.add('bg-amber-500/20', 'text-amber-400');
-
-      if (!keyInput) {
-        statusEl.innerText = 'Please enter an API key.';
-        statusEl.classList.replace('bg-amber-500/20', 'bg-red-500/20');
-        statusEl.classList.replace('text-amber-400', 'text-red-400');
-        return;
-      }
-
-      const res = await callGeminiAPI('Respond with: OK', keyInput);
-      if (res) {
-        statusEl.innerText = '✅ API Key Verified Successfully!';
-        statusEl.classList.replace('bg-amber-500/20', 'bg-emerald-500/20');
-        statusEl.classList.replace('text-amber-400', 'text-emerald-400');
-      } else {
-        statusEl.innerText = '❌ Key Verification Failed. Check key permissions.';
-        statusEl.classList.replace('bg-amber-500/20', 'bg-red-500/20');
-        statusEl.classList.replace('text-amber-400', 'text-red-400');
-      }
-    }
-
-    function saveSettings() {
-      const keyInput = document.getElementById('gemini-key-input').value.trim();
-      localStorage.setItem(GEMINI_KEY_STORAGE, keyInput);
-      closeSettingsModal();
-    }
-
-    function openSettingsModal() {
-      document.getElementById('settings-modal').classList.remove('hidden');
-    }
-    function closeSettingsModal() {
-      document.getElementById('settings-modal').classList.add('hidden');
-    }
-
-    /* ==========================================================================
-       7. TASK MANAGEMENT & IVY LEE RULE OF 3 LOGIC
-       ========================================================================== */
-    function handleQuickAdd(e) {
-      e.preventDefault();
-      const titleInput = document.getElementById('task-title-input');
-      const bucketInput = document.getElementById('task-bucket-input');
-      const durationInput = document.getElementById('task-duration-input');
-      const dateInput = document.getElementById('task-date-input');
-      const dailyInput = document.getElementById('task-daily-input');
-
-      const title = titleInput.value.trim();
-      if (!title) return;
-
-      const newTask = {
-        id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        title: title,
-        bucket: bucketInput.value,
-        duration: parseInt(durationInput.value, 10),
-        date: dateInput.value || getTodayString(),
-        completed: false,
-        completedDate: null,
-        isIvyLee: false,
-        isDaily: dailyInput.checked,
-        rolledOver: false
-      };
-
-      state.tasks.push(newTask);
-      titleInput.value = '';
-      dailyInput.checked = false;
-
-      saveState();
-      renderApp();
-    }
-
-    function toggleTaskComplete(taskId) {
-      const task = state.tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      const todayStr = getTodayString();
-      task.completed = !task.completed;
-      task.completedDate = task.completed ? todayStr : null;
-
-      // CRITICAL IVY LEE RULE: When completing a task in Top 3, set isIvyLee to false
-      // so it frees up the slot immediately while keeping top3 completion count in history!
-      if (task.completed && task.isIvyLee) {
-        task.isIvyLee = false;
-        
-        // Record Ivy Lee hit in history if top 3 active list becomes processed
-        if (!state.history[todayStr]) {
-          state.history[todayStr] = { focusMinutes: 0, rule3Hit: false };
-        }
-      }
-
-      saveState();
-      renderApp();
-    }
-
-    function toggleIvyLeePin(taskId) {
-      const task = state.tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      if (!task.isIvyLee) {
-        // Count active Ivy Lee tasks for today
-        const activeIvyCount = state.tasks.filter(t => t.date === getTodayString() && t.isIvyLee && !t.completed).length;
-        if (activeIvyCount >= 3) {
-          alert('Ivy Lee Rule: Maximum 3 active priorities allowed for Today. Complete or unpin one first.');
-          return;
-        }
-        task.isIvyLee = true;
-      } else {
-        task.isIvyLee = false;
-      }
-
-      saveState();
-      renderApp();
-    }
-
-    function duplicateForNextDay(taskId) {
-      const task = state.tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      const currentDate = new Date(task.date || getTodayString());
-      currentDate.setDate(currentDate.getDate() + 1);
-      const nextDateStr = currentDate.toISOString().split('T')[0];
-
-      const duplicated = {
-        ...task,
-        id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        date: nextDateStr,
-        completed: false,
-        completedDate: null,
-        isIvyLee: false,
-        rolledOver: false
-      };
-
-      state.tasks.push(duplicated);
-      saveState();
-      renderApp();
-    }
-
-    function toggleDailyRecurrence(taskId) {
-      const task = state.tasks.find(t => t.id === taskId);
-      if (task) {
-        task.isDaily = !task.isDaily;
-        saveState();
-        renderApp();
-      }
-    }
-
-    function deleteTask(taskId) {
-      state.tasks = state.tasks.filter(t => t.id !== taskId);
-      saveState();
-      renderApp();
-    }
-
-    function toggleQuickWinsFilter() {
-      state.showOnlyQuickWins = !state.showOnlyQuickWins;
-      const text = document.getElementById('quick-wins-text');
-      const btn = document.getElementById('quick-wins-btn');
-      if (state.showOnlyQuickWins) {
-        text.innerText = 'Showing ≤2m Quick Wins';
-        btn.classList.add('bg-amber-500/20', 'border-amber-500/40', 'text-amber-300');
-      } else {
-        text.innerText = 'Show ≤2m Quick Wins';
-        btn.classList.remove('bg-amber-500/20', 'border-amber-500/40', 'text-amber-300');
-      }
-      renderApp();
-    }
-
-    function copyMarkdownChecklist() {
-      const todayStr = getTodayString();
-      const todayTasks = state.tasks.filter(t => t.date === todayStr);
-
-      if (todayTasks.length === 0) {
-        alert('No tasks for today to copy.');
-        return;
-      }
-
-      let md = `# Commute-to-Desk Tasks - ${todayStr}\n\n`;
-      const workTasks = todayTasks.filter(t => t.bucket === 'Work');
-      const personalTasks = todayTasks.filter(t => t.bucket === 'Personal');
-
-      if (workTasks.length > 0) {
-        md += `## 💼 Work\n`;
-        workTasks.forEach(t => {
-          md += `- [${t.completed ? 'x' : ' '}] ${t.title} (${t.duration}m)${t.isIvyLee ? ' ⭐' : ''}\n`;
-        });
-        md += `\n`;
-      }
-
-      if (personalTasks.length > 0) {
-        md += `## 🏡 Personal\n`;
-        personalTasks.forEach(t => {
-          md += `- [${t.completed ? 'x' : ' '}] ${t.title} (${t.duration}m)${t.isIvyLee ? ' ⭐' : ''}\n`;
-        });
-      }
-
-      // Clipboard copy fallback using execCommand
-      const tempTextArea = document.createElement('textarea');
-      tempTextArea.value = md;
-      document.body.appendChild(tempTextArea);
-      tempTextArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempTextArea);
-
-      alert('Markdown checklist copied to clipboard!');
-    }
-
-    /* ==========================================================================
-       8. FOCUS TIMER (CIRCULAR WALL-CLOCK & WEB AUDIO Synthesizer Chime)
-       ========================================================================== */
-    function setTimerPreset(mins, label) {
-      if (isTimerRunning) resetTimer();
-      timerTotalSeconds = mins * 60;
-      timerSecondsLeft = timerTotalSeconds;
-      document.getElementById('timer-phase').innerText = label + ' Phase';
-      document.getElementById('timer-active-task-badge').innerText = label + ` (${mins}m)`;
-      updateTimerDisplay();
-    }
-
-    function setCustomTimer() {
-      const input = document.getElementById('custom-minutes-input');
-      const val = parseInt(input.value, 10);
-      if (val && val > 0) {
-        setTimerPreset(val, 'Custom Focus');
-        input.value = '';
-      }
-    }
-
-    function startTimerForTask(taskId) {
-      const task = state.tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      currentTimerTask = task;
-      switchTab('focus');
-      setTimerPreset(task.duration || 25, 'Task Focus');
-      document.getElementById('timer-task-title').innerText = task.title;
-      document.getElementById('timer-active-task-badge').innerText = `Target: ${task.title}`;
-    }
-
-    function toggleTimer() {
-      if (isTimerRunning) {
-        pauseTimer();
-      } else {
-        startTimer();
-      }
-    }
-
-    function startTimer() {
-      if (isTimerRunning) return;
-      isTimerRunning = true;
-      document.getElementById('timer-play-icon').className = 'fa-solid fa-pause';
-
-      timerInterval = setInterval(() => {
-        if (timerSecondsLeft > 0) {
-          timerSecondsLeft--;
-          updateTimerDisplay();
-        } else {
-          onTimerComplete();
-        }
-      }, 1000);
-    }
-
-    function pauseTimer() {
-      isTimerRunning = false;
-      clearInterval(timerInterval);
-      document.getElementById('timer-play-icon').className = 'fa-solid fa-play';
-    }
-
-    function resetTimer() {
-      pauseTimer();
-      timerSecondsLeft = timerTotalSeconds;
-      updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-      const mins = Math.floor(timerSecondsLeft / 60);
-      const secs = timerSecondsLeft % 60;
-      const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-      document.getElementById('timer-display').innerText = formatted;
-
-      // Update Circular Ring Offset (Circumference ~ 276.46)
-      const ring = document.getElementById('timer-ring');
-      const progressRatio = timerSecondsLeft / timerTotalSeconds;
-      const offset = 276.46 * (1 - progressRatio);
-      ring.style.strokeDashoffset = offset;
-    }
-
-    function onTimerComplete() {
-      pauseTimer();
-      playWebAudioChime();
-
-      const elapsedMins = Math.round(timerTotalSeconds / 60);
-      logFocusMinutes(elapsedMins);
-
-      if (currentTimerTask) {
-        toggleTaskComplete(currentTimerTask.id);
-        alert(`🎉 Focus session complete! Completed task: "${currentTimerTask.title}" and logged ${elapsedMins} mins.`);
-        currentTimerTask = null;
-      } else {
-        alert(`🎉 Focus session complete! Logged ${elapsedMins} minutes of Deep Focus.`);
-      }
-
-      resetTimer();
-    }
-
-    function logFocusManually() {
-      const input = document.getElementById('custom-minutes-input');
-      const mins = parseInt(input.value, 10) || 25;
-      logFocusMinutes(mins);
-      alert(`Logged ${mins} minutes of Deep Focus!`);
-      input.value = '';
-    }
-
-    function logFocusMinutes(mins) {
-      state.focusMinutes = (state.focusMinutes || 0) + mins;
-      const todayStr = getTodayString();
-      if (!state.history[todayStr]) {
-        state.history[todayStr] = { focusMinutes: 0, rule3Hit: false };
-      }
-      state.history[todayStr].focusMinutes = (state.history[todayStr].focusMinutes || 0) + mins;
-
-      saveState();
-      renderApp();
-    }
-
-    function playWebAudioChime() {
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 note
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
-
-        gain.gain.setValueAtTime(0.5, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start();
-        osc.stop(ctx.currentTime + 1.2);
-      } catch (e) {
-        console.warn('Audio chime error:', e);
-      }
-    }
-
-    /* ==========================================================================
-       9. TIMEBLOCKER SCHEDULE (PLAN TAB) & .ICS EXPORT
-       ========================================================================== */
-    function generateTimeblocks() {
-      const timelineEl = document.getElementById('timeblocks-timeline');
-      if (!timelineEl) return;
-
-      const workStart = document.getElementById('work-start-time').value || '09:00';
-      const workEnd = document.getElementById('work-end-time').value || '17:00';
-      const personalStart = document.getElementById('personal-start-time').value || '17:30';
-      const personalEnd = document.getElementById('personal-end-time').value || '21:00';
-
-      const todayStr = getTodayString();
-      const activeTasks = state.tasks.filter(t => t.date === todayStr && !t.completed);
-
-      let blocks = [];
-
-      // 1. Add Ivy Lee / Work tasks into Work Window
-      let currentWorkMinutes = timeToMinutes(workStart);
-      const workEndMinutes = timeToMinutes(workEnd);
-      const workTasks = activeTasks.filter(t => t.bucket === 'Work');
-
-      workTasks.sort((a, b) => (b.isIvyLee ? 1 : 0) - (a.isIvyLee ? 1 : 0));
-
-      workTasks.forEach(task => {
-        const duration = task.duration || 15;
-        if (currentWorkMinutes + duration <= workEndMinutes) {
-          const startTimeStr = minutesToTime(currentWorkMinutes);
-          currentWorkMinutes += duration;
-          const endTimeStr = minutesToTime(currentWorkMinutes);
-
-          blocks.push({
-            id: task.id,
-            title: task.title,
-            startTime: startTimeStr,
-            endTime: endTimeStr,
-            bucket: 'Work',
-            isIvyLee: task.isIvyLee
-          });
-        }
-      });
-
-      // 2. Add Personal tasks into Personal Window
-      let currentPersonalMinutes = timeToMinutes(personalStart);
-      const personalEndMinutes = timeToMinutes(personalEnd);
-      const personalTasks = activeTasks.filter(t => t.bucket === 'Personal');
-
-      personalTasks.forEach(task => {
-        const duration = task.duration || 15;
-        if (currentPersonalMinutes + duration <= personalEndMinutes) {
-          const startTimeStr = minutesToTime(currentPersonalMinutes);
-          currentPersonalMinutes += duration;
-          const endTimeStr = minutesToTime(currentPersonalMinutes);
-
-          blocks.push({
-            id: task.id,
-            title: task.title,
-            startTime: startTimeStr,
-            endTime: endTimeStr,
-            bucket: 'Personal',
-            isIvyLee: task.isIvyLee
-          });
-        }
-      });
-
-      // 3. Include Custom Timeblocks
-      state.customBlocks.forEach(cb => {
-        blocks.push({
-          id: cb.id,
-          title: cb.title,
-          startTime: cb.startTime,
-          endTime: cb.endTime,
-          bucket: cb.bucket,
-          isCustom: true
-        });
-      });
-
-      // Sort timeline by start time
-      blocks.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-
-      if (blocks.length === 0) {
-        timelineEl.innerHTML = `
-          <div class="text-center py-8 text-slate-500 text-xs italic bg-slate-900/50 rounded-xl border border-slate-800">
-            No active tasks scheduled for timeblocking today. Add tasks or custom blocks above.
-          </div>
-        `;
-        return;
-      }
-
-      timelineEl.innerHTML = blocks.map(block => `
-        <div class="bg-slate-900/90 p-3.5 rounded-xl border ${block.bucket === 'Work' ? 'border-emerald-500/30' : 'border-teal-500/30'} flex items-center justify-between hover:border-slate-600 transition-all">
-          <div class="flex items-center gap-3">
-            <div class="px-2.5 py-1 rounded-lg ${block.bucket === 'Work' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-teal-500/20 text-teal-300'} text-xs font-mono font-semibold">
-              ${block.startTime} - ${block.endTime}
-            </div>
-            <div>
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                ${block.title}
-                ${block.isIvyLee ? '<span class="text-amber-400 text-[10px]">⭐ Top 3</span>' : ''}
-              </div>
-              <span class="text-[10px] text-slate-400">${block.bucket}</span>
-            </div>
-          </div>
-          ${block.isCustom ? `
-            <button onclick="deleteCustomBlock('${block.id}')" class="text-slate-500 hover:text-red-400 p-1 text-xs">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    function openCustomBlockModal() {
-      document.getElementById('custom-block-modal').classList.remove('hidden');
-    }
-    function closeCustomBlockModal() {
-      document.getElementById('custom-block-modal').classList.add('hidden');
-    }
-
-    function handleCreateCustomBlock(e) {
-      e.preventDefault();
-      const title = document.getElementById('block-title-input').value.trim();
-      const startTime = document.getElementById('block-start-input').value;
-      const endTime = document.getElementById('block-end-input').value;
-      const bucket = document.getElementById('block-bucket-input').value;
-
-      if (!title || !startTime || !endTime) return;
-
-      state.customBlocks.push({
-        id: 'cb_' + Date.now(),
-        title: title,
-        startTime: startTime,
-        endTime: endTime,
-        bucket: bucket
-      });
-
-      document.getElementById('block-title-input').value = '';
-      closeCustomBlockModal();
-      saveState();
-      generateTimeblocks();
-    }
-
-    function deleteCustomBlock(id) {
-      state.customBlocks = state.customBlocks.filter(b => b.id !== id);
-      saveState();
-      generateTimeblocks();
-    }
-
-    function timeToMinutes(timeStr) {
-      const [h, m] = timeStr.split(':').map(Number);
-      return h * 60 + m;
-    }
-
-    function minutesToTime(totalMins) {
-      const h = Math.floor(totalMins / 60);
-      const m = totalMins % 60;
-      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-    }
-
-    // Export .ICS Calendar with 5-minute VALARM reminders
-    function exportICalendar() {
-      const todayStr = getTodayString().replace(/-/g, '');
-      const activeTasks = state.tasks.filter(t => t.date === getTodayString() && !t.completed);
-
-      if (activeTasks.length === 0 && state.customBlocks.length === 0) {
-        alert('No tasks or custom blocks available to export.');
-        return;
-      }
-
-      let icsContent = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Commute-to-Desk//Daily Productivity OS//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH'
-      ];
-
-      let startMin = 9 * 60; // 09:00 default
-      activeTasks.forEach((task, idx) => {
-        const start = minutesToTime(startMin);
-        const endMin = startMin + (task.duration || 15);
-        const end = minutesToTime(endMin);
-        startMin = endMin;
-
-        const dtStart = `${todayStr}T${start.replace(':', '')}00`;
-        const dtEnd = `${todayStr}T${end.replace(':', '')}00`;
-
-        icsContent.push(
-          'BEGIN:VEVENT',
-          `UID:c2d_${Date.now()}_${idx}@c2dos.app`,
-          `DTSTAMP:${todayStr}T000000Z`,
-          `DTSTART:${dtStart}`,
-          `DTEND:${dtEnd}`,
-          `SUMMARY:[${task.bucket}] ${task.title}`,
-          `DESCRIPTION:Commute-to-Desk OS Task. Duration: ${task.duration}m`,
-          'BEGIN:VALARM',
-          'TRIGGER:-PT5M',
-          'ACTION:DISPLAY',
-          `DESCRIPTION:Reminder: ${task.title} starts in 5 minutes!`,
-          'END:VALARM',
-          'END:VEVENT'
-        );
-      });
-
-      icsContent.push('END:VCALENDAR');
-
-      const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `c2d-schedule-${getTodayString()}.ics`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    /* ==========================================================================
-       10. ROLLING ANALYTICS DASHBOARD & DRILL-DOWN INSPECTION
-       ========================================================================== */
-    let currentStatsRange = 'week';
-
-    function setStatsRange(range) {
-      currentStatsRange = range;
-      ['week', 'month', 'year'].forEach(r => {
-        const btn = document.getElementById(`range-btn-${r}`);
-        if (r === range) {
-          btn.className = 'px-3 py-1 rounded-lg text-xs font-semibold text-emerald-400 bg-slate-800 transition-all';
-        } else {
-          btn.className = 'px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all';
-        }
-      });
-      renderStats();
-    }
-
-    function renderStats() {
-      const today = new Date();
-      let daysCount = 7;
-      if (currentStatsRange === 'month') daysCount = 30;
-      if (currentStatsRange === 'year') daysCount = 365;
-
-      let totalCompleted = 0;
-      let totalFocus = 0;
-      let rule3Hits = 0;
-      let dateLogs = [];
-
-      for (let i = 0; i < daysCount; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-
-        const completedOnDate = state.tasks.filter(t => t.completed && t.completedDate === dateStr);
-        const totalCreatedOnDate = state.tasks.filter(t => t.date === dateStr);
-
-        const hist = state.history[dateStr] || {};
-        const focusMins = hist.focusMinutes || (dateStr === getTodayString() ? state.focusMinutes : 0);
-
-        // Check if Rule of 3 hit on this date
-        const ivyCompletedCount = state.tasks.filter(t => t.completedDate === dateStr && (t.isIvyLee || (t.completed && t.date === dateStr))).length;
-        const isRule3Hit = ivyCompletedCount >= 3 || hist.rule3Hit;
-
-        if (isRule3Hit) rule3Hits++;
-
-        totalCompleted += completedOnDate.length;
-        totalFocus += focusMins;
-
-        dateLogs.push({
-          dateStr: dateStr,
-          completedCount: completedOnDate.length,
-          totalCount: totalCreatedOnDate.length,
-          focusMins: focusMins,
-          rule3Hit: isRule3Hit
-        });
-      }
-
-      document.getElementById('stats-total-tasks').innerText = totalCompleted;
-      document.getElementById('stats-total-focus').innerText = totalFocus + 'm';
-      document.getElementById('stats-rule3-hits').innerText = rule3Hits;
-
-      const completionRate = dateLogs.length > 0 ? Math.round((totalCompleted / Math.max(1, state.tasks.length)) * 100) : 0;
-      document.getElementById('stats-completion-rate').innerText = Math.min(100, completionRate) + '%';
-
-      // Render daily log cards
-      const logsContainer = document.getElementById('stats-daily-logs');
-      logsContainer.innerHTML = dateLogs.map(log => `
-        <div onclick="inspectDate('${log.dateStr}')" class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-all flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="text-xs font-semibold text-slate-300 font-mono">${log.dateStr}</div>
-            ${log.rule3Hit ? '<span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">⭐ Rule of 3 Met</span>' : ''}
-          </div>
-          <div class="flex items-center gap-4 text-xs">
-            <span class="text-slate-400"><strong class="text-emerald-400">${log.completedCount}</strong> done</span>
-            <span class="text-indigo-400 font-mono">${log.focusMins}m focus</span>
-            <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function inspectDate(dateStr) {
-      document.getElementById('inspect-date-title').innerText = `Inspection for ${dateStr}`;
-      const completedOnDate = state.tasks.filter(t => t.completed && t.completedDate === dateStr);
-      const container = document.getElementById('inspect-tasks-container');
-
-      if (completedOnDate.length === 0) {
-        container.innerHTML = `<p class="text-slate-500 italic py-4 text-center">No completed tasks recorded for this date.</p>`;
-      } else {
-        container.innerHTML = completedOnDate.map(t => `
-          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-            <div>
-              <span class="font-semibold text-white">${t.title}</span>
-              <div class="text-[10px] text-slate-400">${t.bucket} • ${t.duration}m</div>
-            </div>
-            <button onclick="copyTaskToToday('${t.title}', '${t.bucket}', ${t.duration})" class="text-xs bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 font-semibold px-2.5 py-1 rounded-lg border border-emerald-500/30 transition-all flex items-center gap-1">
-              <i class="fa-solid fa-plus"></i> + Today
-            </button>
-          </div>
-        `).join('');
-      }
-
-      document.getElementById('inspect-day-modal').classList.remove('hidden');
-    }
-
-    function copyTaskToToday(title, bucket, duration) {
-      state.tasks.push({
-        id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        title: title,
-        bucket: bucket || 'Work',
-        duration: duration || 15,
-        date: getTodayString(),
-        completed: false,
-        completedDate: null,
-        isIvyLee: false,
-        isDaily: false,
-        rolledOver: false
-      });
-      saveState();
-      renderApp();
-      closeInspectModal();
-      alert(`Copied "${title}" to Today!`);
-    }
-
-    function closeInspectModal() {
-      document.getElementById('inspect-day-modal').classList.add('hidden');
-    }
-
-    function openPastTasksModal() {
-      const pastList = document.getElementById('past-tasks-list');
-      const completedTasks = state.tasks.filter(t => t.completed);
-
-      if (completedTasks.length === 0) {
-        pastList.innerHTML = `<p class="text-slate-500 italic text-center py-6">No past completed tasks logged yet.</p>`;
-      } else {
-        pastList.innerHTML = completedTasks.map(t => `
-          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-            <div>
-              <div class="font-semibold text-white">${t.title}</div>
-              <div class="text-[10px] text-slate-400">Completed ${t.completedDate || 'Recently'} • ${t.bucket}</div>
-            </div>
-            <button onclick="copyTaskToToday('${t.title}', '${t.bucket}', ${t.duration})" class="text-xs bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 px-2.5 py-1 rounded-lg transition-all font-semibold border border-emerald-500/30 flex items-center gap-1">
-              <i class="fa-solid fa-plus"></i> + Today
-            </button>
-          </div>
-        `).join('');
-      }
-
-      document.getElementById('past-tasks-modal').classList.remove('hidden');
-    }
-
-    function closePastTasksModal() {
-      document.getElementById('past-tasks-modal').classList.add('hidden');
-    }
-
-    /* ==========================================================================
-       11. FLOATING AI COACH ASSISTANT
-       ========================================================================== */
-    function toggleCoachWidget() {
-      const modal = document.getElementById('coach-modal');
-      modal.classList.toggle('hidden');
-    }
-
-    async function sendCoachMessage() {
-      const input = document.getElementById('coach-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const container = document.getElementById('coach-messages');
-
-      // Add user message
-      container.innerHTML += `
-        <div class="bg-emerald-500/20 text-emerald-200 p-3 rounded-2xl border border-emerald-500/30 ml-6 text-right">
-          ${text}
-        </div>
-      `;
-      input.value = '';
-      container.scrollTop = container.scrollHeight;
-
-      // Add thinking placeholder
-      const thinkingId = 'thinking_' + Date.now();
-      container.innerHTML += `
-        <div id="${thinkingId}" class="bg-slate-900/90 text-slate-400 p-3 rounded-2xl border border-slate-800 mr-6 italic flex items-center gap-2">
-          <i class="fa-solid fa-spinner fa-spin"></i> Coach is thinking...
-        </div>
-      `;
-      container.scrollTop = container.scrollHeight;
-
-      const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || document.getElementById('gemini-key-input').value.trim();
-      
-      let reply = "Focus on completing your Ivy Lee top 3 tasks first to gain momentum today!";
-      if (apiKey) {
-        const coachPrompt = `You are an elite productivity executive coach. Keep response under 3 concise sentences. Answer user advice request: "${text}"`;
-        const aiReply = await callGeminiAPI(coachPrompt, apiKey);
-        if (aiReply) reply = aiReply;
-      }
-
-      const thinkingEl = document.getElementById(thinkingId);
-      if (thinkingEl) thinkingEl.remove();
-
-      container.innerHTML += `
-        <div class="bg-slate-900/90 text-slate-200 p-3 rounded-2xl border border-slate-800 mr-6">
-          ${reply}
-        </div>
-      `;
-      container.scrollTop = container.scrollHeight;
-    }
-
-    /* ==========================================================================
-       12. VIEW SWITCHING & RENDERING ENGINE
-       ========================================================================== */
-    function switchTab(tabId) {
-      state.activeTab = tabId;
-      ['today', 'focus', 'plan', 'stats'].forEach(t => {
-        const view = document.getElementById(`view-${t}`);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (t === tabId) {
-          view.classList.remove('hidden');
-          btn.className = 'nav-tab active-tab flex-1 min-w-[80px] py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-emerald-400 text-emerald-400 transition-all flex items-center justify-center gap-2';
-        } else {
-          view.classList.add('hidden');
-          btn.className = 'nav-tab flex-1 min-w-[80px] py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2';
-        }
-      });
-
-      if (tabId === 'plan') generateTimeblocks();
-      if (tabId === 'stats') renderStats();
-    }
-
-    function renderApp() {
-      const todayStr = getTodayString();
-      const todayTasks = state.tasks.filter(t => t.date === todayStr);
-
-      // Filter tasks by quick wins if toggled
-      let filteredTasks = todayTasks;
-      if (state.showOnlyQuickWins) {
-        filteredTasks = todayTasks.filter(t => t.duration <= 2);
-      }
-
-      // Render Ivy Lee Rule of 3 (Strictly top 3 active tasks with isIvyLee = true)
-      const ivyTasks = todayTasks.filter(t => t.isIvyLee && !t.completed).slice(0, 3);
-      for (let i = 0; i < 3; i++) {
-        const slotEl = document.getElementById(`ivy-slot-${i}-content`);
-        const task = ivyTasks[i];
-
-        if (task) {
-          slotEl.innerHTML = `
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" onchange="toggleTaskComplete('${task.id}')" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
-                <span class="text-xs font-bold text-white">${task.title}</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <button onclick="startTimerForTask('${task.id}')" class="text-xs bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 p-1.5 rounded-lg transition-all" title="Focus Timer">
-                  <i class="fa-solid fa-play"></i>
-                </button>
-                <button onclick="toggleIvyLeePin('${task.id}')" class="text-xs text-amber-400 hover:text-slate-400 p-1.5" title="Unpin from Top 3">
-                  <i class="fa-solid fa-star"></i>
-                </button>
-              </div>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-1 flex items-center gap-2">
-              <span>${task.bucket}</span> • <span>${task.duration}m</span>
-              ${task.rolledOver ? '<span class="text-amber-400 font-semibold">↻ Rolled</span>' : ''}
-            </div>
-          `;
-        } else {
-          slotEl.innerHTML = `<div class="text-slate-500 text-xs italic py-2">No priority assigned. Pin a task or add below.</div>`;
-        }
-      }
-
-      // Render Work Bucket tasks (uncompleted)
-      const workTasksContainer = document.getElementById('work-tasks-container');
-      const workTasks = filteredTasks.filter(t => t.bucket === 'Work' && !t.completed);
-      document.getElementById('work-count').innerText = `${workTasks.length} tasks`;
-      workTasksContainer.innerHTML = renderTaskList(workTasks);
-
-      // Render Personal Bucket tasks (uncompleted)
-      const personalTasksContainer = document.getElementById('personal-tasks-container');
-      const personalTasks = filteredTasks.filter(t => t.bucket === 'Personal' && !t.completed);
-      document.getElementById('personal-count').innerText = `${personalTasks.length} tasks`;
-      personalTasksContainer.innerHTML = renderTaskList(personalTasks);
-
-      // Render Completed Today Tasks
-      const completedTasks = todayTasks.filter(t => t.completed);
-      document.getElementById('completed-count-badge').innerText = completedTasks.length;
-      const completedContainer = document.getElementById('completed-tasks-container');
-
-      if (completedTasks.length === 0) {
-        completedContainer.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No tasks completed yet today.</p>`;
-      } else {
-        completedContainer.innerHTML = completedTasks.map(t => `
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between opacity-75">
-            <div class="flex items-center gap-2.5">
-              <input type="checkbox" checked onchange="toggleTaskComplete('${t.id}')" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 cursor-pointer">
-              <span class="text-xs line-through text-slate-400">${t.title}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] text-slate-500">${t.bucket}</span>
-              <button onclick="deleteTask('${t.id}')" class="text-slate-600 hover:text-red-400 text-xs p-1">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      // Update Hero Status Header Bar
-      document.getElementById('hero-rule-of-3').innerText = `${ivyTasks.length}/3`;
-      document.getElementById('hero-done-today').innerText = completedTasks.length;
-      document.getElementById('hero-deep-focus').innerText = `${state.focusMinutes || 0}m`;
-    }
-
-    function renderTaskList(taskList) {
-      if (taskList.length === 0) {
-        return `<p class="text-xs text-slate-500 italic py-3 text-center">No active tasks in this bucket.</p>`;
-      }
-
-      return taskList.map(task => `
-        <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <input type="checkbox" onchange="toggleTaskComplete('${task.id}')" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 cursor-pointer">
-            <div class="truncate">
-              <div class="text-xs font-semibold text-white truncate flex items-center gap-1.5">
-                ${task.title}
-                ${task.isDaily ? '<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.2 rounded border border-indigo-500/30">🔁 Daily</span>' : ''}
-                ${task.rolledOver ? '<span class="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.2 rounded border border-amber-500/30">↻ Rolled</span>' : ''}
-              </div>
-              <div class="text-[10px] text-slate-400 font-mono">${task.duration}m</div>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-1 flex-shrink-0">
-            <button onclick="startTimerForTask('${task.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 p-1.5 rounded-lg border border-slate-700 transition-all" title="Start Focus Timer">
-              <i class="fa-solid fa-play"></i>
-            </button>
-            <button onclick="toggleIvyLeePin('${task.id}')" class="text-xs p-1.5 rounded-lg transition-all ${task.isIvyLee ? 'text-amber-400' : 'text-slate-500 hover:text-amber-400'}" title="Pin to Top 3">
-              <i class="fa-solid fa-star"></i>
-            </button>
-            <button onclick="duplicateForNextDay('${task.id}')" class="text-xs text-slate-400 hover:text-white p-1.5" title="Duplicate for Next Day (🌅 +1d)">
-              🌅 +1d
-            </button>
-            <button onclick="toggleDailyRecurrence('${task.id}')" class="text-xs ${task.isDaily ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-400'} p-1.5" title="Toggle Daily Recurrence (🔁)">
-              🔁
-            </button>
-            <button onclick="deleteTask('${task.id}')" class="text-xs text-slate-500 hover:text-red-400 p-1.5">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-  </script>
+ </section>
+ <section class="view" id="v-focus"><div class="card"><h2>⏱ Focus</h2><p class="empty">Timer, Shutdown ritual and brain dump arrive in Phase 2–3.</p></div></section>
+ <section class="view" id="v-plan"><div class="card"><h2>🗓 Plan</h2><p class="empty">Auto-timeblocker and .ICS export arrive in Phase 3.</p></div></section>
+ <section class="view" id="v-stats"><div class="card"><h2>📊 Stats</h2><p class="empty">Analytics and Coach arrive in Phase 3.</p></div></section>
+</main>
+
+<div id="appToast"></div>
+<div id="bg"><div id="sheet"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>ymd(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const fmt=s=>new Date(s+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const KEY='c2d.v1';
+let S,deferredInstall=null,toastT;
+
+function load(){
+ let o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+ S=Object.assign({tasks:[],history:{},todayFocusMins:0,day:today(),apiKey:'',model:'gemini-3.5-flash-lite',quick:false},o||{});
+ let k='';try{k=window.__geminiKey||sessionStorage.getItem('c2d.key')||localStorage.getItem('c2d.key')||''}catch(e){}
+ if(k)S.apiKey=k;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function setKey(v){v=v.trim();window.__geminiKey=v;S.apiKey=v;try{sessionStorage.setItem('c2d.key',v);localStorage.setItem('c2d.key',v)}catch(e){}save();renderHead()}
+function toast(m){const t=$('#appToast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+const H=d=>S.history[d]||(S.history[d]={done:0,mins:0,top3Hit:0,top3Titles:[],tasks:[]});
+const find=id=>S.tasks.find(t=>t.id===id);
+const activeTop3=()=>S.tasks.filter(t=>t.top3&&!t.done&&t.date===today());
+
+function enforceTop3Cap(){
+ let n=0;
+ S.tasks.forEach(t=>{
+  if(t.top3&&(t.done||t.date!==today()))t.top3=false;
+  else if(t.top3&&++n>3)t.top3=false;
+ });
+}
+function rollover(force){
+ const t=today(),tm=addDays(t,1);
+ if(S.day!==t){H(S.day).mins=S.todayFocusMins;S.todayFocusMins=0}
+ else if(!force)return;
+ S.tasks=S.tasks.filter(x=>!(x.done&&x.recurring!=='daily'&&x.date<t));
+ S.tasks.forEach(x=>{
+  if(x.date<t){
+   if(x.recurring==='daily'){x.done=false;x.focusCredited=false;x.date=t}
+   else if(!x.done){x.date=t;x.rolled=true}
+  }else if(force&&x.date===tm&&!x.done)x.date=t;
+ });
+ S.day=t;enforceTop3Cap();save();
+}
+function newTask(o){return Object.assign({id:uid(),title:'',date:today(),bucket:'work',mins:25,top3:false,done:false,recurring:null,focusCredited:false,rolled:false},o)}
+
+function toggle(id){
+ const x=find(id);if(!x)return;const h=H(today());
+ if(!x.done&&x.date>today())return toast('Scheduled for '+fmt(x.date)+'. Edit the date to move it to today first.');
+ if(!x.done){
+  x.done=true;
+  if(!x.focusCredited){S.todayFocusMins+=x.mins;x.focusCredited=true}
+  h.tasks.push({title:x.title,bucket:x.bucket,mins:x.mins});
+  if(x.top3){h.top3Hit++;h.top3Titles.push(x.title);x.top3=false}
+ }else{
+  x.done=false;
+  if(x.focusCredited){S.todayFocusMins=Math.max(0,S.todayFocusMins-x.mins);x.focusCredited=false}
+  const i=h.tasks.map(a=>a.title).lastIndexOf(x.title);if(i>-1)h.tasks.splice(i,1);
+  const j=h.top3Titles.lastIndexOf(x.title);if(j>-1){h.top3Titles.splice(j,1);h.top3Hit--}
+ }
+ h.done=h.tasks.length;renderAll();
+}
+function pin(id){
+ const x=find(id);if(!x)return;
+ if(x.top3){x.top3=false}
+ else{
+  if(x.date!==today())return toast('Only today’s tasks can go in the Rule of 3.');
+  if(activeTop3().length>=3)return toast('Rule of 3 is full. Finish or unpin one first.');
+  x.top3=true;
+ }
+ renderAll();
+}
+function nextDay(id){const x=find(id);if(!x)return;S.tasks.push(newTask({title:x.title,bucket:x.bucket,mins:x.mins,date:addDays(x.date>today()?x.date:today(),1)}));toast('Copied to '+fmt(addDays(x.date>today()?x.date:today(),1)));renderAll()}
+function del(id){S.tasks=S.tasks.filter(t=>t.id!==id);renderAll()}
+
+function card(x){
+ const fut=x.date>today();
+ return `<div class="task${x.done?' done':''}"><button class="chk" data-a="tog" data-id="${x.id}" aria-label="Toggle done">${x.done?'✓':''}</button>
+ <div class="tt"><b>${esc(x.title)}</b><small>${x.mins}m · ${x.bucket==='work'?'Work':'Personal'}${x.recurring?' · 🔁 Daily':''}${x.rolled&&!x.done?' · ↻ Rolled':''}${fut?' · '+fmt(x.date):''}</small></div>
+ <div class="acts">${x.done?'':`<button data-a="focus" data-id="${x.id}">▶ Focus</button><button class="st" data-a="pin" data-id="${x.id}">${x.top3?'★ Top 3':'☆ Top 3'}</button><button data-a="nd" data-id="${x.id}">🌅 +1d</button>`}<button data-a="edit" data-id="${x.id}">✎ Edit</button><button data-a="del" data-id="${x.id}">🗑 Del</button></div></div>`;
+}
+const list=(a,m)=>a.length?a.map(card).join(''):`<div class="empty">${m}</div>`;
+
+function renderHead(){
+ $('#dateLine').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+ $('#keyDot').textContent=S.apiKey?'🟢':'';
+ $('#hR3').textContent=activeTop3().length+' / 3';
+ $('#hDone').textContent=H(today()).tasks.length;
+ $('#hFocus').textContent=S.todayFocusMins+'m';
+ $('#qwBtn').classList.toggle('on',S.quick);
+}
+function renderAll(){
+ enforceTop3Cap();H(today()).mins=S.todayFocusMins;
+ const t=today(),q=x=>!S.quick||x.mins<=2;
+ const td=S.tasks.filter(x=>x.date===t);
+ $('#top3').innerHTML=list(activeTop3(),'Pin up to 3 tasks that must happen today.');
+ const act=td.filter(x=>!x.done&&!x.top3&&q(x));
+ $('#work').innerHTML=list(act.filter(x=>x.bucket==='work'),'Nothing here.');
+ $('#pers').innerHTML=list(act.filter(x=>x.bucket==='personal'),'Nothing here.');
+ $('#up').innerHTML=list(S.tasks.filter(x=>x.date>t&&q(x)).sort((a,b)=>a.date.localeCompare(b.date)),'Nothing scheduled ahead.');
+ $('#doneL').innerHTML=list(td.filter(x=>x.done),'Completed tasks show up here.');
+ renderHead();save();
+ if(typeof generateSchedule==='function'&&window.__sched)generateSchedule();
+}
+
+function sheet(h){$('#sheet').innerHTML=h;$('#bg').classList.add('show')}
+function closeSheet(){$('#bg').classList.remove('show')}
+function addTask(){
+ const ti=$('#qTitle').value.trim();if(!ti)return toast('Type a task first.');
+ const d=$('#quickDate').value||today();
+ S.tasks.push(newTask({title:ti,date:d<today()?today():d,bucket:$('#qBucket').value,mins:+$('#qMins').value,recurring:$('#qRep').checked?'daily':null}));
+ $('#qTitle').value='';$('#qRep').checked=false;renderAll();
+}
+function editSheet(id){
+ const x=find(id);if(!x)return;
+ const opt=(a,v)=>a.map(([k,l])=>`<option value="${k}"${String(k)===String(v)?' selected':''}>${l}</option>`).join('');
+ sheet(`<h3>Edit Task</h3>
+ <label class="f">Title<input id="eT" value="${esc(x.title)}"></label>
+ <label class="f">Date<input type="date" id="eD" value="${x.date}" min="${today()}"></label>
+ <div class="row"><label class="f">Bucket<select id="eB">${opt([['work','💼 Work'],['personal','🏡 Personal']],x.bucket)}</select></label>
+ <label class="f">Minutes<select id="eM">${opt([2,15,25,45,60,90].map(n=>[n,n+' min']),x.mins)}</select></label></div>
+ <label class="c"><input type="checkbox" id="eP"${x.top3?' checked':''}> ★ Pin to Rule of 3 Priority</label>
+ <label class="c"><input type="checkbox" id="eR"${x.recurring?' checked':''}> 🔁 Repeat Every Day</label>
+ <div class="row"><button class="btn bad" data-a="del" data-id="${id}">🗑 Del</button><button class="btn" data-a="nd" data-id="${id}">🌅 +1 Day</button><button class="btn pri" data-a="saveEdit" data-id="${id}">Save</button></div>`);
+}
+function saveEdit(id){
+ const x=find(id);if(!x)return;
+ x.title=$('#eT').value.trim()||x.title;
+ const d=$('#eD').value||x.date;x.date=d<today()&&!x.done?today():d;
+ x.bucket=$('#eB').value;x.mins=+$('#eM').value;x.recurring=$('#eR').checked?'daily':null;
+ const want=$('#eP').checked;x.top3=false;
+ if(want){
+  if(x.date!==today())toast('Only today’s tasks can be pinned.');
+  else if(activeTop3().length>=3)toast('Rule of 3 is full, so this task was not pinned.');
+  else x.top3=true;
+ }
+ closeSheet();renderAll();
+}
+function pastSheet(sel){
+ const days=Object.keys(S.history).filter(d=>S.history[d].tasks.length).sort().reverse();
+ if(!days.length)return sheet('<h3>Copy Past</h3><p class="empty">No completed tasks in history yet.</p>');
+ const d=sel||days[0];
+ sheet(`<h3>Copy Past</h3><select id="pd">${days.map(k=>`<option value="${k}"${k===d?' selected':''}>${fmt(k)}</option>`).join('')}</select>
+ ${S.history[d].tasks.map((x,i)=>`<div class="task"><div class="tt"><b>${esc(x.title)}</b><small>${x.mins}m · ${x.bucket}</small></div><button class="btn" data-a="cp" data-d="${d}" data-i="${i}">+ Copy</button></div>`).join('')}`);
+}
+function installSheet(){
+ sheet(`<h3>Install Commute-to-Desk</h3><p><b>Android (Chrome / Samsung Internet):</b> open the browser menu (⋮ or ≡) and tap <b>Install app</b> or <b>Add to Home screen</b>.</p><p><b>Desktop (Chrome / Edge):</b> click the install icon at the right end of the address bar, or open the menu and choose <b>Install Commute-to-Desk</b>.</p><button class="btn pri" data-a="close" style="width:100%">Got it</button>`);
+}
+function keySheet(){
+ sheet(`<h3>Gemini API key</h3><p class="sub">Saved as you type. Model settings and Test Key arrive in Phase 3.</p><input id="kIn" type="password" autocomplete="off" placeholder="Paste API key" value="${esc(S.apiKey)}" oninput="setKey(this.value)"><div class="row"><button class="btn pri" data-a="close">Done</button></div>`);
+}
+async function copyMD(){
+ const t=today(),a=S.tasks.filter(x=>x.date===t&&!x.done&&(x.bucket==='work'||x.top3));
+ if(!a.length)return toast('No work or Top 3 tasks to copy.');
+ const md=a.map(x=>`- [ ] ${x.top3?'★ ':''}${x.title} (${x.mins}m)`).join('\n');
+ try{await navigator.clipboard.writeText(md)}catch(e){
+  const ta=document.createElement('textarea');ta.value=md;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy')}catch(_){}ta.remove();
+ }
+ toast('Markdown copied.');
+}
+
+document.addEventListener('click',e=>{
+ if(e.target.id==='bg')return closeSheet();
+ const b=e.target.closest('[data-a],[data-t]');if(!b)return;
+ if(b.dataset.t){document.body.dataset.tab=b.dataset.t;document.querySelectorAll('#tabs button').forEach(n=>n.classList.toggle('on',n===b));return}
+ const id=b.dataset.id;
+ ({
+  tog:()=>toggle(id),pin:()=>pin(id),nd:()=>nextDay(id),edit:()=>editSheet(id),
+  del:()=>{del(id);closeSheet()},saveEdit:()=>saveEdit(id),add:addTask,past:()=>pastSheet(),
+  quick:()=>{S.quick=!S.quick;renderAll()},close:closeSheet,key:keySheet,
+  focus:()=>toast('Focus timer arrives in Phase 2.'),
+  clear:()=>{S.tasks=S.tasks.filter(x=>!(x.date===today()&&x.done&&x.recurring!=='daily'));renderAll()},
+  md:copyMD,roll:()=>{rollover(true);renderAll();toast('Rolled over.')},
+  cp:()=>{const o=S.history[b.dataset.d].tasks[+b.dataset.i];S.tasks.push(newTask({title:o.title,bucket:o.bucket,mins:o.mins}));renderAll();b.textContent='✓ Added';b.disabled=true;toast('Added to Today.')},
+  install:async()=>{if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null}else installSheet()}
+ })[b.dataset.a]?.();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+document.addEventListener('change',e=>{if(e.target.id==='pd')pastSheet(e.target.value)});
+$('#qTitle').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){rollover();renderAll()}});
+setInterval(()=>{if(S.day!==today()){rollover();renderAll()}},60000);
+
+/* PWA icons, manifest, service worker */
+const iconCache={};
+function icon(n){
+ if(iconCache[n])return iconCache[n];
+ const c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d');
+ const gr=g.createLinearGradient(0,0,n,n);gr.addColorStop(0,'#0b1120');gr.addColorStop(1,'#172554');
+ g.fillStyle=gr;g.fillRect(0,0,n,n);
+ g.fillStyle='#6366f1';g.beginPath();if(g.roundRect)g.roundRect(n*.12,n*.12,n*.76,n*.76,n*.18);else g.rect(n*.12,n*.12,n*.76,n*.76);g.fill();
+ g.fillStyle='#fff';g.font=`800 ${n*.3}px "Segoe UI",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('C2D',n/2,n/2+n*.02);
+ return iconCache[n]=c.toDataURL('image/png');
+}
+function setupPWA(){
+ try{
+  $('#fav').href=icon(64);$('#touch').href=icon(180);
+  const m={name:'Commute-to-Desk · Daily Productivity OS',short_name:'C2D',display:'standalone',background_color:'#0b1120',theme_color:'#0b1120',start_url:location.href.split('#')[0],
+   icons:[192,512].map(n=>({src:icon(n),sizes:n+'x'+n,type:'image/png',purpose:'any'}))};
+  $('#mf').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
+ }catch(e){}
+ try{if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}catch(e){}
+}
+
+if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#installBtn').style.display='none';
+window.addEventListener('appinstalled',()=>{$('#installBtn').style.display='none'});
+load();rollover();document.querySelector('#quickDate').min=today();document.querySelector('#quickDate').value=today();
+renderAll();setupPWA();
+</script>
 </body>
 </html>
