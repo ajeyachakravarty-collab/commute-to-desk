@@ -1,5 +1,5 @@
-const CACHE = 'c2d-v1';
-const ASSETS = ['./', './index.html'];
+const CACHE = 'c2d-v2';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png', './favicon-32.png', './favicon-64.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

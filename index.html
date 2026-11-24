@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Commute-to-Desk · Daily Productivity OS</title>
 <meta name="theme-color" content="#0b1120">
-<link rel="icon" id="fav" href="data:,">
-<link rel="apple-touch-icon" id="touch" href="data:,">
-<link rel="manifest" id="mf">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Commute-to-Desk">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 :root{--bg:#0b1120;--card:#131c33;--line:#25304d;--tx:#e8edf7;--mut:#8a97b5;--star:#f5b83d;--ok:#34d3a0;--ind:#6366f1}
 *{box-sizing:border-box}
@@ -18,7 +23,7 @@ input,select,textarea{font:16px inherit;font-family:inherit;color:var(--tx);back
 header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#0b1120,#172554);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
 .wrap{max-width:1100px;margin:0 auto;padding:0 14px}
 .top{display:flex;align-items:center;gap:10px;padding:10px 0 6px}
-.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:grid;place-items:center;font-weight:800;font-size:13px;color:#06101f;letter-spacing:.5px}
+.logo{width:38px;height:38px;border-radius:10px;display:block;box-shadow:0 2px 8px #0006}
 .ttl{flex:1;min-width:0}.ttl b{display:block;font-size:16px}.ttl small{color:var(--mut)}
 .pill{border:1px solid #3b4a78;background:#101a36;border-radius:99px;padding:6px 11px;font-size:13px;white-space:nowrap}
 .hero{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0 8px}
@@ -55,7 +60,45 @@ body[data-tab=today] #v-today,body[data-tab=focus] #v-focus,body[data-tab=plan] 
 .acts .st{color:var(--star)}
 .empty{color:var(--mut);padding:8px 2px}
 .sub{color:var(--mut);font-size:13px;margin:12px 0 0}
-#appToast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,30px);background:#f5b83d;color:#1b1305;padding:10px 16px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
+textarea{resize:vertical}
+#kbox input{margin-top:6px}
+#ring{display:block;margin:0 auto;width:210px;height:210px}
+#ring .bgc{fill:none;stroke:#1e2a4d;stroke-width:9}
+#ring .fg{fill:none;stroke:var(--star);stroke-width:9;stroke-linecap:round;transform:rotate(-90deg);transform-origin:60px 60px;transition:stroke-dashoffset .4s linear}
+#ring.brk .fg{stroke:var(--ok)}
+#tm{font-size:25px;font-weight:700;fill:var(--tx);font-variant-numeric:tabular-nums}
+#tlabel{text-align:center;color:var(--mut);min-height:22px;overflow-wrap:anywhere;padding:0 6px}
+#stRange .btn{flex:1}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:#0f1832;border:1px solid var(--line);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:22px}.kpi small{color:var(--mut)}.kpi em{display:block;color:var(--mut);font-size:11px;font-style:normal}
+.bars{display:flex;align-items:flex-end;gap:3px;height:150px;border-bottom:2px solid #3b4a78}
+.bar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;background:none;border:0;padding:0}
+.bar i{display:block;width:100%;background:#4f5fbf;border-radius:4px 4px 0 0;min-height:2px}
+.bar.sel i{background:var(--star)}.bv{font-size:11px;color:var(--mut);min-height:14px}
+.lbls{display:flex;gap:3px;margin-top:4px}.lbls span{flex:1;text-align:center;font-size:11px;color:var(--mut);overflow:hidden}.lbls .tdy{color:var(--star);font-weight:700}
+.ymax{color:var(--mut);font-size:11px;margin:2px 0}
+.blk{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-left:4px solid var(--ind);border-radius:12px;background:#0f1832;margin-top:8px;cursor:pointer}
+.blk.pers{border-left-color:var(--ok)}.blk.fixed{border-left-color:var(--star)}.blk.deferred{border-left-color:#6b7699;border-style:dashed;border-left-style:solid}
+.blk.live{box-shadow:0 0 0 1px var(--star)}
+.bt{flex:none;width:48px;font-variant-numeric:tabular-nums;font-weight:700}.bt small{display:block;color:var(--mut);font-weight:400}
+.ebtn{background:#18233f;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
+#botBtn{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:50;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:0;border-radius:50%;width:48px;height:48px;padding:0;display:grid;place-items:center;box-shadow:0 6px 20px #0009}
+#botBtn svg{pointer-events:none}
+#botPanel{display:none;position:fixed;z-index:55;left:0;right:0;bottom:0;height:72dvh;background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+#botPanel.show{display:flex}
+body.botopen #botBtn{display:none}
+.bh{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.bh small{flex:1;color:var(--mut);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bh button{background:none;border:0;font-size:18px;padding:2px 6px}
+#botLog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.m{max-width:88%;padding:8px 11px;border-radius:14px;overflow-wrap:anywhere}
+.m.bot{background:#1a2547;align-self:flex-start}.m.user{background:#3b3fa8;align-self:flex-end}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:6px 12px}
+.chips button{white-space:nowrap;font-size:13px;background:#18233f;border:1px solid var(--line);border-radius:99px;padding:6px 11px}
+.bi{display:flex;gap:8px;padding:8px 12px 12px}.bi .btn{flex:none}
+@media(min-width:860px){#botPanel{left:auto;right:16px;bottom:16px;width:380px;height:min(560px,80dvh);border-radius:18px}}
+#appToast{position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom));transform:translate(-50%,30px);background:#f5b83d;color:#1b1305;padding:10px 16px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
 #appToast.show{opacity:1;transform:translate(-50%,0)}
 #bg{position:fixed;inset:0;background:#000a;z-index:60;display:none;align-items:flex-end;justify-content:center}
 #bg.show{display:flex}
@@ -69,7 +112,7 @@ label.c{display:flex;gap:8px;align-items:center;margin-top:10px}label.c input{wi
 <header>
  <div class="wrap">
   <div class="top">
-   <div class="logo">C2D</div>
+   <img class="logo" src="icon-192.png" alt="Commute-to-Desk" width="38" height="38">
    <div class="ttl"><b>Commute-to-Desk</b><small id="dateLine"></small></div>
    <button class="pill" id="installBtn" data-a="install">⬇ Install</button>
    <button class="pill" id="keyBtn" data-a="key">⚙ Key <span id="keyDot"></span></button>
@@ -87,6 +130,14 @@ label.c{display:flex;gap:8px;align-items:center;margin-top:10px}label.c input{wi
 
 <main>
  <section class="view" id="v-today">
+  <div class="card">
+   <h2>🎙 60-Sec Brain Dump</h2>
+   <textarea id="bd" rows="4" placeholder="Speak or type everything on your mind…"></textarea>
+   <div id="kbox" style="display:none" class="sub">Optional: paste a Gemini API key to use AI Polish. Smart Split works without one.<input id="kIn2" type="password" autocomplete="off" placeholder="API key" oninput="setKey(this.value)"></div>
+   <div class="row"><button class="btn" data-a="sample">Sample</button><button class="btn" id="micBtn" data-a="mic">🎤 Tap to Speak</button></div>
+   <div class="row"><button class="btn pri" data-a="split">⚡ Smart Split</button><button class="btn" id="aiBtn" data-a="ai">✨ AI Polish</button></div>
+   <div id="bdMsg" class="sub"></div>
+  </div>
   <div class="card">
    <h2>➕ Quick Add</h2>
    <input id="qTitle" placeholder="What needs doing?" enterkeyhint="done" autocomplete="off">
@@ -109,11 +160,38 @@ label.c{display:flex;gap:8px;align-items:center;margin-top:10px}label.c input{wi
    <div class="row"><button class="btn" data-a="clear">Clear Done</button><button class="btn" data-a="md">Copy MD</button><button class="btn" data-a="roll">↻ Rollover</button></div>
   </div>
  </section>
- <section class="view" id="v-focus"><div class="card"><h2>⏱ Focus</h2><p class="empty">Timer, Shutdown ritual and brain dump arrive in Phase 2–3.</p></div></section>
- <section class="view" id="v-plan"><div class="card"><h2>🗓 Plan</h2><p class="empty">Auto-timeblocker and .ICS export arrive in Phase 3.</p></div></section>
- <section class="view" id="v-stats"><div class="card"><h2>📊 Stats</h2><p class="empty">Analytics and Coach arrive in Phase 3.</p></div></section>
+ <section class="view" id="v-focus">
+  <div class="card"><h2>⏱ Focus Timer</h2>
+   <svg id="ring" viewBox="0 0 120 120" role="timer" aria-label="Focus timer"><circle class="bgc" cx="60" cy="60" r="52"/><circle class="fg" id="fg" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="0"/><text id="tm" x="60" y="68" text-anchor="middle">25:00</text></svg>
+   <div id="tlabel"></div>
+   <div class="row"><button class="btn" data-p="25" data-m="focus">25m Focus</button><button class="btn" data-p="5" data-m="break">5m Break</button><button class="btn" data-p="90" data-m="focus">90m Sprint</button></div>
+   <div class="row"><button class="btn pri" id="tgBtn" data-a="tgl">▶ Start</button><button class="btn" data-a="trs">↺ Reset</button><button class="btn" data-a="tdn">✓ Done</button></div>
+   <div class="row"><input type="number" id="cMin" min="1" max="300" step="1" inputmode="numeric" placeholder="Minutes (1–300)"><button class="btn" data-a="tset">Set Timer</button><button class="btn" data-a="tlog">+ Log</button></div>
+  </div>
+  <div class="card"><h2>🌙 End of day</h2><p class="sub" style="margin:0 0 10px">Review what you finished and set tomorrow up.</p><button class="btn pri" data-a="shut" style="width:100%">🌙 Shutdown</button></div>
+ </section>
+ <section class="view" id="v-plan">
+  <div class="card"><h2>🗓 Auto-Timeblocker</h2>
+   <div class="row"><label class="f">💼 Work start<input type="time" id="pWS"></label><label class="f">💼 Work end<input type="time" id="pWE"></label></div>
+   <div class="row"><label class="f">🏡 Personal start<input type="time" id="pPS"></label><label class="f">🏡 Personal end<input type="time" id="pPE"></label></div>
+   <div class="row"><button class="btn pri" data-a="auto">⚡ Auto-Plan</button><button class="btn" data-a="addblk">➕ Block</button><button class="btn" data-a="ics">📲 .ICS</button></div>
+  </div>
+  <div class="card"><h2>Schedule</h2><div id="scheduleList"></div></div>
+ </section>
+ <section class="view" id="v-stats">
+  <div class="card"><div class="row" id="stRange" style="margin:0 0 10px"><button class="btn" data-r="week">Week</button><button class="btn" data-r="month">Month</button><button class="btn" data-r="year">Year</button></div><div class="kpis" id="kpis"></div></div>
+  <div class="card"><h2 id="chTitle"></h2><div id="chart"></div></div>
+  <div class="card" id="brk" style="display:none"></div>
+ </section>
 </main>
 
+<button id="botBtn" data-a="bot" aria-label="Open Coach" title="Coach"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.5-4.6A8 8 0 1 1 21 12z"/><circle cx="8.5" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="15.5" cy="12" r=".6" fill="currentColor"/></svg></button>
+<div id="botPanel" role="dialog" aria-label="Coach">
+ <div class="bh"><b>💬 Coach</b><small id="botMode"></small><button data-a="botx" aria-label="Close Coach">✕</button></div>
+ <div id="botLog"></div>
+ <div class="chips"><button data-q="What should I do next?">What next?</button><button data-q="Rule of 3 status">Rule of 3</button><button data-q="How is today going?">Today</button><button data-q="How is my week?">My week</button><button data-q="How much deep focus have I done?">Focus time</button><button data-q="What is coming up tomorrow?">Tomorrow</button></div>
+ <div class="bi"><input id="botIn" placeholder="Ask about your day…" enterkeyhint="send" autocomplete="off"><button class="btn pri" data-a="botsend">Send</button></div>
+</div>
 <div id="appToast"></div>
 <div id="bg"><div id="sheet"></div></div>
 
@@ -130,12 +208,12 @@ let S,deferredInstall=null,toastT;
 
 function load(){
  let o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){}
- S=Object.assign({tasks:[],history:{},todayFocusMins:0,day:today(),apiKey:'',model:'gemini-3.5-flash-lite',quick:false},o||{});
+ S=Object.assign({tasks:[],history:{},todayFocusMins:0,day:today(),apiKey:'',model:'gemini-3.8-flash',quick:false,timer:{mode:'focus',total:1500,left:1500,running:false,endTime:0,taskId:null,label:''}},o||{});
  let k='';try{k=window.__geminiKey||sessionStorage.getItem('c2d.key')||localStorage.getItem('c2d.key')||''}catch(e){}
  if(k)S.apiKey=k;
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function setKey(v){v=v.trim();window.__geminiKey=v;S.apiKey=v;try{sessionStorage.setItem('c2d.key',v);localStorage.setItem('c2d.key',v)}catch(e){}save();renderHead()}
+function setKey(v){v=v.trim();window.__geminiKey=v;S.apiKey=v;window.__aiDownUntil=0;try{sessionStorage.setItem('c2d.key',v);localStorage.setItem('c2d.key',v)}catch(e){}save();renderHead();const k2=document.querySelector('#kIn2');if(k2&&k2!==document.activeElement)k2.value=v}
 function toast(m){const t=$('#appToast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
 const H=d=>S.history[d]||(S.history[d]={done:0,mins:0,top3Hit:0,top3Titles:[],tasks:[]});
 const find=id=>S.tasks.find(t=>t.id===id);
@@ -159,9 +237,11 @@ function rollover(force){
    else if(!x.done){x.date=t;x.rolled=true}
   }else if(force&&x.date===tm&&!x.done)x.date=t;
  });
+ S.tasks.forEach(x=>{if(x.pick&&!x.done&&x.date<=t){x.pick=false;x.top3=true}});
+ S.schedule=(S.schedule||[]).filter(b=>b.date>=t&&!(b.auto&&b.date===t&&S.day!==t));S.schedSig='';
  S.day=t;enforceTop3Cap();save();
 }
-function newTask(o){return Object.assign({id:uid(),title:'',date:today(),bucket:'work',mins:25,top3:false,done:false,recurring:null,focusCredited:false,rolled:false},o)}
+function newTask(o){return Object.assign({id:uid(),title:'',date:today(),bucket:'work',mins:25,top3:false,pick:false,done:false,recurring:null,focusCredited:false,rolled:false},o)}
 
 function toggle(id){
  const x=find(id);if(!x)return;const h=H(today());
@@ -190,12 +270,12 @@ function pin(id){
  renderAll();
 }
 function nextDay(id){const x=find(id);if(!x)return;S.tasks.push(newTask({title:x.title,bucket:x.bucket,mins:x.mins,date:addDays(x.date>today()?x.date:today(),1)}));toast('Copied to '+fmt(addDays(x.date>today()?x.date:today(),1)));renderAll()}
-function del(id){S.tasks=S.tasks.filter(t=>t.id!==id);renderAll()}
+function del(id){if(T().taskId===id){T().taskId=null;T().running=false;T().left=T().total}S.tasks=S.tasks.filter(t=>t.id!==id);renderAll()}
 
 function card(x){
  const fut=x.date>today();
  return `<div class="task${x.done?' done':''}"><button class="chk" data-a="tog" data-id="${x.id}" aria-label="Toggle done">${x.done?'✓':''}</button>
- <div class="tt"><b>${esc(x.title)}</b><small>${x.mins}m · ${x.bucket==='work'?'Work':'Personal'}${x.recurring?' · 🔁 Daily':''}${x.rolled&&!x.done?' · ↻ Rolled':''}${fut?' · '+fmt(x.date):''}</small></div>
+ <div class="tt"><b>${esc(x.title)}</b><small>${x.mins}m · ${x.bucket==='work'?'Work':'Personal'}${x.recurring?' · 🔁 Daily':''}${x.rolled&&!x.done?' · ↻ Rolled':''}${x.pick&&!x.top3&&!x.done?' · ★ Tomorrow’s pick':''}${fut?' · '+fmt(x.date):''}</small></div>
  <div class="acts">${x.done?'':`<button data-a="focus" data-id="${x.id}">▶ Focus</button><button class="st" data-a="pin" data-id="${x.id}">${x.top3?'★ Top 3':'☆ Top 3'}</button><button data-a="nd" data-id="${x.id}">🌅 +1d</button>`}<button data-a="edit" data-id="${x.id}">✎ Edit</button><button data-a="del" data-id="${x.id}">🗑 Del</button></div></div>`;
 }
 const list=(a,m)=>a.length?a.map(card).join(''):`<div class="empty">${m}</div>`;
@@ -206,7 +286,7 @@ function renderHead(){
  $('#hR3').textContent=activeTop3().length+' / 3';
  $('#hDone').textContent=H(today()).tasks.length;
  $('#hFocus').textContent=S.todayFocusMins+'m';
- $('#qwBtn').classList.toggle('on',S.quick);
+ $('#qwBtn').classList.toggle('on',S.quick);if(typeof botMode==='function')botMode();
 }
 function renderAll(){
  enforceTop3Cap();H(today()).mins=S.todayFocusMins;
@@ -218,10 +298,482 @@ function renderAll(){
  $('#pers').innerHTML=list(act.filter(x=>x.bucket==='personal'),'Nothing here.');
  $('#up').innerHTML=list(S.tasks.filter(x=>x.date>t&&q(x)).sort((a,b)=>a.date.localeCompare(b.date)),'Nothing scheduled ahead.');
  $('#doneL').innerHTML=list(td.filter(x=>x.done),'Completed tasks show up here.');
- renderHead();save();
- if(typeof generateSchedule==='function'&&window.__sched)generateSchedule();
+ renderHead();save();if(typeof drawTimer==='function')drawTimer();
+ if((S.schedule||[]).some(b=>b.auto))generateSchedule();
+ renderSchedule();renderStats();
 }
 
+/* ---------- Focus timer ---------- */
+const T=()=>S.timer;
+let actx=null;
+function chime(){
+ try{
+  actx=actx||new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();
+  [660,880,1100].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+i*.22;
+   o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.5);
+   o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+.55)});
+ }catch(e){}
+ try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+}
+const mmss=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+function drawTimer(){
+ const t=T();
+ $('#tm').textContent=mmss(t.left);
+ $('#fg').style.strokeDashoffset=326.73*(1-(t.total?t.left/t.total:0));
+ $('#ring').classList.toggle('brk',t.mode==='break');
+ $('#tgBtn').textContent=t.running?'⏸ Pause':'▶ Start';
+ const k=find(t.taskId);
+ $('#tlabel').textContent=t.running||t.left<t.total?(k?'Working on: '+k.title:(t.mode==='break'?'Break':'Focus')):(k?'Ready: '+k.title:'');
+ document.title=t.running?mmss(t.left)+' · Commute-to-Desk':'Commute-to-Desk · Daily Productivity OS';
+}
+function tick(){
+ const t=T();if(!t.running)return;
+ t.left=Math.max(0,Math.ceil((t.endTime-Date.now())/1000));
+ if(t.left<=0)return finishTimer(true);
+ drawTimer();
+}
+function setTimer(mins,mode,taskId){
+ const t=T();t.mode=mode||'focus';t.total=t.left=Math.round(mins*60);t.running=false;t.taskId=taskId||null;save();drawTimer();
+}
+function startTimer(){
+ const t=T();if(t.running)return;if(t.left<=0)t.left=t.total;
+ t.endTime=Date.now()+t.left*1000;t.running=true;
+ try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume&&actx.resume()}catch(e){}
+ save();drawTimer();
+}
+function pauseTimer(){const t=T();if(!t.running)return;t.left=Math.max(0,Math.ceil((t.endTime-Date.now())/1000));t.running=false;save();drawTimer()}
+function resetTimer(){const t=T();t.running=false;t.left=t.total;save();drawTimer()}
+function finishTimer(auto){
+ const t=T();
+ const elapsed=auto?t.total:t.total-(t.running?Math.max(0,Math.ceil((t.endTime-Date.now())/1000)):t.left);
+ const k=find(t.taskId),mode=t.mode;
+ t.running=false;t.left=t.total;t.taskId=null;
+ let msg;
+ if(mode==='break'){msg='Break finished.'}
+ else if(k&&!k.done&&k.date===today()){
+  const before=S.todayFocusMins;toggle(k.id);msg='Done: '+k.title+' (+'+(S.todayFocusMins-before)+'m focus)';
+ }else{
+  const m=Math.round(elapsed/60);
+  if(m<1&&!auto){save();drawTimer();return toast('Nothing to log yet. Run the timer for a minute first.')}
+  S.todayFocusMins+=m;msg='Logged '+m+'m of focus.';
+ }
+ chime();toast(msg);renderAll();drawTimer();
+}
+function logMinutes(){
+ const n=parseInt($('#cMin').value,10);
+ if(!(n>=1&&n<=300))return toast('Enter 1 to 300 minutes.');
+ S.todayFocusMins+=n;$('#cMin').value='';renderAll();toast('Logged '+n+'m of focus.');
+}
+function setCustom(){
+ const n=parseInt($('#cMin').value,10);
+ if(!(n>=1&&n<=300))return toast('Enter 1 to 300 minutes.');
+ setTimer(n,'focus');
+}
+function focusTask(id){
+ const x=find(id);if(!x||x.done)return;
+ if(x.date!==today())return toast('Move this task to today to focus on it.');
+ setTimer(x.mins,'focus',id);startTimer();
+ document.body.dataset.tab='focus';document.querySelectorAll('#tabs button').forEach(n=>n.classList.toggle('on',n.dataset.t==='focus'));
+ window.scrollTo(0,0);
+}
+function shutdown(){
+ const t=today(),h=H(t),open=S.tasks.filter(x=>x.date===t&&!x.done);
+ const L=S.lastShutdown&&S.lastShutdown.day===t?S.lastShutdown:null;
+ sheet(`<h3>🌙 Shutdown</h3>
+ <p><b>${h.tasks.length}</b> done · <b>${S.todayFocusMins}m</b> deep focus · Rule of 3 hits: <b>${h.top3Hit}</b></p>
+ ${h.top3Titles.length?`<p class="sub">Must-wins finished: ${h.top3Titles.map(esc).join(', ')}</p>`:''}
+ ${open.length?`<p style="margin-bottom:0"><b>Pick up to 3 must-wins for tomorrow:</b></p>
+ ${open.map(x=>`<label class="c"><input type="checkbox" class="pk" value="${x.id}"${x.top3&&open.filter(y=>y.top3).indexOf(x)<3?' checked':''}> <span>${esc(x.title)} <small style="color:var(--mut)">${x.mins}m${x.recurring?' · 🔁 daily (stays on Today)':''}</small></span></label>`).join('')}
+ <p class="sub">Wrapping up moves the ${open.filter(x=>x.recurring!=='daily').length} unfinished one-off task(s) to tomorrow, stops the timer, and pre-pins your picks for tomorrow.</p>
+ <div class="row"><button class="btn pri" data-a="wrap">Wrap up &amp; move to tomorrow</button><button class="btn" data-a="close">Just close</button></div>`
+ :`<p>Nothing left open. Clean slate.</p><div class="row"><button class="btn pri" data-a="close">Close</button></div>`}
+ ${L?`<div class="row"><button class="btn bad" data-a="undoSh">↩ Undo today’s wrap-up</button></div>`:''}`);
+}
+function wrapUp(){
+ const t=today(),tm=addDays(t,1),picks=[...document.querySelectorAll('#sheet .pk:checked')].map(e=>e.value).slice(0,3);
+ const open=S.tasks.filter(x=>x.date===t&&!x.done);
+ const snap=open.map(x=>({id:x.id,date:x.date,rolled:x.rolled,top3:x.top3,pick:x.pick}));
+ const tk=T();tk.running=false;tk.left=tk.total;if(open.some(x=>x.id===tk.taskId))tk.taskId=null;
+ let moved=0;
+ open.forEach(x=>{if(x.recurring!=='daily'){x.date=tm;x.rolled=true;moved++}x.top3=false;x.pick=picks.includes(x.id)});
+ S.lastShutdown={day:t,snap};renderAll();
+ const names=open.filter(x=>x.pick).map(x=>esc(x.title));
+ sheet(`<h3>🌙 Shutdown complete</h3><p>${moved} task(s) moved to tomorrow.</p>${names.length?`<p>Tomorrow’s must-wins: <b>${names.join(', ')}</b></p>`:'<p class="sub">No must-wins picked for tomorrow.</p>'}<div class="row"><button class="btn bad" data-a="undoSh">↩ Undo</button><button class="btn pri" data-a="close">Done for today</button></div>`);
+}
+function undoShutdown(){
+ const L=S.lastShutdown;if(!L)return;
+ L.snap.forEach(o=>{const x=find(o.id);if(x){x.date=o.date;x.rolled=o.rolled;x.top3=o.top3;x.pick=o.pick}});
+ S.lastShutdown=null;closeSheet();renderAll();toast('Wrap-up undone.');
+}
+/* ---------- Brain dump + Gemini ---------- */
+const MODELS=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite'];
+const MS=[2,15,25,45,60,90];
+const snap=n=>MS.reduce((a,b)=>Math.abs(b-n)<Math.abs(a-n)?b:a);
+const VERBS='call|email|mail|send|buy|book|finish|write|review|prepare|plan|schedule|pay|reply|clean|cook|fix|update|submit|read|study|practice|do|go|take|get|pick|check|ask|make|meet|text|ping|remind|order|renew|cancel|organi[sz]e|walk|run|work';
+const PERS=/\b(gym|workout|exercise|run|jog|walk|yoga|stretch|cook|dinner|lunch|breakfast|groceries|grocery|family|mom|dad|mother|father|wife|husband|kids?|doctor|dentist|laundry|home|house|bills?|rent|guitar|meditat\w*|birthday|shopping|kannada|sleep|water|skincare|friend|temple|movie)\b/i;
+function guessMins(c){
+ let m=c.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h)\b/i);if(m)return snap(parseFloat(m[1])*60);
+ m=c.match(/(\d+)\s*(mins?|minutes?|m)\b/i);if(m)return snap(+m[1]);
+ if(/\b(ping|text|remind|pay|reply|confirm|rsvp)\b/i.test(c))return 2;
+ if(/\b(call|email|mail|send|book|schedule|check|order|renew|cancel|submit|update)\b/i.test(c))return 15;
+ if(/\b(project|assignment|thesis|sprint|workshop|deep work|proposal|report)\b/i.test(c))return 90;
+ if(/\b(workout|gym|cook|clean|research|design|build|code|develop|analy\w+|study|laundry)\b/i.test(c))return 60;
+ if(/\b(write|draft|prepare|plan|read|practice|learn|slides?|presentation|review)\b/i.test(c))return 45;
+ return 25;
+}
+function smartSplit(text){
+ const out=[];
+ text.replace(/\r/g,'\n').split(/[\n.!?;]+/).forEach(p=>p.split(new RegExp('\\s*,?\\s+(?:and then|then|also)\\s+|,\\s*and\\s+|,\\s+(?=(?:'+VERBS+')\\b)|,\\s+(?=\\d+\\s*(?:mins?|minutes?|hrs?|hours?)\\b)|\\s+and\\s+(?=(?:'+VERBS+')\\b)','i')).forEach(c=>{
+  c=c.trim();if(!c)return;
+  const rec=/\b(every ?day|daily)\b/i.test(c)?'daily':null,tom=/\btomorrow\b/i.test(c);
+  let t=c.replace(/\b(every ?day|daily|tomorrow|today)\b/ig,' ').replace(/\s*(?:for\s+)?\d+(?:\.\d+)?\s*(?:mins?|minutes?|hrs?|hours?)\b/ig,' ');
+  const lead=/^(?:(?:i|we)\s+)?(?:(?:also|and|then|so|plus|but)\s+)*(?:(?:need|have|has|want|got)\s+to|should|must|gotta|remember to|don'?t forget to|please)\s+/i;
+  while(lead.test(t))t=t.replace(lead,'');
+  t=t.replace(/^(?:(?:also|and|then|so|plus)\s+)+/i,'').replace(/\s+(?:by|on|for)\s*$/i,'').replace(/\s+/g,' ').replace(/^[\s,\-–:]+|[\s,\-–:]+$/g,'');
+  t=t.replace(/^(?:(?:ugh+|um+|uh+|hmm+|okay|ok|well|anyway)[,\s]+)+/i,'');
+  if(t.length<3||(/^(?:so much|a lot|too much|lots|nothing|whatever)\b/i.test(t)&&t.split(' ').length<=5))return;
+  t=t[0].toUpperCase()+t.slice(1);
+  const personal=PERS.test(c);
+  out.push({title:t,day:tom?'tomorrow':'today',bucket:personal?'personal':'work',mins:guessMins(c),recurring:rec,top3:false});
+ }));
+ out.map((i,n)=>({i,n})).filter(o=>o.i.bucket==='work'&&o.i.day==='today'&&!o.i.recurring).sort((a,b)=>b.i.mins-a.i.mins||a.n-b.n).slice(0,3).forEach(o=>{o.i.top3=true});
+ return out;
+}
+function addParsed(items){
+ const t=today(),tm=addDays(t,1);let added=0,skipped=0,pinned=0;
+ items.forEach(i=>{
+  const title=String(i.title||'').trim().slice(0,200);if(!title)return;
+  const date=i.day==='tomorrow'?tm:t;
+  if(S.tasks.some(x=>!x.done&&x.date===date&&x.title.toLowerCase()===title.toLowerCase())){skipped++;return}
+  const x=newTask({title,date,bucket:i.bucket==='personal'?'personal':'work',mins:snap(+i.mins||25),recurring:i.recurring==='daily'?'daily':null});
+  if(i.top3&&date===t&&!x.recurring&&activeTop3().length<3){x.top3=true;pinned++}
+  S.tasks.push(x);added++;
+ });
+ renderAll();return {added,skipped,pinned};
+}
+const bdMsg=m=>{$('#bdMsg').textContent=m};
+function bdDone(r,how){
+ if(!r.added&&!r.skipped)return bdMsg('Nothing to add. Try a fuller sentence.');
+ $('#bd').value='';
+ bdMsg(`${how}: added ${r.added} task${r.added===1?'':'s'}${r.pinned?`, pinned ${r.pinned} to Rule of 3`:''}${r.skipped?` (${r.skipped} duplicate${r.skipped===1?'':'s'} skipped)`:''}.`);
+ toast(`Added ${r.added} task${r.added===1?'':'s'}.`);
+}
+function doSplit(){
+ const v=$('#bd').value.trim();if(!v)return bdMsg('Dump something first. Speak, type, or tap Sample.');
+ bdDone(addParsed(smartSplit(v)),'Smart Split');
+}
+function sampleDump(){
+ $('#bd').value='Reply to Priya about the budget and finish the Q4 report draft. Call the bank tomorrow. Gym every day for 60 minutes. Buy groceries, then prepare slides for the Friday review. Quick ping to Arjun about the invoice.';
+ bdMsg('Sample loaded. Tap Smart Split or AI Polish.');
+}
+/* voice */
+let rec=null,recTimer=null,recBase='';
+function micStop(){clearTimeout(recTimer);try{rec&&rec.stop()}catch(e){}}
+function micToggle(){
+ if(rec){return micStop()}
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR)return toast('Voice input isn’t supported in this browser. Type instead.');
+ const r=new SR();r.lang='en-IN';r.interimResults=true;r.continuous=true;
+ recBase=$('#bd').value.trim();let fin='';
+ r.onresult=e=>{
+  let interim='';
+  for(let i=e.resultIndex;i<e.results.length;i++){const tx=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=tx+' ';else interim+=tx}
+  $('#bd').value=(recBase?recBase+' ':'')+(fin+interim).trim();
+ };
+ r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')toast('Microphone permission was blocked.');else if(e.error!=='no-speech'&&e.error!=='aborted')toast('Voice error: '+e.error)};
+ r.onend=()=>{clearTimeout(recTimer);rec=null;$('#micBtn').textContent='🎤 Tap to Speak'};
+ try{r.start();rec=r;$('#micBtn').textContent='⏹ Stop (60s max)';bdMsg('Listening…');recTimer=setTimeout(micStop,60000)}catch(e){rec=null;toast('Could not start the microphone.')}
+}
+/* Gemini */
+const modelOrder=()=>[S.model].concat(MODELS.filter(m=>m!==S.model));
+async function gem(model,text,json){
+ const ac=new AbortController(),to=setTimeout(()=>ac.abort(),25000);
+ try{
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal:ac.signal,
+   headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},
+   body:JSON.stringify({contents:[{role:'user',parts:[{text}]}],generationConfig:Object.assign({temperature:.2},json?{responseMimeType:'application/json'}:{})})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+  const out=((j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[]).map(p=>p.text||'').join('');
+  if(!out)throw new Error('Empty response');
+  return out;
+ }catch(e){throw e.name==='AbortError'?new Error('Request timed out'):e}
+ finally{clearTimeout(to)}
+}
+async function gemFallback(prompt,json,parse){
+ let err=new Error('No model answered');
+ for(const m of modelOrder()){
+  try{const t=await gem(m,prompt,json);window.__aiDownUntil=0;return {value:parse?parse(t):t,model:m}}
+  catch(e){err=e;if(/api key|permission|quota|billing|exhaust|denied|unauthenticated|rate limit/i.test(e.message))break}
+ }
+ window.__aiDownUntil=Date.now()+5*60000;botMode();
+ throw err;
+}
+function parseTasks(t){
+ t=t.replace(/```(?:json)?/gi,'').trim();
+ const a=t.indexOf('['),b=t.lastIndexOf(']');
+ let j=JSON.parse(a>-1&&b>a?t.slice(a,b+1):t);
+ if(j&&!Array.isArray(j))j=j.tasks;
+ if(!Array.isArray(j)||!j.length)throw new Error('No tasks in response');
+ return j.filter(x=>x&&x.title).map(x=>({title:String(x.title),day:/tomorrow/i.test(x.day)?'tomorrow':'today',bucket:/pers/i.test(x.bucket)?'personal':'work',mins:+x.mins||25,recurring:/daily/i.test(String(x.recurring))?'daily':null,top3:x.top3===true}));
+}
+async function aiPolish(){
+ const v=$('#bd').value.trim();if(!v)return bdMsg('Dump something first. Speak, type, or tap Sample.');
+ if(!S.apiKey){$('#kbox').style.display='block';$('#kIn2').focus();return bdMsg('Add your Gemini key above, then tap AI Polish again.')}
+ if(!aiUsable())return bdDone(addParsed(smartSplit(v)),'AI is unavailable right now, so I used Smart Split');
+ const btn=$('#aiBtn');btn.disabled=true;btn.textContent='✨ Polishing…';bdMsg('Asking Gemini…');
+ const prompt=`You turn a messy brain dump into clear tasks. Today is ${today()}.
+Return ONLY a JSON array. Each item: {"title": short imperative task (max 80 chars), "day": "today" or "tomorrow", "bucket": "work" or "personal", "mins": one of 2,15,25,45,60,90, "recurring": "daily" or null, "top3": true for at most 3 important work tasks due today, otherwise false}.
+Rules: split combined items, drop filler, use "daily" only if the text says every day/daily, use "tomorrow" only if the text says tomorrow.
+Brain dump:
+"""${v}"""`;
+ try{
+  const r=await gemFallback(prompt,true,parseTasks);
+  bdDone(addParsed(r.value),'AI Polish ('+r.model+')');
+ }catch(e){bdDone(addParsed(smartSplit(v)),'AI unavailable ('+shortErr(e)+'), so I used Smart Split')}
+ finally{btn.disabled=false;btn.textContent='✨ AI Polish'}
+}
+async function testKey(){
+ const st=$('#kStat');if(!S.apiKey){st.textContent='Paste a key first.';return}
+ st.textContent='Testing '+S.model+'…';
+ try{await gem(S.model,'Reply with the single word OK.',false);st.textContent='✅ Key works with '+S.model+'.';window.__aiDownUntil=0;botMode()}
+ catch(e){st.textContent='❌ '+e.message}
+}
+function keySheet(){
+ sheet(`<h3>⚙ Settings</h3>
+ <label class="f">Gemini model<select id="mSel">${MODELS.map(m=>`<option${m===S.model?' selected':''}>${m}</option>`).join('')}</select></label>
+ <label class="f">API key (saved as you type)<input id="kIn" type="password" autocomplete="off" placeholder="Paste API key" value="${esc(S.apiKey)}" oninput="setKey(this.value)"></label>
+ <div class="row"><button class="btn" data-a="tkey">🔌 Test Key</button><button class="btn pri" data-a="close">Done</button></div>
+ <div id="kStat" class="sub"></div>`);
+}
+/* ---------- Coach (floating, offline-first) ---------- */
+const aiUsable=()=>!!S.apiKey&&Date.now()>(window.__aiDownUntil||0)&&navigator.onLine!==false;
+const shortErr=e=>String(e&&e.message||e).slice(0,70);
+const fmM=m=>m>=60?Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':''):m+'m';
+function rangeStats(n){
+ const out=[];
+ for(let i=n-1;i>=0;i--){const d=addDays(today(),-i),h=S.history[d];out.push({d,done:h?h.tasks.length:0,mins:d===today()?S.todayFocusMins:(h?h.mins:0),top3:h?h.top3Hit:0})}
+ const sum=k=>out.reduce((a,x)=>a+x[k],0);
+ return {days:out,done:sum('done'),mins:sum('mins'),top3:sum('top3'),active:out.filter(x=>x.done>0).length,best:out.reduce((a,x)=>x.done>a.done?x:a,out[0])};
+}
+const bot={msgs:[],busy:false};
+function botMode(){const el=document.querySelector('#botMode');if(el)el.textContent=aiUsable()?'AI · '+S.model:(S.apiKey?'Offline answers (AI paused)':'Offline mode · no key needed')}
+function renderBot(){const l=$('#botLog');l.innerHTML=bot.msgs.map(m=>`<div class="m ${m.role}">${esc(m.text).replace(/\n/g,'<br>')}</div>`).join('');l.scrollTop=l.scrollHeight;botMode()}
+function botOpen(){
+ if(!bot.msgs.length)bot.msgs.push({role:'bot',text:'I’m your Coach. Ask what to do next, how today or your week is going, or about your Rule of 3. I work offline too.'});
+ document.body.classList.add('botopen');$('#botPanel').classList.add('show');renderBot();setTimeout(()=>$('#botIn').focus(),60);
+}
+function botClose(){document.body.classList.remove('botopen');$('#botPanel').classList.remove('show')}
+function offlineAnswer(q){
+ const ql=q.toLowerCase(),t=today(),open=S.tasks.filter(x=>x.date===t&&!x.done),pins=activeTop3(),h=S.history[t]||{tasks:[],top3Hit:0};
+ if(/top ?3|rule of 3|must[- ]?win|pinned/.test(ql))
+  return pins.length?`Rule of 3: ${pins.length}/3 active.\n`+pins.map((x,i)=>`${i+1}. ${x.title} (${x.mins}m)`).join('\n')+`\nMust-wins finished today: ${h.top3Hit}.`:`No must-wins pinned (finished today: ${h.top3Hit}). Pin up to 3 tasks with ☆ Top 3.`;
+ if(/\bnext\b|what should|start|prioriti|what now|focus on/.test(ql)){
+  if(pins.length)return `Start with your Rule of 3: “${pins[0].title}” (${pins[0].mins}m).`+(pins[1]?` Then “${pins[1].title}”.`:'');
+  if(open.length){const b=[...open].sort((a,c)=>c.mins-a.mins)[0];return `Nothing is pinned. The biggest open task is “${b.title}” (${b.mins}m). Pin it to your Rule of 3 and start the timer.`}
+  return 'Nothing is open today. Try a Brain Dump or pull a task from Upcoming.';
+ }
+ if(/week|month|year|7 day|30 day|streak|trend|history|last /.test(ql)){
+  const n=/year/.test(ql)?365:/month|30/.test(ql)?30:7,r=rangeStats(n);
+  if(!r.done&&!r.mins)return `No completed tasks or focus time logged in the last ${n} days yet.`;
+  return `Last ${n} days: ${r.done} done, ${fmM(r.mins)} focus, ${r.top3} Rule of 3 hits, active on ${r.active} of ${n} days.`+(r.best.done?` Best day: ${fmt(r.best.d)} with ${r.best.done} done.`:'');
+ }
+ if(/tomorrow|upcoming|later|scheduled|ahead|coming up/.test(ql)){
+  const u=S.tasks.filter(x=>x.date>t&&!x.done).sort((a,b)=>a.date.localeCompare(b.date));
+  return u.length?`Coming up (${u.length}):\n`+u.slice(0,6).map(x=>`• ${fmt(x.date)}: ${x.title}`).join('\n')+(u.length>6?`\n+${u.length-6} more`:''):'Nothing is scheduled ahead.';
+ }
+ if(/roll|overdue|carried|behind/.test(ql)){
+  const r=S.tasks.filter(x=>x.rolled&&!x.done);return r.length?`${r.length} rolled-over task(s):\n`+r.slice(0,6).map(x=>'• '+x.title).join('\n'):'No rolled-over tasks. You’re caught up.';
+ }
+ if(/schedule|timeblock|time block|timeline|plan\b/.test(ql)){
+  const sc=(S.schedule||[]).filter(b=>b.date===t).sort((a,c)=>mm(a.start)-mm(c.start));return sc.length?'Today’s blocks:\n'+sc.slice(0,8).map(b=>`• ${b.start}–${b.end} ${b.title}`).join('\n'):'No timeblocks planned for today yet.';
+ }
+ if(/focus|deep|minutes|time spent/.test(ql)){const r=rangeStats(7);return `Deep focus today: ${fmM(S.todayFocusMins)}. Last 7 days: ${fmM(r.mins)} (about ${Math.round(r.mins/7)}m a day).`}
+ if(/today|done|progress|how am i|status|summary|doing|going/.test(ql))
+  return `Today: ${h.tasks.length} done, ${open.length} open, ${fmM(S.todayFocusMins)} focus, Rule of 3 ${pins.length}/3 active (${h.top3Hit} finished).`+(open.length?` Next up: “${(pins[0]||open[0]).title}”.`:'');
+ return 'I can answer: what to do next, your Rule of 3, today’s progress, focus time, week/month/year stats, tomorrow’s tasks, and rolled-over tasks. Tap a chip below.';
+}
+function coachContext(){
+ const t=today(),h=S.history[t]||{tasks:[],top3Hit:0};
+ return {today:t,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),rule3Active:activeTop3().map(x=>x.title),
+  openToday:S.tasks.filter(x=>x.date===t&&!x.done).slice(0,40).map(x=>({title:x.title,mins:x.mins,bucket:x.bucket,daily:!!x.recurring,rolled:!!x.rolled})),
+  doneToday:h.tasks.map(x=>x.title),top3FinishedToday:h.top3Hit,focusMinsToday:S.todayFocusMins,
+  last14Days:rangeStats(14).days.map(x=>[x.d,x.done,x.mins,x.top3]),last14Legend:'[date,done,focusMins,top3Hits]',
+  upcoming:S.tasks.filter(x=>x.date>t&&!x.done).slice(0,15).map(x=>({date:x.date,title:x.title})),schedule:(S.schedule||[]).filter(b=>b.date>=t).sort((a,c)=>a.date.localeCompare(c.date)||mm(a.start)-mm(c.start)).slice(0,25).map(b=>({date:b.date,start:b.start,end:b.end,title:b.title,type:b.type}))};
+}
+async function askCoach(q){
+ q=String(q||'').trim();if(!q||bot.busy)return;
+ $('#botIn').value='';bot.msgs.push({role:'user',text:q});
+ if(!aiUsable()){bot.msgs.push({role:'bot',text:offlineAnswer(q)});return renderBot()}
+ bot.busy=true;bot.msgs.push({role:'bot',text:'Thinking…'});renderBot();
+ const idx=bot.msgs.length-1,hist=bot.msgs.slice(-9,-2).map(m=>(m.role==='user'?'User: ':'Coach: ')+m.text).join('\n');
+ const prompt=`You are a concise productivity coach inside a task app. Use only the DATA below. If something is not in the data, say you don't have it. Max 90 words, plain text, no markdown.\nDATA: ${JSON.stringify(coachContext())}\n${hist?'RECENT CHAT:\n'+hist+'\n':''}User: ${q}`;
+ try{bot.msgs[idx].text=(await gemFallback(prompt,false)).value.trim()}
+ catch(e){bot.msgs[idx].text='AI unavailable ('+shortErr(e)+'). Offline answer:\n'+offlineAnswer(q)}
+ bot.busy=false;renderBot();
+}
+/* ---------- Plan: auto-timeblocker + .ICS ---------- */
+const hm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const mm=s=>{const a=String(s).split(':').map(Number);return (a[0]||0)*60+(a[1]||0)};
+const PLAN0={ws:'11:30',we:'19:00',ps:'20:00',pe:'22:00'};
+const TYPES={work:'💼 Work',pers:'🏡 Personal',fixed:'📌 Fixed',deferred:'⏭ Deferred'};
+const PIDS={pWS:'ws',pWE:'we',pPS:'ps',pPE:'pe'};
+const nowMin=(step)=>{const n=new Date();return Math.ceil((n.getHours()*60+n.getMinutes())/step)*step};
+function planSync(){S.plan=Object.assign({},PLAN0,S.plan);Object.keys(PIDS).forEach(id=>{$('#'+id).value=S.plan[PIDS[id]]})}
+function planChange(id){
+ const k=PIDS[id];S.plan[k]=$('#'+id).value||PLAN0[k];
+ let fixed=false;
+ [['ws','we'],['ps','pe']].forEach(([a,b])=>{
+  if(mm(S.plan[b])<=mm(S.plan[a])){
+   S.plan[b]=hm(Math.min(mm(S.plan[a])+(k===a?60:30),1439));
+   if(mm(S.plan[b])<=mm(S.plan[a]))S.plan[a]=hm(mm(S.plan[b])-30);
+   fixed=true;
+  }
+ });
+ planSync();if(fixed)toast('End time must be after start, so I adjusted it.');
+ save();if((S.schedule||[]).some(b=>b.auto))generateSchedule(true);
+}
+function generateSchedule(force){
+ const t=today(),tm=addDays(t,1),pl=S.plan=Object.assign({},PLAN0,S.plan);
+ const open=S.tasks.filter(x=>x.date===t&&!x.done);
+ const sig=JSON.stringify([open.map(x=>[x.id,x.title,x.mins,x.top3,x.bucket]),pl]);
+ if(!force&&sig===S.schedSig)return null;
+ S.schedSig=sig;
+ const keep=(S.schedule||[]).filter(b=>!b.auto&&b.date>=t);
+ const planned=new Set(keep.filter(b=>b.taskId).map(b=>b.taskId));
+ const out=[];let placed=0,deferred=0,lost=0;
+ const place=(list,ws,we,date,floor,type)=>{
+  const over=[];let cur=Math.max(mm(ws),floor);
+  const busy=()=>keep.concat(out).filter(b=>b.date===date);
+  list.forEach(x=>{
+   let ok=false;
+   while(cur+x.mins<=mm(we)){
+    const c=busy().find(b=>cur<mm(b.end)&&cur+x.mins>mm(b.start));
+    if(!c){out.push({id:uid(),title:x.title,start:hm(cur),end:hm(cur+x.mins),type,date,auto:true,taskId:x.id,top3:!!x.top3});cur+=x.mins+5;ok=true;break}
+    cur=Math.max(cur+5,mm(c.end));
+   }
+   if(!ok)over.push(x);
+  });
+  return over;
+ };
+ const todo=open.filter(x=>!planned.has(x.id));
+ const work=todo.filter(x=>x.bucket==='work').sort((a,b)=>(b.top3-a.top3)||(b.mins-a.mins));
+ const pers=todo.filter(x=>x.bucket!=='work');
+ const floor=nowMin(5);
+ const ow=place(work,pl.ws,pl.we,t,floor,'work'),op=place(pers,pl.ps,pl.pe,t,floor,'pers');
+ placed=out.length;
+ const before=out.length;
+ const dw=place(ow,pl.ws,pl.we,tm,0,'deferred'),dp=place(op,pl.ps,pl.pe,tm,0,'deferred');
+ deferred=out.length-before;lost=dw.length+dp.length;
+ S.schedule=keep.concat(out);save();renderSchedule();
+ return {placed,deferred,lost};
+}
+function renderSchedule(){
+ const L=$('#scheduleList');if(!L)return;
+ const t=today(),all=(S.schedule||[]).filter(b=>b.date>=t).sort((a,b)=>a.date.localeCompare(b.date)||mm(a.start)-mm(b.start));
+ if(!all.length){L.innerHTML='<div class="empty">No timeblocks yet. Tap ⚡ Auto-Plan to schedule today’s open tasks, or ➕ Block to add your own.</div>';return}
+ const nm=nowMin(1);let cur='',h='';
+ all.forEach(b=>{
+  if(b.date!==cur){cur=b.date;h+=`<p class="sub">${b.date===t?'Today':fmt(b.date)}</p>`}
+  const live=b.date===t&&nm>=mm(b.start)&&nm<mm(b.end);
+  h+=`<div class="blk ${b.type}${live?' live':''}" data-a="blk" data-id="${b.id}"><div class="bt">${b.start}<small>${b.end}</small></div><div class="tt"><b>${b.top3?'★ ':''}${esc(b.title)}</b><small>${TYPES[b.type]||''}${live?' · now':''}</small></div><button class="ebtn" data-a="blk" data-id="${b.id}">✎ Edit</button></div>`;
+ });
+ L.innerHTML=h;
+}
+function blockSheet(id){
+ const b=id?(S.schedule||[]).find(x=>x.id===id):null;
+ const sm=Math.min(nowMin(30),1380);
+ const v=b||{title:'',start:hm(sm),end:hm(Math.min(sm+30,1439)),type:'fixed',date:today()};
+ sheet(`<h3>${b?'Edit Timeblock':'Add Timeblock'}</h3>
+ <label class="f">Title<input id="bTi" value="${esc(v.title)}"></label>
+ <div class="row"><label class="f">Start<input type="time" id="bS" value="${v.start}"></label><label class="f">End<input type="time" id="bE" value="${v.end}"></label></div>
+ <label class="f">Type<select id="bT">${Object.keys(TYPES).map(k=>`<option value="${k}"${k===v.type?' selected':''}>${TYPES[k]}</option>`).join('')}</select></label>
+ <label class="f" id="bDw" style="display:${v.type==='deferred'?'block':'none'}">Target date<input type="date" id="bD" value="${v.date}" min="${today()}"></label>
+ <div class="row">${b?`<button class="btn bad" data-a="blkdel" data-id="${id}">🗑 Remove</button>`:''}<button class="btn pri" data-a="blksave" data-id="${id||''}">Save</button></div>`);
+}
+function saveBlock(id){
+ const ti=$('#bTi').value.trim(),s=$('#bS').value,e=$('#bE').value,ty=$('#bT').value;
+ if(!ti)return toast('Give the block a title.');
+ if(!s||!e||mm(e)<=mm(s))return toast('End time must be after start time.');
+ let d=ty==='deferred'?($('#bD').value||today()):today();if(d<today())d=today();
+ S.schedule=S.schedule||[];
+ const b=id?S.schedule.find(x=>x.id===id):null;
+ if(b){Object.assign(b,{title:ti,start:s,end:e,type:ty,date:d,auto:false})}
+ else S.schedule.push({id:uid(),title:ti,start:s,end:e,type:ty,date:d,auto:false});
+ closeSheet();
+ if(S.schedule.some(x=>x.auto))generateSchedule(true);
+ save();renderSchedule();
+}
+function autoPlan(){
+ const r=generateSchedule(true);
+ if(!r.placed&&!r.deferred)return toast(S.tasks.some(x=>x.date===today()&&!x.done)?'Open tasks are already scheduled.':'No open tasks to plan. Add some first.');
+ toast(`Planned ${r.placed} block${r.placed===1?'':'s'}${r.deferred?`, ${r.deferred} deferred to tomorrow`:''}${r.lost?`, ${r.lost} didn’t fit`:''}.`);
+}
+const icsEsc=s=>String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+function icsFold(l){const o=[];while(l.length>73){o.push(l.slice(0,73));l=' '+l.slice(73)}o.push(l);return o.join('\r\n')}
+function buildICS(){
+ const t=today(),list=(S.schedule||[]).filter(b=>b.date>=t);
+ const dt=(d,m)=>d.replace(/-/g,'')+'T'+hm(m).replace(':','')+'00';
+ const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Commute-to-Desk//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-TIMEZONE:Asia/Kolkata',
+  'BEGIN:VTIMEZONE','TZID:Asia/Kolkata','BEGIN:STANDARD','DTSTART:19700101T000000','TZOFFSETFROM:+0530','TZOFFSETTO:+0530','TZNAME:IST','END:STANDARD','END:VTIMEZONE'];
+ list.forEach(b=>{
+  L.push('BEGIN:VEVENT','UID:'+b.id+'@commute-to-desk','DTSTAMP:'+stamp,'DTSTART;TZID=Asia/Kolkata:'+dt(b.date,mm(b.start)),'DTEND;TZID=Asia/Kolkata:'+dt(b.date,mm(b.end)),
+   'SUMMARY:'+icsEsc((b.top3?'★ ':'')+b.title),'DESCRIPTION:'+icsEsc(TYPES[b.type]||b.type),'CATEGORIES:'+icsEsc(b.type),
+   'BEGIN:VALARM','TRIGGER:-PT5M','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(b.title),'END:VALARM','END:VEVENT');
+ });
+ L.push('END:VCALENDAR');
+ return {text:L.map(icsFold).join('\r\n')+'\r\n',count:list.length};
+}
+function exportICS(){
+ const r=buildICS();if(!r.count)return toast('No blocks to export. Tap Auto-Plan first.');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([r.text],{type:'text/calendar;charset=utf-8'}));
+ a.download='commute-to-desk-'+today()+'.ics';document.body.appendChild(a);a.click();
+ setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+ toast('Exported '+r.count+' block'+(r.count===1?'':'s')+' to .ics');
+}
+/* ---------- Stats ---------- */
+const stat={range:'week',sel:null};
+function buckets(){
+ const t=today(),R=stat.range;
+ if(R==='year'){
+  const d0=new Date(),out=[];
+  for(let i=11;i>=0;i--){const d=new Date(d0.getFullYear(),d0.getMonth()-i,1),e=new Date(d.getFullYear(),d.getMonth()+1,0);
+   out.push({label:d.toLocaleDateString('en-IN',{month:'long',year:'numeric'}),short:d.toLocaleDateString('en-IN',{month:'short'}).slice(0,1),from:ymd(d),to:ymd(e)})}
+  return out;
+ }
+ const n=R==='week'?7:30;
+ return Array.from({length:n},(_,i)=>{const d=addDays(t,i-(n-1));
+  return {label:fmt(d),short:R==='week'?new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3):((i%5===0||i===n-1)?String(+d.slice(8)):''),from:d,to:d}});
+}
+function bData(b){
+ let done=0,mins=0,top3=0;const items=[],t=today();
+ Object.keys(S.history).sort().forEach(d=>{
+  if(d<b.from||d>b.to)return;const h=S.history[d];
+  done+=h.tasks.length;top3+=h.top3Hit||0;mins+=d===t?S.todayFocusMins:(h.mins||0);
+  h.tasks.forEach((x,i)=>items.push({d,i,title:x.title}));
+ });
+ if(!S.history[t]&&t>=b.from&&t<=b.to)mins+=S.todayFocusMins;
+ return {done,mins,top3,items};
+}
+function renderStats(){
+ if(!$('#chart'))return;
+ const t=today(),bs=buckets(),data=bs.map(bData);
+ document.querySelectorAll('#stRange button').forEach(x=>x.classList.toggle('on',x.dataset.r===stat.range));
+ const done=data.reduce((a,x)=>a+x.done,0),mins=data.reduce((a,x)=>a+x.mins,0);
+ const openNow=S.tasks.filter(x=>!x.done&&x.date<=t).length,th=Math.min(3,(S.history[t]||{top3Hit:0}).top3Hit);
+ const kp=(v,l,s)=>`<div class="kpi"><b>${v}</b><small>${l}</small>${s?`<em>${s}</em>`:''}</div>`;
+ $('#kpis').innerHTML=kp(done,'Done in range')+kp(th+' / 3','Rule of 3 Today')+kp(fmM(mins),'Focus Logged')+kp(done+openNow?Math.round(done/(done+openNow)*100)+'%':'—','Completion Rate','done ÷ (done + open now)');
+ const max=Math.max(1,...data.map(x=>x.done));
+ $('#chTitle').textContent=({week:'Last 7 days',month:'Last 30 days',year:'Last 12 months'})[stat.range]+' · tasks done';
+ $('#chart').innerHTML=`<div class="ymax">${max}</div><div class="bars">${data.map((x,i)=>`<button class="bar${stat.sel===i?' sel':''}" data-a="bar" data-i="${i}" aria-label="${esc(bs[i].label)}: ${x.done} done"><span class="bv">${stat.range==='month'?'':x.done||''}</span><i style="height:${x.done/max*100}%"></i></button>`).join('')}</div>
+ <div class="lbls">${bs.map((b,i)=>`<span class="${bs[i].from<=t&&bs[i].to>=t?'tdy':''}">${b.short}</span>`).join('')}</div><div class="ymax">0 baseline</div>`;
+ const B=$('#brk');
+ if(stat.sel===null||!bs[stat.sel]){B.style.display='none';return}
+ const b=bs[stat.sel],x=data[stat.sel];B.style.display='block';
+ B.innerHTML=`<h2>${esc(b.label)}</h2><div class="kpis">${kp(x.done,'Completed')+kp(fmM(x.mins),'Focus')+kp(x.top3,'Rule of 3 hits')}</div>
+ ${x.items.length?x.items.slice(0,60).map(i=>`<div class="task"><div class="tt"><b>${esc(i.title)}</b>${stat.range!=='week'?`<small>${fmt(i.d)}</small>`:''}</div>${stat.range==='week'&&i.d<t?`<button class="btn" data-a="cp" data-d="${i.d}" data-i="${i.i}">+ Today</button>`:''}</div>`).join(''):'<div class="empty">Nothing completed in this period.</div>'}`;
+}
 function sheet(h){$('#sheet').innerHTML=h;$('#bg').classList.add('show')}
 function closeSheet(){$('#bg').classList.remove('show')}
 function addTask(){
@@ -265,9 +817,6 @@ function pastSheet(sel){
 function installSheet(){
  sheet(`<h3>Install Commute-to-Desk</h3><p><b>Android (Chrome / Samsung Internet):</b> open the browser menu (⋮ or ≡) and tap <b>Install app</b> or <b>Add to Home screen</b>.</p><p><b>Desktop (Chrome / Edge):</b> click the install icon at the right end of the address bar, or open the menu and choose <b>Install Commute-to-Desk</b>.</p><button class="btn pri" data-a="close" style="width:100%">Got it</button>`);
 }
-function keySheet(){
- sheet(`<h3>Gemini API key</h3><p class="sub">Saved as you type. Model settings and Test Key arrive in Phase 3.</p><input id="kIn" type="password" autocomplete="off" placeholder="Paste API key" value="${esc(S.apiKey)}" oninput="setKey(this.value)"><div class="row"><button class="btn pri" data-a="close">Done</button></div>`);
-}
 async function copyMD(){
  const t=today(),a=S.tasks.filter(x=>x.date===t&&!x.done&&(x.bucket==='work'||x.top3));
  if(!a.length)return toast('No work or Top 3 tasks to copy.');
@@ -281,52 +830,42 @@ async function copyMD(){
 
 document.addEventListener('click',e=>{
  if(e.target.id==='bg')return closeSheet();
- const b=e.target.closest('[data-a],[data-t]');if(!b)return;
+ const b=e.target.closest('[data-a],[data-t],[data-p],[data-q],[data-r]');if(!b)return;
+ if(b.dataset.r){stat.range=b.dataset.r;stat.sel=null;renderStats();return}
+ if(b.dataset.q){askCoach(b.dataset.q);return}
+ if(b.dataset.p){setTimer(+b.dataset.p,b.dataset.m);return}
  if(b.dataset.t){document.body.dataset.tab=b.dataset.t;document.querySelectorAll('#tabs button').forEach(n=>n.classList.toggle('on',n===b));return}
  const id=b.dataset.id;
  ({
   tog:()=>toggle(id),pin:()=>pin(id),nd:()=>nextDay(id),edit:()=>editSheet(id),
   del:()=>{del(id);closeSheet()},saveEdit:()=>saveEdit(id),add:addTask,past:()=>pastSheet(),
   quick:()=>{S.quick=!S.quick;renderAll()},close:closeSheet,key:keySheet,
-  focus:()=>toast('Focus timer arrives in Phase 2.'),
+  focus:()=>focusTask(id),tgl:()=>T().running?pauseTimer():startTimer(),trs:resetTimer,tdn:()=>finishTimer(false),tset:setCustom,tlog:logMinutes,shut:shutdown,auto:autoPlan,addblk:()=>blockSheet(),ics:exportICS,blk:()=>blockSheet(id),blksave:()=>saveBlock(id||null),blkdel:()=>{S.schedule=(S.schedule||[]).filter(x=>x.id!==id);closeSheet();if(S.schedule.some(x=>x.auto))generateSchedule(true);save();renderSchedule()},bar:()=>{const i=+b.dataset.i;stat.sel=stat.sel===i?null:i;renderStats()},bot:botOpen,botx:botClose,botsend:()=>askCoach($('#botIn').value),sample:sampleDump,mic:micToggle,split:doSplit,ai:aiPolish,tkey:testKey,wrap:wrapUp,undoSh:undoShutdown,
   clear:()=>{S.tasks=S.tasks.filter(x=>!(x.date===today()&&x.done&&x.recurring!=='daily'));renderAll()},
   md:copyMD,roll:()=>{rollover(true);renderAll();toast('Rolled over.')},
   cp:()=>{const o=S.history[b.dataset.d].tasks[+b.dataset.i];S.tasks.push(newTask({title:o.title,bucket:o.bucket,mins:o.mins}));renderAll();b.textContent='✓ Added';b.disabled=true;toast('Added to Today.')},
   install:async()=>{if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null}else installSheet()}
  })[b.dataset.a]?.();
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
-document.addEventListener('change',e=>{if(e.target.id==='pd')pastSheet(e.target.value)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();botClose()}});
+document.addEventListener('change',e=>{if(PIDS[e.target.id])planChange(e.target.id);
+ if(e.target.id==='bT'){const w=$('#bDw');if(w)w.style.display=e.target.value==='deferred'?'block':'none'}
+ if(e.target.id==='mSel'){S.model=e.target.value;save()}
+ if(e.target.classList&&e.target.classList.contains('pk')&&document.querySelectorAll('#sheet .pk:checked').length>3){e.target.checked=false;toast('Pick at most 3 for tomorrow.')}
+ if(e.target.id==='pd')pastSheet(e.target.value)});
+$('#botIn').addEventListener('keydown',e=>{if(e.key==='Enter')askCoach($('#botIn').value)});
 $('#qTitle').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){rollover();renderAll()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();rollover();renderAll()}});
+setInterval(tick,250);
 setInterval(()=>{if(S.day!==today()){rollover();renderAll()}},60000);
 
-/* PWA icons, manifest, service worker */
-const iconCache={};
-function icon(n){
- if(iconCache[n])return iconCache[n];
- const c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d');
- const gr=g.createLinearGradient(0,0,n,n);gr.addColorStop(0,'#0b1120');gr.addColorStop(1,'#172554');
- g.fillStyle=gr;g.fillRect(0,0,n,n);
- g.fillStyle='#6366f1';g.beginPath();if(g.roundRect)g.roundRect(n*.12,n*.12,n*.76,n*.76,n*.18);else g.rect(n*.12,n*.12,n*.76,n*.76);g.fill();
- g.fillStyle='#fff';g.font=`800 ${n*.3}px "Segoe UI",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('C2D',n/2,n/2+n*.02);
- return iconCache[n]=c.toDataURL('image/png');
-}
-function setupPWA(){
- try{
-  $('#fav').href=icon(64);$('#touch').href=icon(180);
-  const m={name:'Commute-to-Desk · Daily Productivity OS',short_name:'C2D',display:'standalone',background_color:'#0b1120',theme_color:'#0b1120',start_url:location.href.split('#')[0],
-   icons:[192,512].map(n=>({src:icon(n),sizes:n+'x'+n,type:'image/png',purpose:'any'}))};
-  $('#mf').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
- }catch(e){}
- try{if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}catch(e){}
-}
-
+/* PWA: icons + manifest are static files; just register the service worker */
+function setupPWA(){try{if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}catch(e){}}
 if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#installBtn').style.display='none';
 window.addEventListener('appinstalled',()=>{$('#installBtn').style.display='none'});
-load();rollover();document.querySelector('#quickDate').min=today();document.querySelector('#quickDate').value=today();
-renderAll();setupPWA();
+load();if(!MODELS.includes(S.model))S.model=MODELS[0];planSync();rollover();document.querySelector('#quickDate').min=today();document.querySelector('#quickDate').value=today();
+renderAll();tick();setupPWA();
 </script>
 </body>
 </html>
