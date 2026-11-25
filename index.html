@@ -50,12 +50,12 @@ body[data-tab=today] #v-today,body[data-tab=focus] #v-focus,body[data-tab=plan] 
 .btn.pri{background:var(--star);color:#1b1305;border-color:var(--star)}
 .btn.on{background:#26346a;border-color:var(--ind)}
 .btn.bad{color:#ff8b8b}
-.task{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#0f1832;margin-top:8px}
+.task{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#0f1832;margin-top:8px}
 .task.done .tt b{text-decoration:line-through;color:var(--mut)}
 .chk{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid #4a5a8c;background:none;color:#06101f;font-weight:800;padding:0}
 .done .chk{background:var(--ok);border-color:var(--ok)}
-.tt{flex:1;min-width:0}.tt b{display:block;overflow-wrap:anywhere}.tt small{color:var(--mut)}
-.acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tt{flex:1 1 0;min-width:0}.tt b{display:block;overflow-wrap:anywhere}.tt small{color:var(--mut)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 100%;margin-left:38px}
 .acts button{background:#18233f;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
 .acts .st{color:var(--star)}
 .empty{color:var(--mut);padding:8px 2px}
@@ -486,8 +486,9 @@ function micToggle(){
 }
 /* Gemini */
 const modelOrder=()=>[S.model].concat(MODELS.filter(m=>m!==S.model));
-async function gem(model,text,json){
+async function gem(model,text,json,signal){
  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),25000);
+ if(signal){if(signal.aborted)ac.abort();else signal.addEventListener('abort',()=>ac.abort(),{once:true})}
  try{
   const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal:ac.signal,
    headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},
@@ -500,14 +501,30 @@ async function gem(model,text,json){
  }catch(e){throw e.name==='AbortError'?new Error('Request timed out'):e}
  finally{clearTimeout(to)}
 }
-async function gemFallback(prompt,json,parse){
- let err=new Error('No model answered');
- for(const m of modelOrder()){
-  try{const t=await gem(m,prompt,json);window.__aiDownUntil=0;return {value:parse?parse(t):t,model:m}}
-  catch(e){err=e;if(/api key|permission|quota|billing|exhaust|denied|unauthenticated|rate limit/i.test(e.message))break}
- }
- window.__aiDownUntil=Date.now()+5*60000;botMode();
- throw err;
+const AUTHERR=/api key|permission|denied|unauthenticated|billing/i;
+const hedgeMs=()=>window.__hedgeMs||6000;
+function gemFallback(prompt,json,parse,onSwitch){
+ return new Promise((resolve,reject)=>{
+  const order=modelOrder(),acs=[];let next=0,failed=0,done=false,timer=null,lastErr=new Error('No model answered');
+  const finish=(fn,v)=>{if(done)return;done=true;clearTimeout(timer);acs.forEach(a=>{try{a.abort()}catch(e){}});fn(v)};
+  const giveUp=ms=>{window.__aiDownUntil=Date.now()+ms;botMode();finish(reject,lastErr)};
+  const fail=e=>{
+   if(done)return;lastErr=e;failed++;
+   if(AUTHERR.test(e.message))return giveUp(5*60000);
+   if(next<order.length)launch();else if(failed>=next)giveUp(45000);
+  };
+  const launch=()=>{
+   if(done||next>=order.length)return;
+   const m=order[next++],ac=new AbortController();acs.push(ac);
+   if(next>1&&onSwitch)try{onSwitch(m)}catch(e){}
+   clearTimeout(timer);if(next<order.length)timer=setTimeout(launch,hedgeMs());
+   gem(m,prompt,json,ac.signal).then(t=>{
+    if(done)return;let v;try{v=parse?parse(t):t}catch(e){return fail(e)}
+    window.__aiDownUntil=0;finish(resolve,{value:v,model:m});
+   }).catch(fail);
+  };
+  launch();
+ });
 }
 function parseTasks(t){
  t=t.replace(/```(?:json)?/gi,'').trim();
@@ -528,7 +545,7 @@ Rules: split combined items, drop filler, use "daily" only if the text says ever
 Brain dump:
 """${v}"""`;
  try{
-  const r=await gemFallback(prompt,true,parseTasks);
+  const r=await gemFallback(prompt,true,parseTasks,m=>bdMsg('Gemini is slow or busy, also trying '+m+'…'));
   bdDone(addParsed(r.value),'AI Polish ('+r.model+')');
  }catch(e){bdDone(addParsed(smartSplit(v)),'AI unavailable ('+shortErr(e)+'), so I used Smart Split')}
  finally{btn.disabled=false;btn.textContent='✨ AI Polish'}
@@ -548,7 +565,7 @@ function keySheet(){
 }
 /* ---------- Coach (floating, offline-first) ---------- */
 const aiUsable=()=>!!S.apiKey&&Date.now()>(window.__aiDownUntil||0)&&navigator.onLine!==false;
-const shortErr=e=>String(e&&e.message||e).slice(0,70);
+const shortErr=e=>{const m=String(e&&e.message||e).trim();return (m.split(/\.\s/)[0]||m).replace(/\.$/,'').slice(0,90)};
 const fmM=m=>m>=60?Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':''):m+'m';
 function rangeStats(n){
  const out=[];
@@ -608,7 +625,7 @@ async function askCoach(q){
  bot.busy=true;bot.msgs.push({role:'bot',text:'Thinking…'});renderBot();
  const idx=bot.msgs.length-1,hist=bot.msgs.slice(-9,-2).map(m=>(m.role==='user'?'User: ':'Coach: ')+m.text).join('\n');
  const prompt=`You are a concise productivity coach inside a task app. Use only the DATA below. If something is not in the data, say you don't have it. Max 90 words, plain text, no markdown.\nDATA: ${JSON.stringify(coachContext())}\n${hist?'RECENT CHAT:\n'+hist+'\n':''}User: ${q}`;
- try{bot.msgs[idx].text=(await gemFallback(prompt,false)).value.trim()}
+ try{bot.msgs[idx].text=(await gemFallback(prompt,false,null,m=>{bot.msgs[idx].text='Still thinking… also asking '+m;renderBot()})).value.trim()}
  catch(e){bot.msgs[idx].text='AI unavailable ('+shortErr(e)+'). Offline answer:\n'+offlineAnswer(q)}
  bot.busy=false;renderBot();
 }
