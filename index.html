@@ -318,8 +318,13 @@ function renderHead(){
  $('#hFocus').textContent=S.todayFocusMins+'m';
  $('#qwBtn').classList.toggle('on',S.quick);if(typeof botMode==='function')botMode();
 }
+let autoDate='';
+function syncQuickDate(){
+ const q=$('#quickDate');if(!q)return;const t=today();
+ q.min=t;if(!q.value||q.value<t||q.value===autoDate)q.value=t;autoDate=t;
+}
 function renderAll(){
- enforceTop3Cap();H(today()).mins=S.todayFocusMins;
+ enforceTop3Cap();H(today()).mins=S.todayFocusMins;syncQuickDate();
  const t=today(),q=x=>!S.quick||x.mins<=2;
  const td=S.tasks.filter(x=>x.date===t);
  $('#top3').innerHTML=list(activeTop3(),'Pin up to 3 tasks that must happen today.');
@@ -875,9 +880,10 @@ document.addEventListener('keydown',e=>{
 });
 function addTask(){
  const ti=$('#qTitle').value.trim().slice(0,200);if(!ti)return toast('Type a task first.');
- const d=$('#quickDate').value||today();
- S.tasks.push(newTask({title:ti,date:d<today()?today():d,bucket:$('#qBucket').value,mins:+$('#qMins').value,recurring:$('#qRep').checked?'daily':null}));
+ const d0=$('#quickDate').value||today(),clamped=d0<today(),d=clamped?today():d0;
+ S.tasks.push(newTask({title:ti,date:d,bucket:$('#qBucket').value,mins:+$('#qMins').value,recurring:$('#qRep').checked?'daily':null}));
  $('#qTitle').value='';$('#qRep').checked=false;renderAll();
+ if(clamped)toast('That date was in the past, so I added it to today.');else if(d>today())toast('Added for '+fmt(d)+'.');
 }
 function editSheet(id){
  const x=find(id);if(!x)return;
@@ -956,6 +962,8 @@ $('#qTitle').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();rollover();renderAll()}});
 setInterval(tick,250);
+window.addEventListener('pageshow',()=>{rollover();renderAll()});
+document.addEventListener('resume',()=>{rollover();renderAll()});
 setInterval(()=>{if(S.day!==today()){rollover();renderAll()}},60000);
 function armMidnight(){const n=new Date(),m=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,1);setTimeout(()=>{rollover();renderAll();armMidnight()},Math.max(1000,m-n))}
 armMidnight();
@@ -971,7 +979,7 @@ if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#in
 window.addEventListener('appinstalled',()=>{$('#installBtn').style.display='none'});
 load();normalize();
 if((S.ver||0)<2){S.tasks.forEach(t=>{if(t.done&&t.focusCredited&&t.date===S.day){S.todayFocusMins=Math.max(0,S.todayFocusMins-t.mins)}t.focusCredited=false});S.ver=2;save()}
-planSync();rollover();document.querySelector('#quickDate').min=today();document.querySelector('#quickDate').value=today();
+planSync();rollover();
 renderAll();tick();setupPWA();setTab(document.body.dataset.tab||'today');
 </script>
 </body>
